@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-09-16 (14)
+
+- Task 7 of the block-file split: extracted virtual display widget logic into a new
+  `js/blocks/display.js`, loaded after `js/blocks/sound.js` and before `js/app.js`. Moved
+  the entire "display area" section from `js/app.js` (including background image data,
+  display state, rendering, text fitting, dragging, and math operations) into the new module.
+  The module exports display state (`displayContent`, `displaySize`, `displayBg`, `dispPos`,
+  `displayNumber()`, `BG_RATIO`), background handling (`BGB`, `BG_COUNT`, `BG_THUMBS`,
+  `BG_FULL`, `bgUrl()`), rendering functions (`paintDisplay()`, `fitDisplayText()`),
+  interaction wiring (`wireDisplayChrome()`, `dispDrag`), user-facing functions
+  (`openDisplay()`), math operations (`applyMath()`), and the `Display` namespace
+  (with `execDisplay()`, `execMath()`, `execClosed()`, `execMedium()`, `execFull()`,
+  `execBackground()` methods). The boot-time `wireDisplayChrome()` call remains in
+  `js/app.js` at its original position in the boot sequence since it wires DOM elements
+  at load time. The 31 tests all pass cleanly — display blocks are now fully functional
+  and isolated from the core app logic.
+
 ## 2026-09-16 (13)
 
 - Task 6 of the block-file split: extracted tablet microphone and speaker logic into a new
