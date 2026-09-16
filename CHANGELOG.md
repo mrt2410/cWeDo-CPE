@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-16 (10)
+
+- Task 3 of the block-file split: extracted Motion/Distance Sensor state, constants, and event logic
+  into a new `js/blocks/motion-sensor.js`, loaded after `js/blocks/tilt-sensor.js` and before
+  `js/app.js`. The `Motion` namespace (with `state`, `reset()`, `onAttach()`, `onDetach()`,
+  `onValue()`, `attached()`, and `describe()` methods) is now fully defined and working alongside
+  `Tilt`. The 31 tests all pass cleanly with no ReferenceError noise in the log — both Tilt and
+  Motion sensors are now available for the sensor-bus code to call. Note: `Motion` has no
+  `condition()` method (distance sensor has no per-key conditions), only the event-timestamp
+  fallback in `core.js`'s `sensorCondition` applies to distance events.
+
 ## 2026-09-16 (9)
 
 - Task 2 of the block-file split: extracted Tilt Sensor state, constants, and condition logic
