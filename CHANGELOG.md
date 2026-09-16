@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-16 (11)
+
+- Task 4 of the block-file split: extracted Motor state, power constants, and control logic
+  into a new `js/blocks/motor.js`, loaded after `js/blocks/motion-sensor.js` and before
+  `js/app.js`. Removed `motorState`, `DEFAULT_LEVEL`, `POWER_FLOOR`, `levelToPower`, and
+  `motorRun` from `js/app.js`. The `Motor` namespace (with `execPower()`, `execThisWay()`,
+  `execThatWay()`, `execOff()`, and `execOnFor()` methods) is now fully defined and working
+  alongside `Tilt` and `Motion`. The 31 tests all pass cleanly — Motor blocks are now available
+  for the execution engine to call, and `chooseSpeed()` correctly calls the motor's
+  `levelToPower()` function from the global scope.
+
 ## 2026-09-16 (10)
 
 - Task 3 of the block-file split: extracted Motion/Distance Sensor state, constants, and event logic
