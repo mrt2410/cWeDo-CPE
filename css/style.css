@@ -97,6 +97,20 @@
   #edcancel{background:#eef1f4;color:#5b6b7a}
   #edok{background:#1ba055;color:#fff}
 
+  #saveas{position:fixed;inset:0;z-index:250;background:rgba(30,40,52,.45);
+    display:none;align-items:center;justify-content:center;pointer-events:none}
+  #saveas.open{display:flex}
+  #saveas.armed{pointer-events:auto}
+  #sacard{background:#fff;border-radius:18px;padding:20px;width:300px;
+    box-shadow:0 12px 40px rgba(0,0,0,.3)}
+  #satitle{font-size:13px;color:#8f9aa5;margin-bottom:10px}
+  #saname{width:100%;box-sizing:border-box;border:3px solid #3aa5d9;border-radius:8px;height:56px;
+    font-size:16px;text-align:center;color:#26313c;margin-bottom:4px;outline:none;padding:0 10px}
+  #sarow{display:flex;gap:9px;margin-top:14px}
+  #sarow button{flex:1;height:50px;border:none;border-radius:10px;font-size:16px;cursor:pointer}
+  #sacancel{background:#eef1f4;color:#5b6b7a}
+  #saok{background:#1ba055;color:#fff}
+
   #sounds{position:fixed;inset:0;z-index:250;background:rgba(30,40,52,.45);
     display:none;align-items:center;justify-content:center;pointer-events:none}
   #sounds.open{display:flex}

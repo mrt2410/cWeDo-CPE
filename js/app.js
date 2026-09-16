@@ -39,6 +39,33 @@ const pscale=()=>parseFloat(getComputedStyle(document.documentElement).getProper
 /* ---- model ---- */
 let stacks=[];            /* {id,x,y,items:[]} */
 let uid=1;
+
+/* ---- save / open (the board's program only — the custom recorded sound
+   persists separately, see syncSensorMic/startRecording) ---- */
+const PROGRAM_KEY='wedo:program';
+const PROGRAM_FORMAT='wedo-cpe-program', PROGRAM_VERSION=1;
+function serializeProgram(){
+  return JSON.stringify({format:PROGRAM_FORMAT,version:PROGRAM_VERSION,stacks},null,2);
+}
+function applyProgram(data){
+  if(!data||data.format!==PROGRAM_FORMAT||!Array.isArray(data.stacks))
+    throw new Error('not a WeDo CPE program file');
+  stacks=data.stacks;
+  uid=1+stacks.reduce((m,st)=>Math.max(m,st.id||0),0);
+}
+let persistTimer=null;
+function persistProgram(){
+  clearTimeout(persistTimer);
+  persistTimer=setTimeout(()=>{
+    try{ localStorage.setItem(PROGRAM_KEY,serializeProgram()); }catch(e){}
+  },250);
+}
+function restoreProgram(){
+  try{
+    const raw=localStorage.getItem(PROGRAM_KEY);
+    if(raw) applyProgram(JSON.parse(raw));
+  }catch(e){ /* corrupt or foreign data — start from an empty board instead of crashing */ }
+}
 /* blocks that arrive from the tray with an input already seated */
 const N=v=>({key:'NumberInput',value:v}), T=v=>({key:'TextInput',value:v});
 const DEFAULT_INPUT={
@@ -340,6 +367,38 @@ async function loadSound(i){
 let customSound=null;       /* your own recording, played as sound 0 */
 let mediaRec=null, recChunks=[], recState='idle';
 
+/* the recording persists separately from the program: it's a device-local
+   asset, not something you'd want bundled into a shared .wedo.json file */
+const SOUND_KEY='wedo:customSound';
+function blobToBase64(blob){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(r.result.slice(r.result.indexOf(',')+1));
+    r.onerror=()=>reject(r.error||new Error('could not read blob'));
+    r.readAsDataURL(blob);
+  });
+}
+function base64ToBlob(b64,mime){
+  const raw=atob(b64),bytes=new Uint8Array(raw.length);
+  for(let k=0;k<raw.length;k++) bytes[k]=raw.charCodeAt(k);
+  return new Blob([bytes],{type:mime});
+}
+async function persistCustomSound(blob){
+  try{
+    const data=await blobToBase64(blob);
+    localStorage.setItem(SOUND_KEY,JSON.stringify({mime:blob.type||'audio/webm',data}));
+  }catch(e){ /* storage full/unavailable — recording still works this session */ }
+}
+async function restoreCustomSound(){
+  try{
+    const raw=localStorage.getItem(SOUND_KEY);
+    if(!raw) return;
+    const {mime,data}=JSON.parse(raw);
+    const blob=base64ToBlob(data,mime);
+    customSound=await ac().decodeAudioData(await blob.arrayBuffer());
+  }catch(e){ /* no Web Audio support, corrupt data, etc. — sound 0 just stays empty */ }
+}
+
 function ac(){
   if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
   if(audioCtx.state==='suspended') audioCtx.resume();
@@ -463,6 +522,7 @@ async function startRecording(){
     try{
       const blob=new Blob(recChunks,{type:mediaRec.mimeType||'audio/webm'});
       customSound=await ac().decodeAudioData(await blob.arrayBuffer());
+      persistCustomSound(blob);
       log('recorded '+customSound.duration.toFixed(1)+'s as sound 0');
     }catch(e){ log('could not decode the recording: '+e.message); }
     recState='idle'; paintSoundDialog();
@@ -951,6 +1011,7 @@ function findFreeSpot(base,w,h,s){
 }
 
 function render(){
+  persistProgram();
   const sheet=document.getElementById('sheet');
   [...sheet.querySelectorAll('.wrap')].forEach(e=>e.remove());
   const s=scale();
@@ -1508,8 +1569,11 @@ const slopFor=p => p.pt==='touch' ? 12 : 6;
 addEventListener('pointermove',ev=>{
   if(pending&&!drag){
     const dx=ev.clientX-pending.sx, dy=ev.clientY-pending.sy, slop=slopFor(pending);
-    if(pending.from==='tray'){
-      if(Math.abs(dx)>Math.abs(dy)){        /* sideways — leave it to the tray */
+    if(pending.from==='tray'&&pending.pt==='touch'){
+      /* touch only: a sideways swipe must reach the tray as a scroll, so the
+         block is only lifted once the finger moves upward. A mouse has no
+         competing scroll gesture here, so it uses the plain radial check below. */
+      if(Math.abs(dx)>Math.abs(dy)){
         if(Math.abs(dx)>slop) pending=null;
         return;
       }
@@ -1596,6 +1660,70 @@ zout.onclick=()=>{cu=Math.max(70,cu-16);document.documentElement.style.setProper
 addEventListener('resize',()=>{drawTray();paintDisplay();});
 addEventListener('load',()=>setTimeout(()=>splash.classList.add('gone'),900));
 document.getElementById('stop').onclick=stopAll;
+
+/* ---- save as / open ---- */
+let bannerTimer=null;
+function flashBanner(msg,ms=3000){
+  const el=document.getElementById('banner');
+  if(el.dataset.orig===undefined) el.dataset.orig=el.textContent;
+  el.textContent=msg;
+  clearTimeout(bannerTimer);
+  bannerTimer=setTimeout(()=>{ el.textContent=el.dataset.orig; },ms);
+}
+function defaultProgramName(){
+  const d=new Date(),pad=n=>String(n).padStart(2,'0');
+  return `wedo-program-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+function openSaveAsDialog(){
+  const el=document.getElementById('saveas');
+  document.getElementById('saname').value=defaultProgramName();
+  el.classList.add('open');
+  setTimeout(()=>{ if(el.classList.contains('open')) el.classList.add('armed'); },300);
+}
+function closeSaveAsDialog(){
+  const el=document.getElementById('saveas');
+  el.classList.remove('open'); el.classList.remove('armed');
+}
+function downloadText(filename,text){
+  const blob=new Blob([text],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function confirmSaveAs(){
+  let name=document.getElementById('saname').value.trim()||defaultProgramName();
+  if(!/\.wedo\.json$/i.test(name)) name+='.wedo.json';
+  downloadText(name,serializeProgram());
+  closeSaveAsDialog();
+}
+function handleOpenFile(file){
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      applyProgram(JSON.parse(reader.result));
+      persistProgram();render();
+      flashBanner('Opened "'+file.name+'"');
+    }catch(e){
+      flashBanner('Could not open that file: '+e.message);
+    }
+  };
+  reader.onerror=()=>flashBanner('Could not read that file.');
+  reader.readAsText(file);
+}
+document.getElementById('saveasbtn').onclick=openSaveAsDialog;
+document.getElementById('sacancel').onclick=closeSaveAsDialog;
+document.getElementById('saok').onclick=confirmSaveAs;
+document.getElementById('openbtn').onclick=()=>document.getElementById('openfile').click();
+document.getElementById('openfile').onchange=e=>{
+  const file=e.target.files[0];
+  e.target.value='';   /* so choosing the same file again still fires 'change' */
+  if(file) handleOpenFile(file);
+};
+
+restoreProgram();
+restoreCustomSound();
 drawTray();render();
 
 
@@ -1613,6 +1741,55 @@ const listEl=document.getElementById('list'),diagEl=document.getElementById('dia
 const hubs=new Map();let scanning=null,busy=false;
 const connectedHub=()=>[...hubs.values()].find(h=>h.connected);
 const logLines=[];
+
+/* ---- remembering & auto-reconnecting to the last hub ---- */
+const LAST_HUB_KEY='wedo:lastHub';
+function rememberLastHub(id,name){
+  try{ localStorage.setItem(LAST_HUB_KEY,JSON.stringify({id,name})); }catch(e){}
+}
+/* the actual GATT connect (device.gatt.connect(), services, characteristics)
+   needs a real browser and real hardware to verify — this only handles
+   finding the remembered device and retrying the connect attempt, so it's
+   testable with fakes standing in for getDevices/connect/isConnected */
+async function attemptAutoReconnect({getDevices,connect,isConnected,lastId,
+                                      retries=10,delayMs=3000,wait=ms=>new Promise(r=>setTimeout(r,ms))}){
+  if(!lastId) return false;
+  const devices=await getDevices();
+  const device=devices.find(d=>d.id===lastId);
+  if(!device) return false;
+  for(let i=0;i<retries;i++){
+    await connect(device);
+    if(isConnected()) return true;
+    if(i<retries-1) await wait(delayMs);
+  }
+  return false;
+}
+async function autoReconnect(){
+  try{
+    const cap=capabilities();
+    if(!cap.secure){ log('auto-reconnect skipped: not a secure context'); return; }
+    if(!cap.bt){ log('auto-reconnect skipped: Web Bluetooth not available'); return; }
+    if(!navigator.bluetooth.getDevices){ log('auto-reconnect skipped: getDevices() not supported by this browser'); return; }
+    if(connectedHub()) return;
+    const raw=localStorage.getItem(LAST_HUB_KEY);
+    if(!raw){ log('auto-reconnect: no remembered Smarthub'); return; }
+    const {id,name}=JSON.parse(raw);
+    if(!id) return;
+    log('auto-reconnect: looking for '+(name||id)+'…');
+    document.getElementById('hub').querySelector('.state').textContent=
+      'Reconnecting'+(name?' to '+name:'')+'…';
+    const ok=await attemptAutoReconnect({
+      getDevices:()=>navigator.bluetooth.getDevices(),
+      connect,
+      isConnected:()=>!!connectedHub(),
+      lastId:id,
+    });
+    if(!ok){
+      log('auto-reconnect: gave up on '+(name||id)+' — not found or not reachable');
+      setHubWidget();
+    }
+  }catch(e){ log('auto-reconnect error: '+e.message); }
+}
 function log(m){
   const line=new Date().toLocaleTimeString()+'  '+m;
   logLines.push(line);
@@ -1720,6 +1897,7 @@ async function connect(device){
         h.connected=false;h.pressed=false;h.battery=null;h.out=null;h.inp=null;h.val=null;
         clearSensors();
         log('disconnected: '+(h.name||''));hintEl.textContent='';renderHubs();setHubWidget();});}
+    rememberLastHub(device.id,name);
     log('connected to '+name);hintEl.textContent='';
   }catch(e){log('connect failed: '+e.message);hintEl.textContent='Could not connect: '+e.message;
     const h=hubs.get(device.id);if(h)h.connected=false;
@@ -1785,3 +1963,4 @@ refreshBtn.onclick=search;
 document.getElementById('diagtoggle').onclick=()=>document.getElementById('diagwrap').classList.toggle('closed');
 document.getElementById('copylog').onclick=copyLog;
 capabilities();renderHubs();
+autoReconnect();

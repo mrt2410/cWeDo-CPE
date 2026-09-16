@@ -30,7 +30,10 @@
     <div id="rail">
       <button class="rbtn" id="zin"  aria-label="Zoom in"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6M16.5 16.5L21 21"/></svg></button>
       <button class="rbtn" id="zout" aria-label="Zoom out"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M16.5 16.5L21 21"/></svg></button>
+      <button class="rbtn" id="saveasbtn" aria-label="Save As"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg></button>
+      <button class="rbtn" id="openbtn" aria-label="Open"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg></button>
     </div>
+    <input id="openfile" type="file" accept="application/json,.json" style="display:none">
 
     <div id="display">
       <div id="dispbg"></div>
@@ -67,7 +70,7 @@
   <footer>
     <div id="traytabs"></div>
     <div id="tray"></div>
-    <div class="banner">All 38 blocks working. Build a program, press Start, or press the letter on a Start On Key block.</div>
+    <div class="banner" id="banner">All 38 blocks working. Build a program, press Start, or press the letter on a Start On Key block.</div>
   </footer>
 </div>
 <div id="ghost"></div>
@@ -124,6 +127,17 @@
     <div id="edrow">
       <button id="edcancel">Cancel</button>
       <button id="edok">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="saveas">
+  <div id="sacard">
+    <div id="satitle">Save As</div>
+    <input id="saname" type="text" autocomplete="off">
+    <div id="sarow">
+      <button id="sacancel">Cancel</button>
+      <button id="saok">Save</button>
     </div>
   </div>
 </div>
