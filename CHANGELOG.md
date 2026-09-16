@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-16 (15)
+
+- Task 8 of the block-file split: extracted keyboard and message-based program triggering
+  logic into a new `js/blocks/messaging.js`, loaded after `js/blocks/display.js` and before
+  `js/app.js`. Moved the entire messaging and key press handling section from `js/app.js`
+  (including `sameMsg()`, `broadcast()`, `triggerKey()`, and the global `keydown` event
+  listener) into the new module. The module provides message-based inter-program triggering
+  (`broadcast(msg)`) and keyboard-based program launching via `StartOnMessageBlock` and
+  `StartOnKeyPressBlock` block types. It reads from app state (`stacks`, `letterTarget`,
+  `editing`) and calls core functions (`runStack()`, `keyPressAnim()`, `log()`). The 31 tests
+  all pass cleanly — messaging and key press blocks are now fully functional and isolated from
+  the core app logic.
+
 ## 2026-09-16 (14)
 
 - Task 7 of the block-file split: extracted virtual display widget logic into a new
