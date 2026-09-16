@@ -16,8 +16,15 @@ const SCRIPTS = ["data/bundle.js", "data/soundbank.js", "data/bgbank.js",
  * Loads the real app (real HTML + real css/js/data files) into a jsdom window,
  * exactly as a browser would. `seed(window)` runs before any app script executes,
  * so tests can pre-populate localStorage to exercise restore-on-load.
+ *
+ * `probe`, if given, is a snippet of code appended into the *same* combined
+ * eval() call as the app's own scripts (see the comment below on why that
+ * matters), so it can read otherwise-unreachable top-level `const`/`let`
+ * values (e.g. a one-liner arrow-function helper that isn't a `function`
+ * declaration, so never becomes a `window` property) and expose them for the
+ * test to read back off `window` — without duplicating their logic.
  */
-async function loadApp({ seed } = {}) {
+async function loadApp({ seed, probe } = {}) {
   let html = fs.readFileSync(HTML_PATH, "utf8");
   for (const rel of SCRIPTS) html = html.replace(`<script src="${rel}"></script>`, "");
 
@@ -43,7 +50,8 @@ async function loadApp({ seed } = {}) {
   // script-tag-like sharing so cross-file top-level const/let (e.g.
   // js/blocks/core.js's `ORDER`, read by js/app.js's drawTray()) resolve
   // correctly, matching real-browser behaviour.
-  const combined = SCRIPTS.map(rel => fs.readFileSync(path.join(ROOT, rel), "utf8")).join("\n;\n");
+  let combined = SCRIPTS.map(rel => fs.readFileSync(path.join(ROOT, rel), "utf8")).join("\n;\n");
+  if (probe) combined += "\n;\n" + probe;
   dom.window.eval(combined);
 
   // let the app's own load-time async work (e.g. sound restore) settle

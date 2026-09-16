@@ -8,6 +8,30 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { loadApp } = require("../helpers.js");
 
+// isNumeric and prettyKey are one-liner arrow functions (`const isNumeric =
+// k => ...`), not `function` declarations, so — unlike canAccept/mkItem/etc.
+// — they never become `window` properties, even under the single combined
+// eval() loadApp() uses (see the comment there): a `const` only lives in the
+// lexical scope of the code that declared it. `probe` runs a tiny snippet in
+// that exact same scope right after the app's own scripts, so it can reach
+// the real bindings and hand them to the test via window, without
+// re-implementing their logic here.
+test("isNumeric: true for number-shaped inputs, false for a condition", async (t) => {
+  const dom = await loadApp({ probe: "window.__isNumeric = isNumeric;" });
+  t.after(() => dom.window.close());
+
+  assert.equal(dom.window.__isNumeric("NumberInput"), true);
+  assert.equal(dom.window.__isNumeric("TiltUp"), false);
+});
+
+test("prettyKey: splits a PascalCase block key into lowercase words", async (t) => {
+  const dom = await loadApp({ probe: "window.__prettyKey = prettyKey;" });
+  t.after(() => dom.window.close());
+
+  assert.equal(dom.window.__prettyKey("TiltUp"), "tilt up");
+  assert.equal(dom.window.__prettyKey("AnyDistanceChange"), "any distance change");
+});
+
 test("canAccept: Repeat/Wait For take a time or a condition; Motor Power takes only numbers", async (t) => {
   const dom = await loadApp();
   t.after(() => dom.window.close());
