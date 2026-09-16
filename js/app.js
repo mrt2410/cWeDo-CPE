@@ -438,19 +438,6 @@ function applyMath(op,it){
 
 /* inputNumber/writeOut/sendOut moved to js/blocks/core.js. */
 
-/* Hub LED: port 6, command 4, one byte — an index into the hub's own palette,
-   not an RGB value. Names are for the log only; sources disagree on 4, 5 and 10. */
-const LED_NAMES=['off','pink','purple','blue','sky blue','teal',
-                 'green','yellow','orange','red','white'];
-const LED_IDLE=3;          /* what the hub shows when it is just sitting connected */
-const DEFAULT_COLOUR=9;    /* placeholder until inputs carry a value (Stage 10) */
-
-async function ledSet(idx){
-  const i=Math.max(0,Math.min(10,Math.round(idx)));
-  log('light -> '+i+' ('+LED_NAMES[i]+')');
-  return sendOut([0x06,0x04,0x01,i]);
-}
-
 /* execBlock/runBody/execRepeat/execSeq moved to js/blocks/core.js. Note: the
    per-block behaviour that used to live in execBlock's switch (motor state,
    display, light, wait-for dispatch) is NOT preserved here — core.js's new
