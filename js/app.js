@@ -912,7 +912,6 @@ drawTray();render();
 const HUB_SERVICE='00001523-1212-efde-1523-785feabcd123';
 const IO_SERVICE ='00004f0e-1212-efde-1523-785feabcd123';
 const C_NAME='00001524-1212-efde-1523-785feabcd123';
-const C_BUTTON='00001526-1212-efde-1523-785feabcd123';
 const C_ATTACHED='00001527-1212-efde-1523-785feabcd123';
 const C_INPUT   ='00001563-1212-efde-1523-785feabcd123';
 const C_OUTPUT  ='00001565-1212-efde-1523-785feabcd123';
@@ -1050,16 +1049,7 @@ async function connect(device){
       name=new TextDecoder().decode(await c.readValue()).replace(/\0+$/,'');}catch(e){log('name read failed: '+e.message);}
     const h=hubs.get(device.id)||{device};
     h.device=device;h.name=name;h.connected=true;h.pressed=false;hubs.set(device.id,h);
-    try{const bc=await svc.getCharacteristic(C_BUTTON);await bc.startNotifications();
-      bc.addEventListener('characteristicvaluechanged',ev=>{
-        h.pressed=ev.target.value.getUint8(0)===1;log('button '+(h.pressed?'DOWN':'up'));renderHubs();});
-      try{h.pressed=(await bc.readValue()).getUint8(0)===1;}catch(e){}
-      log('button notifications on');}catch(e){log('button characteristic failed: '+e.message);}
-    try{const bs=await server.getPrimaryService('battery_service');
-      const bl=await bs.getCharacteristic('battery_level');
-      h.battery=(await bl.readValue()).getUint8(0);await bl.startNotifications();
-      bl.addEventListener('characteristicvaluechanged',ev=>{h.battery=ev.target.value.getUint8(0);renderHubs();});
-    }catch(e){log('battery unavailable: '+e.message);}
+    await Telemetry.wireButtonBattery(h,svc,server);
     clearSensors();
     try{
       const io=await server.getPrimaryService(IO_SERVICE);

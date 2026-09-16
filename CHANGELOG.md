@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-09-16 (16)
+
+- Task 9 of the block-file split: extracted hub button and battery GATT wiring logic into
+  a new `js/telemetry/button-battery.js`, loaded after `js/blocks/messaging.js` and before
+  `js/app.js`. Moved the button characteristic notification handler and battery level reading
+  and notification listener from `js/app.js`'s `connect()` function into the new module's
+  `Telemetry.wireButtonBattery(h, svc, server)` async function. The module declares the
+  `C_BUTTON` GATT UUID constant (now removed from `js/app.js`'s Bluetooth-stage constants).
+  The handler calls `renderHubs()` on button press and battery changes, and calls the
+  (as-yet-undefined) `triggerButtonPress()` function when the button is pressed — a forward
+  reference that will be defined in Task 16 (Phase 2) but never executes in test (no real
+  hardware button presses in jsdom). **This completes Phase 1 restructuring (Tasks 1-9):**
+  all core block handlers, I/O wiring, UI logic, and telemetry are now extracted into their
+  own modules. The test suite passes cleanly (36 tests including new tests for wireButtonBattery).
+  The split is now behavior-preserving and fully verified.
+
 ## 2026-09-16 (15)
 
 - Task 8 of the block-file split: extracted keyboard and message-based program triggering
