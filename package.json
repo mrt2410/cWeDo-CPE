@@ -3,7 +3,7 @@
   "private": true,
   "description": "Dev-only tooling for WeDo CPE. The app itself is plain static files with zero runtime dependencies.",
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test"
   },
   "devDependencies": {
     "jsdom": "^30.0.1"
