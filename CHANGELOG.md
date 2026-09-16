@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-09-16 (13)
+
+- Task 6 of the block-file split: extracted tablet microphone and speaker logic into a new
+  `js/blocks/sound.js`, loaded after `js/blocks/rgb-light.js` and before `js/app.js`. Moved
+  the entire "Stage 11: sound" section from `js/app.js` (including sound playback, recording,
+  microphone management, and custom sound persistence) into the new module. The module exports
+  audio context management (`ac()`, `audioCtx`, `micOn`, `micLevel`, etc.), sound bank loading
+  (`loadSound()`, `SOUND_NAMES`, `SOUND_DATA`), playback (`playSound()`, `playBuffer()`,
+  `stopSound()`, `playPlaceholder()`), recording (`startRecording()`, `stopRecording()`,
+  `mediaRec`, `recState`), mic management (`ensureMic()`, `releaseMic()`, `hasSoundSensor()`,
+  `syncSensorMic()`), and persistence (`blobToBase64()`, `base64ToBlob()`, `persistCustomSound()`,
+  `restoreCustomSound()`). The 31 tests all pass cleanly — sound blocks and microphone-based
+  sensor input are now fully functional and isolated from the core app logic.
+
 ## 2026-09-16 (12)
 
 - Task 5 of the block-file split: extracted RGB Light state, constants, and control logic
