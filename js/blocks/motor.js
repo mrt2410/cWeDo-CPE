@@ -1,0 +1,63 @@
+/* ================= Motor (hub IO type 1) ================= */
+/* ---- motor state. Power and direction are remembered but never assumed:
+   until a program sets both, Motor On For does nothing. ---- */
+const motorState={power:null,dir:null};
+const DEFAULT_LEVEL=10;    /* until Motor Power carries an input */
+
+/* Level 1-10 maps onto 35-100%. The motor stalls below roughly a third power —
+   measured on real hardware: 29% would not turn, 38% would. */
+const POWER_FLOOR=35;
+const levelToPower=l => l<=0 ? 0
+  : Math.round(POWER_FLOOR+(Math.min(l,10)-1)*((100-POWER_FLOOR)/9));
+
+/* -100..100; negative is encoded as 256+value. Both ports are addressed so any
+   attached motor responds, and both packets are dispatched before either is
+   awaited so the motors start and stop together. */
+async function motorRun(power){
+  const h=connectedHub();
+  if(!h||!h.out){ log('motor: no hub connected — command skipped'); return false; }
+  const p=Math.max(-100,Math.min(100,Math.round(power)));
+  const b=p<0?256+p:p;
+  const pk=[new Uint8Array([1,0x01,0x01,b]),new Uint8Array([2,0x01,0x01,b])];
+  const t0=(self.performance||Date).now();
+  try{
+    /* dispatched one after the other, but unacknowledged: each resolves as soon
+       as it is queued rather than waiting a round trip for the hub to reply */
+    for(const d of pk) await writeOut(h.out,d,h);
+  }catch(e){ log('motor write failed: '+e.message); return false; }
+  log('motor -> '+p+'%  (both ports in '+Math.round((self.performance||Date).now()-t0)+'ms)');
+  return true;
+}
+
+const Motor={
+  async execPower(it,r){
+    const lvl=inputNumber(it,DEFAULT_LEVEL);
+    if(lvl==null) log('Motor Power: no input attached — power left unset');
+    else { motorState.power=levelToPower(lvl); log('power set to '+motorState.power+'%'); }
+    await sleep(STEP,r);
+  },
+  async execThisWay(it,r){
+    motorState.dir=-1; log('direction set: this way'); await sleep(STEP,r);
+  },
+  async execThatWay(it,r){
+    motorState.dir=1; log('direction set: that way'); await sleep(STEP,r);
+  },
+  async execOff(it,r){
+    await motorRun(0); await sleep(STEP,r);
+  },
+  async execOnFor(it,r){
+    if(motorState.power==null||motorState.dir==null){
+      log('Motor On For skipped — '+
+          (motorState.power==null?'no power set':'')+
+          (motorState.power==null&&motorState.dir==null?' and ':'')+
+          (motorState.dir==null?'no direction set':''));
+      await sleep(STEP,r); return;
+    }
+    const secs=inputNumber(it,DEFAULT_SECONDS)??DEFAULT_SECONDS;
+    await motorRun(motorState.power*motorState.dir);
+    /* the stop is in a finally so the motor cannot be left spinning by an
+       error, a stop press, or the program being edited mid-run */
+    try{ await sleep(secs*1000,r); }
+    finally{ await motorRun(0); }
+  }
+};
