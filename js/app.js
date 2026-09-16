@@ -1,6 +1,3 @@
-const B=WEDO_DATA.bundle;
-const S=B.sprites, ORDER=B.order;
-
 /* ---- geometry measured from the original app ---- */
 const BH=179,CAV_L=61,ARCH_TOP=61,ARCH_H=240,
       RP_L=105,RP_M0=105,RP_M1=205,RP_W=453,OVER=18,SNAP=75;
@@ -9,29 +6,6 @@ const BH=179,CAV_L=61,ARCH_TOP=61,ARCH_H=240,
 const RP_CUT_FIN=426,
       CAV_R_INF=211, CAV_R_FIN=184,
       SOCK_INF=119.5, SOCK_FIN=92.5;
-
-const STARTS=new Set(['StartBlock','StartOnKeyPressBlock','StartOnMessageBlock']);
-const SOCKETED=new Set(['StartOnMessageBlock','SendMessageBlock','WaitForBlock','MotorPowerBlock',
-  'MotorOnForBlock','LightBlock','PlaySoundBlock','DisplayBackgroundBlock','DisplayBlock',
-  'AddtoDisplayBlock','SubtractfromDisplayBlock','MultiplybyDisplayBlock','DividebyDisplayBlock']);
-const INPUTS=new Set(['AnyDistanceChange','DistanceChangeCloser','DistanceChangeFurther','DistanceSensorInput',
-  'AnyTilt','TiltUp','TiltDown','TiltThisWay','TiltThatWay','TiltSensorInput',
-  'SoundSensorInput','NumberInput','TextInput','DisplayInput','RandomInput']);
-
-/* Which inputs a socket will take. Without this a tilt sensor could be dropped
-   into Motor Power, where it has no numeric meaning and silently fell back to
-   full power. */
-const NUM_INPUTS=['NumberInput','RandomInput','DisplayInput','DistanceSensorInput'];
-const isCondition=k => STATE_KEYS.indexOf(k)>=0||EDGE_KEYS.indexOf(k)>=0;
-const isNumeric  =k => NUM_INPUTS.indexOf(k)>=0;
-function canAccept(parentKey,inputKey){
-  if(parentKey==='RepeatBlock'||parentKey==='WaitForBlock')      /* a time or a condition */
-    return isNumeric(inputKey)||isCondition(inputKey);
-  if(parentKey==='StartOnMessageBlock'||parentKey==='SendMessageBlock'
-     ||parentKey==='DisplayBlock')                               /* text or a number */
-    return isNumeric(inputKey)||inputKey==='TextInput';
-  return isNumeric(inputKey);                                    /* everything else: numbers */
-}
 
 const scale=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cu'))/182;
 const pscale=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pu'))/182;
@@ -66,24 +40,6 @@ function restoreProgram(){
     if(raw) applyProgram(JSON.parse(raw));
   }catch(e){ /* corrupt or foreign data — start from an empty board instead of crashing */ }
 }
-/* blocks that arrive from the tray with an input already seated */
-const N=v=>({key:'NumberInput',value:v}), T=v=>({key:'TextInput',value:v});
-const DEFAULT_INPUT={
-  MotorPowerBlock:N('5'), MotorOnForBlock:N('3'), WaitForBlock:N('3'), LightBlock:N('1'),
-  PlaySoundBlock:N('1'), DisplayBackgroundBlock:N('1'), DisplayBlock:N('1'),
-  AddtoDisplayBlock:N('1'), SubtractfromDisplayBlock:N('1'),
-  MultiplybyDisplayBlock:N('1'), DividebyDisplayBlock:N('1'),
-  StartOnMessageBlock:T('abc'), SendMessageBlock:T('abc')
-};
-function mkItem(k){
-  if(k==='RepeatBlock') return {t:'r',input:null,children:[]};
-  if(INPUTS.has(k))     return {t:'i',key:k,value:defaultValueFor(k)};
-  const d=DEFAULT_INPUT[k];
-  const it={t:'b',key:k,input:d?d.key:null,inputValue:d?d.value:undefined};
-  if(k==='StartOnKeyPressBlock') it.letter='A';
-  return it;
-}
-
 /* ---- element factories ---- */
 const FIELD={x:12,y:33,w:158,h:60};   /* white value field inside an input sprite */
 const KEYCAP={x:86,y:44,w:58,h:50};   /* the face of the key, which has an A printed on it */
@@ -119,7 +75,6 @@ function blockEl(key,s,label){
 const inputKeyOf=h => h.t==='i'?h.key:h.input;
 const inputValOf=h => h.t==='i'?h.value:h.inputValue;
 function setInputVal(h,v){ if(h.t==='i') h.value=v; else h.inputValue=v; }
-const defaultValueFor=k => k==='NumberInput'?'1':(k==='TextInput'?'':undefined);
 function archEl(contentW,s,finite){
   const m=S.RepeatBlock,capEnd=finite?RP_CUT_FIN:RP_W,capW=capEnd-RP_M1,
         total=contentW+(CAV_L+(finite?CAV_R_FIN:CAV_R_INF))*s,
@@ -182,171 +137,12 @@ function buildSeq(items,x,y,s,ctx,stack,inLoop){
   return w;
 }
 
-/* ================= Stage 7: sensors ================= */
-const DEV_MOTOR=1, DEV_TILT=34, DEV_DISTANCE=35;
-const DEV_NAMES={1:'motor',34:'tilt sensor',35:'distance sensor'};
-/* direction codes the hub reports for the tilt sensor */
-/* One table per tilt code: its name in the readout and the block it satisfies.
-   Left and right were the other way round on the real sensor. */
-const TILT={NONE:0, UP:3, LEFT:5, RIGHT:7, DOWN:9};
-const TILT_INFO={};
-TILT_INFO[TILT.NONE] ={name:'no tilt',key:'TiltSensorInput'};
-TILT_INFO[TILT.UP]   ={name:'up',     key:'TiltUp'};
-TILT_INFO[TILT.LEFT] ={name:'left',   key:'TiltThisWay'};
-TILT_INFO[TILT.RIGHT]={name:'right',  key:'TiltThatWay'};
-TILT_INFO[TILT.DOWN] ={name:'down',   key:'TiltDown'};
-
-const DIST_EPS=0.2;     /* how much movement counts as a distance change */
-const EDGE_MS=400;      /* how long a change stays lit in the readout */
-
-/* Tilt directions are states: true for as long as the sensor is held there.
-   Changes are moments: they happen between two readings and are gone. Those are
-   counted, so a wait can tell "it happened again" from "it is still true". */
+/* Tilt/Motion sensor logic (port dispatch, event bus, execution engine) moved
+   to js/blocks/core.js. The per-device tilt/distance state and condition
+   logic itself moves to js/blocks/tilt-sensor.js / motion-sensor.js in
+   Tasks 2/3 — until then STATE_KEYS stays here since core.js's isCondition/
+   metSince/waitForInput/execRepeat all read it. */
 const STATE_KEYS=['TiltUp','TiltDown','TiltThisWay','TiltThatWay','TiltSensorInput'];
-const EDGE_KEYS =['AnyTilt','AnyDistanceChange','DistanceChangeCloser','DistanceChangeFurther',
-                  'SoundSensorInput'];
-const KEY_SENSOR={TiltUp:'tilt',TiltDown:'tilt',TiltThisWay:'tilt',TiltThatWay:'tilt',
-  TiltSensorInput:'tilt',AnyTilt:'tilt',AnyDistanceChange:'distance',
-  DistanceChangeCloser:'distance',DistanceChangeFurther:'distance',DistanceSensorInput:'distance'};
-
-const EVENT_KEYS=['AnyTilt','AnyDistanceChange','DistanceChangeCloser','DistanceChangeFurther',
-                  'TiltUp','TiltDown','TiltThisWay','TiltThatWay','TiltSensorInput',
-                  'SoundSensorInput'];
-const newEvents=()=>{const o={};EVENT_KEYS.forEach(k=>o[k]={n:0,at:0});return o;};
-
-
-const sensors={
-  tilt:{port:null,dir:TILT.NONE,raw:null},
-  distance:{port:null,value:null,prev:null,raw:null},
-  motors:[], events:newEvents()
-};
-function bump(key){ const e=sensors.events[key]; e.n++; e.at=Date.now(); }
-function clearSensors(){
-  sensors.tilt={port:null,dir:TILT.NONE,raw:null};
-  sensors.distance={port:null,value:null,prev:null,raw:null};
-  sensors.motors=[]; sensors.events=newEvents();
-  renderPorts();
-}
-
-/* tell a port which mode to report in, and to notify us as it changes */
-const inputFormat=(port,type,mode,unit)=>
-  [0x01,0x02,port,type,mode,0x01,0x00,0x00,0x00,unit,0x01];
-
-async function configurePort(port,type){
-  const h=connectedHub();
-  if(!h||!h.inp) return;
-  const bytes = type===DEV_TILT     ? inputFormat(port,DEV_TILT,1,2)      /* direction, SI */
-              : type===DEV_DISTANCE ? inputFormat(port,DEV_DISTANCE,0,2)  /* distance, SI */
-              : null;
-  if(!bytes) return;
-  const data=new Uint8Array(bytes);
-  try{
-    if(h.inp.writeValueWithResponse) await h.inp.writeValueWithResponse(data);
-    else await h.inp.writeValue(data);
-    log('port '+port+' configured as '+(DEV_NAMES[type]||type));
-  }catch(e){ log('port '+port+' setup failed: '+e.message); }
-}
-
-function onPortEvent(ev){
-  const v=new Uint8Array(ev.target.value.buffer);
-  log('port event ['+[...v].join(',')+']');
-  const port=v[0], attached=v[1];
-  if(!attached){
-    if(sensors.tilt.port===port) sensors.tilt={port:null,dir:TILT.NONE,raw:null};
-    if(sensors.distance.port===port) sensors.distance={port:null,value:null,prev:null,raw:null};
-    sensors.motors=sensors.motors.filter(p=>p!==port);
-    log('port '+port+' emptied'); renderPorts(); return;
-  }
-  /* write-ups disagree on which byte carries the device type, so look for a
-     value we recognise instead of trusting one offset */
-  let type=null;
-  for(const i of [3,2,4]) if([DEV_MOTOR,DEV_TILT,DEV_DISTANCE].indexOf(v[i])>=0){type=v[i];break;}
-  if(type===null){ log('port '+port+': device not recognised'); renderPorts(); return; }
-  if(type===DEV_TILT){ sensors.tilt.port=port; configurePort(port,DEV_TILT); }
-  else if(type===DEV_DISTANCE){ sensors.distance.port=port; configurePort(port,DEV_DISTANCE); }
-  else if(sensors.motors.indexOf(port)<0) sensors.motors.push(port);
-  log('port '+port+' holds a '+(DEV_NAMES[type]||type));
-  renderPorts();
-}
-
-function onSensorValue(ev){
-  const buf=ev.target.value.buffer;
-  const v=new Uint8Array(buf), dv=new DataView(buf);
-  if(v.length<6) return;
-  const val=dv.getFloat32(2,true);
-  let port=v[1];                                   /* byte 1 is the port... */
-  if(port!==sensors.tilt.port&&port!==sensors.distance.port) port=v[0];   /* ...usually */
-  const raw='['+[...v].join(',')+']';
-  if(port===sensors.tilt.port){
-    const was=sensors.tilt.dir, now=Math.round(val);
-    sensors.tilt.dir=now; sensors.tilt.raw=raw;
-    /* no direction mode is free while we are reading direction, so a shake is
-       inferred from flipping straight between two tilts */
-    if(was!==now){
-      const k=(TILT_INFO[now]||{}).key; if(k) bump(k);
-      if(was!==TILT.NONE&&now!==TILT.NONE) bump('AnyTilt');
-    }
-  }else if(port===sensors.distance.port){
-    const prev=sensors.distance.value, cur=Math.max(0,Math.min(10,val));
-    sensors.distance.prev=prev; sensors.distance.value=cur; sensors.distance.raw=raw;
-    if(prev!=null){
-      const d=cur-prev;
-      if(Math.abs(d)>DIST_EPS) bump('AnyDistanceChange');
-      if(d<-DIST_EPS) bump('DistanceChangeCloser');
-      if(d> DIST_EPS) bump('DistanceChangeFurther');
-    }
-  }
-  renderPorts();
-}
-
-function sensorCondition(key){
-  const t=sensors.tilt;
-  switch(key){
-    case 'TiltUp':          return t.dir===TILT.UP;
-    case 'TiltDown':        return t.dir===TILT.DOWN;
-    case 'TiltThisWay':     return t.dir===TILT.LEFT;
-    case 'TiltThatWay':     return t.dir===TILT.RIGHT;
-    case 'TiltSensorInput': return t.port!=null&&t.dir===TILT.NONE;
-  }
-  const e=sensors.events[key];
-  return e ? Date.now()-e.at<EDGE_MS : false;   /* recently happened */
-}
-/* A loop body can take seconds, so a condition may come and go while it runs.
-   Comparing counts against a snapshot catches that; a held tilt is also true
-   simply by still being held. */
-function snapshotEvents(){
-  const s={}; for(const k in sensors.events) s[k]=sensors.events[k].n; return s;
-}
-function metSince(key,snap){
-  const e=sensors.events[key];
-  if(e&&snap[key]!=null&&e.n>snap[key]) return true;
-  return STATE_KEYS.indexOf(key)>=0 ? sensorCondition(key) : false;
-}
-function sensorAttached(key){
-  if(key==='SoundSensorInput') return micOn;     /* the tablet's mic, not a hub port */
-  const which=KEY_SENSOR[key];
-  return !which || sensors[which].port!=null;
-}
-
-const COND_KEYS=['TiltUp','TiltDown','TiltThisWay','TiltThatWay','TiltSensorInput','AnyTilt',
-                 'AnyDistanceChange','DistanceChangeCloser','DistanceChangeFurther'];
-function renderPorts(){
-  const el=document.getElementById('ports'); if(!el) return;
-  const t=sensors.tilt, d=sensors.distance;
-  el.innerHTML=
-    '<div class="prow"><b>Tilt</b> '+(t.port?'port '+t.port+' — code '+t.dir+
-        ' ('+((TILT_INFO[t.dir]||{}).name||'?')+')':'not attached')+
-        (t.raw?'<span class="raw">'+t.raw+'</span>':'')+'</div>'+
-    '<div class="prow"><b>Distance</b> '+(d.port?'port '+d.port+
-        (d.value!=null?' — '+d.value.toFixed(1):''):'not attached')+
-        (d.raw?'<span class="raw">'+d.raw+'</span>':'')+'</div>'+
-    '<div class="prow"><b>Motor</b> '+(sensors.motors.length?'port '+sensors.motors.join(', ')
-        :'not detected')+'</div>'+
-    '<div class="prow"><b>Microphone</b> '+(micOn?'on — level '+micLevel.toFixed(3):'off')+'</div>'+
-    '<div class="conds">'+COND_KEYS.map(k=>'<span class="'+(sensorCondition(k)?'on':'')+'">'+
-        k.replace(/([A-Z])/g,' $1').trim()+'</span>').join('')+'</div>';
-}
-setInterval(renderPorts,250);
 
 /* ================= Stage 11: sound ================= */
 let audioCtx=null, micOn=false, micStream=null, micAnalyser=null, micTimer=null, micLevel=0;
@@ -535,69 +331,13 @@ function stopRecording(){
   if(mediaRec&&recState==='recording'){ recState='saving'; mediaRec.stop(); paintSoundDialog(); }
 }
 
-/* ================= Stage 4: execution engine ================= */
-const STEP=200;            /* how long an instantaneous block stays highlighted */
-const DEFAULT_LOOPS=3;     /* until number inputs carry a value (Stage 10) */
-const runners=new Map();   /* stack.id -> runner */
-const highlighted=new Set();
-let itemEl=new Map();
+/* Execution engine (STEP/mark/sleep/until/waitForInput/loopCount/runBody/
+   execRepeat/execSeq/runStack/stopStack/stopAll/haltEverything/updateStop)
+   moved to js/blocks/core.js. */
 
-function mark(it,on){
-  if(on) highlighted.add(it); else highlighted.delete(it);
-  const e=itemEl.get(it);
-  if(e) e.classList.toggle('exec',on);
-}
-function clearMarks(items){
-  items.forEach(it=>{mark(it,false); if(it.children) clearMarks(it.children);});
-}
-function sleep(ms,r){
-  return new Promise(res=>{
-    const t=setTimeout(res,ms);
-    r.cancels.add(()=>{clearTimeout(t);res();});
-  });
-}
-/* waits until test() passes, or until the program is stopped */
-function until(test,r,pollMs=30){
-  return new Promise(res=>{
-    if(r.stop||test()) return res();
-    const id=setInterval(()=>{ if(r.stop||test()){ clearInterval(id); res(); } },pollMs);
-    r.cancels.add(()=>{ clearInterval(id); res(); });
-  });
-}
-const prettyKey=k=>k.replace(/([A-Z])/g,' $1').trim().toLowerCase();
-
-/* Wait For, and later Repeat-until, both resolve an input the same way. */
-async function waitForInput(it,r){
-  const key=it.input;
-  if(key==='SoundSensorInput'){ micForSensor=true; await ensureMic(); }
-  if(EDGE_KEYS.indexOf(key)>=0){
-    if(!sensorAttached(key)) log('Wait For: no '+KEY_SENSOR[key]+' sensor attached — this will wait');
-    const start=sensors.events[key].n;
-    log('waiting for '+prettyKey(key));
-    await until(()=>sensors.events[key].n>start,r);   /* the next one, not the last one */
-    return;
-  }
-  if(STATE_KEYS.indexOf(key)>=0){
-    if(!sensorAttached(key)) log('Wait For: no '+KEY_SENSOR[key]+' sensor attached — this will wait');
-    log('waiting for '+prettyKey(key));
-    await until(()=>sensorCondition(key),r);          /* passes straight away if already true */
-    return;
-  }
-  const secs=inputNumber(it,DEFAULT_SECONDS);
-  const s=(secs==null?DEFAULT_SECONDS:secs);
-  log('waiting '+s+'s');
-  await sleep(s*1000,r);
-}
-
-function loopCount(it){
-  const v=inputNumber(it,DEFAULT_LOOPS);
-  const n=Math.round(v==null?DEFAULT_LOOPS:v);
-  return n>0?n:0;      /* a count of zero means the body never runs */
-}
 /* ---- motor state. Power and direction are remembered but never assumed:
    until a program sets both, Motor On For does nothing. ---- */
 const motorState={power:null,dir:null};
-const DEFAULT_SECONDS=3;   /* until On For carries a value (Stage 10) */
 const DEFAULT_LEVEL=10;    /* likewise for Motor Power */
 
 /* Level 1-10 maps onto 35-100%. The motor stalls below roughly a third power —
@@ -606,18 +346,6 @@ const POWER_FLOOR=35;
 const levelToPower=l => l<=0 ? 0
   : Math.round(POWER_FLOOR+(Math.min(l,10)-1)*((100-POWER_FLOOR)/9));
 
-/* Random takes its range from whatever it is plugged into */
-const RAND_RANGE={MotorPowerBlock:[1,10],LightBlock:[0,10],MotorOnForBlock:[1,10],
-  WaitForBlock:[1,10],RepeatBlock:[1,10],PlaySoundBlock:[1,10],DisplayBackgroundBlock:[1,10],
-  DisplayBlock:[0,10],AddtoDisplayBlock:[1,10],SubtractfromDisplayBlock:[1,10],
-  MultiplybyDisplayBlock:[1,10],DividebyDisplayBlock:[1,10]};
-function randomFor(it){
-  const parent=it.t==='r'?'RepeatBlock':it.key;
-  const r=RAND_RANGE[parent]||[1,10];
-  const n=r[0]+Math.floor(Math.random()*(r[1]-r[0]+1));
-  log('random '+n+' (from '+r[0]+'–'+r[1]+')');
-  return n;
-}
 /* ---- display area ---- */
 const BGB=WEDO_DATA.bgbank;
 const BG_COUNT=BGB.count, BG_THUMBS=BGB.thumbs, BG_FULL=BGB.full||{};
@@ -722,38 +450,8 @@ function applyMath(op,it){
   openDisplay(); paintDisplay();
 }
 
-function inputNumber(it,fallback){
-  const key=it.input;
-  if(!key) return null;
-  /* the distance sensor reads as a live number wherever a number is wanted */
-  if(key==='DistanceSensorInput')
-    return sensors.distance.value==null?null:sensors.distance.value;
-  if(key==='RandomInput')  return randomFor(it);
-  if(key==='DisplayInput') return displayNumber();
-  const v=parseFloat(it.inputValue);
-  if(Number.isFinite(v)) return v;
-  return fallback==null?null:fallback;
-}
+/* inputNumber/writeOut/sendOut moved to js/blocks/core.js. */
 
-/* Write mode is chosen once per hub. Without-response matters for the motors:
-   an acknowledged write makes the second port wait a round trip for the first,
-   which is long enough to see two motors start out of step. */
-function writeOut(c,data,h){
-  if(!h.writeMode){
-    h.writeMode = (c.properties&&c.properties.writeWithoutResponse&&c.writeValueWithoutResponse)
-                    ? 'nr' : (c.writeValueWithResponse ? 'wr' : 'legacy');
-    log('output write mode: '+h.writeMode);
-  }
-  if(h.writeMode==='nr') return c.writeValueWithoutResponse(data);
-  if(h.writeMode==='wr') return c.writeValueWithResponse(data);
-  return c.writeValue(data);
-}
-async function sendOut(bytes){
-  const h=connectedHub();
-  if(!h||!h.out){ log('no hub connected — command skipped'); return false; }
-  try{ await writeOut(h.out,new Uint8Array(bytes),h); return true; }
-  catch(e){ log('write failed: '+e.message); return false; }
-}
 /* -100..100; negative is encoded as 256+value. Both ports are addressed so any
    attached motor responds, and both packets are dispatched before either is
    awaited so the motors start and stop together. */
@@ -786,132 +484,11 @@ async function ledSet(idx){
   return sendOut([0x06,0x04,0x01,i]);
 }
 
-async function execBlock(it,r){
-  switch(it.key){
-    case 'MotorPowerBlock':{
-      const lvl=inputNumber(it,DEFAULT_LEVEL);
-      if(lvl==null) log('Motor Power: no input attached — power left unset');
-      else { motorState.power=levelToPower(lvl); log('power set to '+motorState.power+'%'); }
-      await sleep(STEP,r); break;
-    }
-    case 'MotorThisWayBlock':
-      motorState.dir=-1; log('direction set: this way');  await sleep(STEP,r); break;
-    case 'MotorThatWayBlock':
-      motorState.dir=1;  log('direction set: that way');  await sleep(STEP,r); break;
-    case 'MotorOffBlock':
-      await motorRun(0); await sleep(STEP,r); break;
-    case 'WaitForBlock':{
-      if(!it.input){ log('Wait For skipped — no input attached'); await sleep(STEP,r); break; }
-      await waitForInput(it,r);
-      break;
-    }
-    case 'PlaySoundBlock':{
-      const n=inputNumber(it,1);
-      if(n==null){ log('Play Sound skipped — no input attached'); await sleep(STEP,r); break; }
-      const secs=await playSound(n);
-      if(secs>0){
-        /* hold the program until the sound finishes, and cut it off if stopped */
-        try{ await sleep(secs*1000,r); }
-        finally{ if(r.stop) stopSound(); }
-      }else await sleep(STEP,r);
-      break;
-    }
-    case 'DisplayBlock':{
-      if(!it.input){ log('Display skipped — no input attached'); await sleep(STEP,r); break; }
-      displayContent = it.input==='TextInput'
-        ? String(it.inputValue==null?'':it.inputValue)
-        : (inputNumber(it,0)??0);
-      log('display shows "'+displayContent+'"');
-      openDisplay(); paintDisplay(); await sleep(STEP,r); break;
-    }
-    case 'AddtoDisplayBlock':      applyMath('+',it); await sleep(STEP,r); break;
-    case 'SubtractfromDisplayBlock': applyMath('-',it); await sleep(STEP,r); break;
-    case 'MultiplybyDisplayBlock': applyMath('*',it); await sleep(STEP,r); break;
-    case 'DividebyDisplayBlock':   applyMath('/',it); await sleep(STEP,r); break;
-    case 'DisplayClosedBlock':
-      displaySize='closed'; log('display closed'); paintDisplay(); await sleep(STEP,r); break;
-    case 'DisplayMediumsizeBlock':
-      displaySize='medium'; log('display medium'); paintDisplay(); await sleep(STEP,r); break;
-    case 'DisplayFullsizeBlock':
-      displaySize='full'; log('display full size'); paintDisplay(); await sleep(STEP,r); break;
-    case 'DisplayBackgroundBlock':{
-      const n=inputNumber(it,1);
-      if(n==null) log('Display Background skipped — no input attached');
-      else{
-        displayBg=Math.max(0,Math.min(BG_COUNT,Math.round(n)));
-        log('background '+displayBg+(bgUrl(displayBg)||displayBg===0?'':' — image not loaded yet'));
-        openDisplay(); paintDisplay();
-      }
-      await sleep(STEP,r); break;
-    }
-    case 'SendMessageBlock':{
-      if(!it.input){ log('Send Message skipped — no input attached'); await sleep(STEP,r); break; }
-      const msg = it.input==='TextInput' ? String(it.inputValue==null?'':it.inputValue)
-                                         : String(inputNumber(it,0)??'');
-      broadcast(msg);
-      await sleep(STEP,r); break;
-    }
-    case 'LightBlock':{
-      const c=inputNumber(it,DEFAULT_COLOUR);
-      if(c==null) log('Light skipped — no input attached');
-      else await ledSet(c);
-      await sleep(STEP,r); break;
-    }
-    case 'MotorOnForBlock':{
-      if(motorState.power==null||motorState.dir==null){
-        log('Motor On For skipped — '+
-            (motorState.power==null?'no power set':'')+
-            (motorState.power==null&&motorState.dir==null?' and ':'')+
-            (motorState.dir==null?'no direction set':''));
-        await sleep(STEP,r); break;
-      }
-      const secs=inputNumber(it,DEFAULT_SECONDS)??DEFAULT_SECONDS;
-      await motorRun(motorState.power*motorState.dir);
-      /* the stop is in a finally so the motor cannot be left spinning by an
-         error, a stop press, or the program being edited mid-run */
-      try{ await sleep(secs*1000,r); }
-      finally{ await motorRun(0); }
-      break;
-    }
-    default: await sleep(STEP,r);
-  }
-}
-
-async function runBody(it,r){
-  if(it.children.length===0) await sleep(STEP,r);   /* the arch itself never lights up */
-  else await execSeq(it.children,r);
-}
-async function execRepeat(it,r){
-  const key=it.input;
-  if(!key){                                    /* no count: forever */
-    while(!r.stop) await runBody(it,r);
-    return;
-  }
-  if(STATE_KEYS.indexOf(key)>=0||EDGE_KEYS.indexOf(key)>=0){
-    if(key==='SoundSensorInput'){ micForSensor=true; await ensureMic(); }
-    if(!sensorAttached(key))
-      log('Repeat until '+prettyKey(key)+': no '+(KEY_SENSOR[key]||'sound')+' sensor available');
-    const snap=snapshotEvents();
-    log('repeating until '+prettyKey(key));
-    while(!r.stop&&!metSince(key,snap)) await runBody(it,r);
-    return;
-  }
-  const n=loopCount(it);
-  log('repeating '+n+'x');
-  for(let i=0;i<n&&!r.stop;i++) await runBody(it,r);
-}
-
-async function execSeq(items,r){
-  for(const it of items){
-    if(r.stop) return;
-    if(it.t==='r'){
-      await execRepeat(it,r);
-    }else if(it.t==='b'){
-      mark(it,true);
-      try{ await execBlock(it,r); } finally { mark(it,false); }
-    }
-  }
-}
+/* execBlock/runBody/execRepeat/execSeq moved to js/blocks/core.js. Note: the
+   per-block behaviour that used to live in execBlock's switch (motor state,
+   display, light, wait-for dispatch) is NOT preserved here — core.js's new
+   execBlock is a dispatcher that calls into per-device namespaces (Motor.*,
+   Display.*, RgbLight.*) which Tasks 4-8 create with their own logic. */
 /* messages match exactly on case, ignoring spaces around the edges */
 const sameMsg=(a,b)=>String(a==null?'':a).trim()===String(b==null?'':b).trim();
 function broadcast(msg){
@@ -942,42 +519,8 @@ addEventListener('keydown',ev=>{
   if(k.length===1&&/[A-Za-z0-9]/.test(k)) triggerKey(k);   /* case-sensitive, like messages */
 });
 
-async function runStack(stack){
-  if(runners.has(stack.id)) return;      /* already running — the press is ignored */
-  const r={stop:false,cancels:new Set()};
-  runners.set(stack.id,r); updateStop();
-  try{
-    const head=stack.items[0];
-    if(head&&head.t==='b'){ mark(head,true); await sleep(Math.round(STEP*0.6),r); mark(head,false); }
-    await execSeq(stack.items.slice(1),r);
-  }finally{
-    runners.delete(stack.id);
-    clearMarks(stack.items);
-    updateStop();
-    if(runners.size===0) syncSensorMic();
-  }
-}
-function stopStack(stack){
-  const r=runners.get(stack.id); if(!r) return;
-  r.stop=true; r.cancels.forEach(f=>f()); r.cancels.clear();
-}
-function stopAll(){ stacks.slice().forEach(stopStack); }
-
-/* Chrome throttles timers in a backgrounded tab, so a running On For could
-   overshoot its duration by a long way. Halt everything instead. */
-function haltEverything(reason){
-  if(runners.size===0) return;
-  log('halted — '+reason);
-  stopAll(); stopSound();
-  motorRun(0);            /* best effort; the On For finally also stops it */
-}
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden) haltEverything('app left the foreground');
-});
-addEventListener('pagehide',()=>haltEverything('page closed'));
-function updateStop(){
-  document.getElementById('stop').classList.toggle('active',runners.size>0);
-}
+/* runStack/stopStack/stopAll/haltEverything/updateStop moved to
+   js/blocks/core.js. */
 
 let anchors=[], ejectAnim=null;
 
@@ -1036,9 +579,8 @@ function render(){
 }
 
 /* ---- palette ---- */
-/* each tab is tinted like the blocks it holds */
-const TAB_COLOUR={'Flow':'#c69500','Motor':'#2f8a33','Output':'#c02a2e',
-                  'Sensor Input':'#d4740c','Other Input':'#2379a8'};
+/* each tab is tinted like the blocks it holds; TAB_COLOUR is now in
+   js/blocks/core.js since registerCustomBlock() also needs it */
 let activeTab=0;
 function drawTray(){
   const tabs=document.getElementById('traytabs'); tabs.innerHTML='';
