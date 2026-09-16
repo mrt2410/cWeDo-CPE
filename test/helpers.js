@@ -9,7 +9,8 @@ const HTML_PATH = path.join(ROOT, "WeDo CPE v1.0.html");
 // scripts are stripped from the parsed HTML and evaluated manually in order —
 // equivalent to what a browser does with these classic (non-module) scripts,
 // without depending on jsdom's resource loader.
-const SCRIPTS = ["data/bundle.js", "data/soundbank.js", "data/bgbank.js", "js/app.js"];
+const SCRIPTS = ["data/bundle.js", "data/soundbank.js", "data/bgbank.js",
+  "js/blocks/core.js", "js/app.js"];
 
 /**
  * Loads the real app (real HTML + real css/js/data files) into a jsdom window,
@@ -33,10 +34,17 @@ async function loadApp({ seed } = {}) {
     },
   });
 
-  for (const rel of SCRIPTS) {
-    const code = fs.readFileSync(path.join(ROOT, rel), "utf8");
-    dom.window.eval(code);
-  }
+  // Concatenated into a single eval() call rather than one eval() per file:
+  // separate indirect-eval() calls each get their own throwaway lexical
+  // environment, so a top-level `const`/`let` in one call is invisible to a
+  // later call (verified: `eval("const X=1")` then `eval("X")` in a second
+  // call throws "X is not defined") — unlike real <script> tags, which all
+  // share one global lexical environment. Concatenating restores that
+  // script-tag-like sharing so cross-file top-level const/let (e.g.
+  // js/blocks/core.js's `ORDER`, read by js/app.js's drawTray()) resolve
+  // correctly, matching real-browser behaviour.
+  const combined = SCRIPTS.map(rel => fs.readFileSync(path.join(ROOT, rel), "utf8")).join("\n;\n");
+  dom.window.eval(combined);
 
   // let the app's own load-time async work (e.g. sound restore) settle
   await new Promise((r) => setTimeout(r, 300));

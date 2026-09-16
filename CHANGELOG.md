@@ -1,5 +1,41 @@
 # Changelog
 
+## 2026-09-16 (8)
+
+- Began splitting the monolithic `js/app.js` (1966 lines) into per-device files under
+  `js/blocks/` and `js/telemetry/`, plus five new hub I/O features — see
+  [docs/superpowers/plans/2026-09-16-wedo2-io-blocks.md](docs/superpowers/plans/2026-09-16-wedo2-io-blocks.md)
+  for the full 16-task plan. First step: extracted the shared block classification
+  data (`STARTS`/`SOCKETED`/`INPUTS`/`canAccept`/etc.), the shared sensor port-dispatch
+  bus (device-type detection on attach, port configuration, the tilt/distance event
+  bus), and the execution engine (`execBlock`'s dispatcher, `runStack`/`execSeq`/
+  `execRepeat`, the wait/loop/random helpers) out of `js/app.js` and into a new
+  `js/blocks/core.js`, loaded via a new `<script>` tag between the `data/*.js` bundles
+  and `js/app.js`. This is an intentionally incomplete, interim state: `core.js`'s new
+  `execBlock` dispatcher and sensor bus call into `Tilt`/`Motion`/`Motor`/`RgbLight`/
+  `Display`/`broadcast` namespaces that don't exist until the next several tasks create
+  them, so a recurring (but harmless — no current test exercises sensor features)
+  `ReferenceError: Tilt is not defined` shows up in the console/logs from `core.js`'s
+  250ms port-status poll until then.
+- Fixed a latent bug in `test/helpers.js` surfaced by the split above: `loadApp()`
+  evaluated each script file with its own `dom.window.eval()` call, but separate
+  indirect-`eval()` calls each get their own throwaway lexical environment, so a
+  top-level `const`/`let` declared in one file was invisible to a later one — unlike
+  real `<script>` tags, which all share one global lexical environment (verified with a
+  minimal repro: `vm.runInContext` against a persistent context preserves top-level
+  bindings across calls the way script tags do, indirect `eval()` does not). This broke
+  every test the moment `js/app.js` needed something from the new `js/blocks/core.js`
+  (e.g. `ORDER`, read by the always-run `drawTray()` call at boot) — a different,
+  unrelated failure that was easy to miss under the also-present (and expected)
+  Tilt/Motion noise from the same run. Fixed by concatenating all `SCRIPTS` sources
+  into a single `eval()` call instead of one per file, restoring script-tag-like
+  sharing. This is a permanent fix to the test harness, not specific to this one step —
+  every later stage of the block-file split depends on it working correctly.
+- Note for anyone running tests during this interim state: a bare `npm test`/
+  `node --test` will hang and never exit on its own, because the recurring interval
+  error above keeps Node's event loop alive — wrap with `timeout` (e.g.
+  `timeout 20 node --test`) until the `Tilt`/`Motion`/etc. namespaces land.
+
 ## 2026-09-16 (7)
 
 - Documented a full inventory of this app's Input/Output blocks (motor, hub LED,
