@@ -140,9 +140,7 @@ function buildSeq(items,x,y,s,ctx,stack,inLoop){
 /* Tilt/Motion sensor logic (port dispatch, event bus, execution engine) moved
    to js/blocks/core.js. The per-device tilt/distance state and condition
    logic itself moves to js/blocks/tilt-sensor.js / motion-sensor.js in
-   Tasks 2/3 — until then STATE_KEYS stays here since core.js's isCondition/
-   metSince/waitForInput/execRepeat all read it. */
-const STATE_KEYS=['TiltUp','TiltDown','TiltThisWay','TiltThatWay','TiltSensorInput'];
+   Tasks 2/3. STATE_KEYS is defined in tilt-sensor.js. */
 
 /* ================= Stage 11: sound ================= */
 let audioCtx=null, micOn=false, micStream=null, micAnalyser=null, micTimer=null, micLevel=0;
