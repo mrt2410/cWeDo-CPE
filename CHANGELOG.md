@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-16 (12)
+
+- Task 5 of the block-file split: extracted RGB Light state, constants, and control logic
+  into a new `js/blocks/rgb-light.js`, loaded after `js/blocks/motor.js` and before
+  `js/app.js`. Removed `LED_NAMES`, `LED_IDLE`, `DEFAULT_COLOUR`, and `ledSet` from
+  `js/app.js`, keeping `LED_HEX` (which is colour-dialog rendering data per the spec's
+  boundary rule). The `RgbLight` namespace (with `execLight(it, r)` method) is now fully
+  defined and working alongside `Motor` and `Tilt`. The 31 tests all pass cleanly — RGB Light
+  blocks are now available for the execution engine to call, and the colour-picker dialog
+  continues to work via the global `ledSet()` function and `LED_NAMES` array.
+
 ## 2026-09-16 (11)
 
 - Task 4 of the block-file split: extracted Motor state, power constants, and control logic
