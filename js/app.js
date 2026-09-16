@@ -1,0 +1,1787 @@
+const B=WEDO_DATA.bundle;
+const S=B.sprites, ORDER=B.order;
+
+/* ---- geometry measured from the original app ---- */
+const BH=179,CAV_L=61,ARCH_TOP=61,ARCH_H=240,
+      RP_L=105,RP_M0=105,RP_M1=205,RP_W=453,OVER=18,SNAP=75;
+/* Repeat has two right caps. No input = infinite: rounded cap, nothing may follow.
+   With an input = finite: the same cap cut off at a vertical edge, blocks may follow. */
+const RP_CUT_FIN=426,
+      CAV_R_INF=211, CAV_R_FIN=184,
+      SOCK_INF=119.5, SOCK_FIN=92.5;
+
+const STARTS=new Set(['StartBlock','StartOnKeyPressBlock','StartOnMessageBlock']);
+const SOCKETED=new Set(['StartOnMessageBlock','SendMessageBlock','WaitForBlock','MotorPowerBlock',
+  'MotorOnForBlock','LightBlock','PlaySoundBlock','DisplayBackgroundBlock','DisplayBlock',
+  'AddtoDisplayBlock','SubtractfromDisplayBlock','MultiplybyDisplayBlock','DividebyDisplayBlock']);
+const INPUTS=new Set(['AnyDistanceChange','DistanceChangeCloser','DistanceChangeFurther','DistanceSensorInput',
+  'AnyTilt','TiltUp','TiltDown','TiltThisWay','TiltThatWay','TiltSensorInput',
+  'SoundSensorInput','NumberInput','TextInput','DisplayInput','RandomInput']);
+
+/* Which inputs a socket will take. Without this a tilt sensor could be dropped
+   into Motor Power, where it has no numeric meaning and silently fell back to
+   full power. */
+const NUM_INPUTS=['NumberInput','RandomInput','DisplayInput','DistanceSensorInput'];
+const isCondition=k => STATE_KEYS.indexOf(k)>=0||EDGE_KEYS.indexOf(k)>=0;
+const isNumeric  =k => NUM_INPUTS.indexOf(k)>=0;
+function canAccept(parentKey,inputKey){
+  if(parentKey==='RepeatBlock'||parentKey==='WaitForBlock')      /* a time or a condition */
+    return isNumeric(inputKey)||isCondition(inputKey);
+  if(parentKey==='StartOnMessageBlock'||parentKey==='SendMessageBlock'
+     ||parentKey==='DisplayBlock')                               /* text or a number */
+    return isNumeric(inputKey)||inputKey==='TextInput';
+  return isNumeric(inputKey);                                    /* everything else: numbers */
+}
+
+const scale=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cu'))/182;
+const pscale=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pu'))/182;
+
+/* ---- model ---- */
+let stacks=[];            /* {id,x,y,items:[]} */
+let uid=1;
+/* blocks that arrive from the tray with an input already seated */
+const N=v=>({key:'NumberInput',value:v}), T=v=>({key:'TextInput',value:v});
+const DEFAULT_INPUT={
+  MotorPowerBlock:N('5'), MotorOnForBlock:N('3'), WaitForBlock:N('3'), LightBlock:N('1'),
+  PlaySoundBlock:N('1'), DisplayBackgroundBlock:N('1'), DisplayBlock:N('1'),
+  AddtoDisplayBlock:N('1'), SubtractfromDisplayBlock:N('1'),
+  MultiplybyDisplayBlock:N('1'), DividebyDisplayBlock:N('1'),
+  StartOnMessageBlock:T('abc'), SendMessageBlock:T('abc')
+};
+function mkItem(k){
+  if(k==='RepeatBlock') return {t:'r',input:null,children:[]};
+  if(INPUTS.has(k))     return {t:'i',key:k,value:defaultValueFor(k)};
+  const d=DEFAULT_INPUT[k];
+  const it={t:'b',key:k,input:d?d.key:null,inputValue:d?d.value:undefined};
+  if(k==='StartOnKeyPressBlock') it.letter='A';
+  return it;
+}
+
+/* ---- element factories ---- */
+const FIELD={x:12,y:33,w:158,h:60};   /* white value field inside an input sprite */
+const KEYCAP={x:86,y:44,w:58,h:50};   /* the face of the key, which has an A printed on it */
+const EDITABLE=['NumberInput','TextInput'];
+
+function blockEl(key,s,label){
+  const m=S[key],d=document.createElement('div');d.className='wrap blk';
+  d.style.width=(m.w*s)+'px';d.style.height=(m.h*s)+'px';
+  const i=document.createElement('img');i.src=m.d;
+  i.style.width=(m.cw*s)+'px';i.style.height=(m.ch*s)+'px';
+  i.style.left=(-m.x0*s)+'px';i.style.top=(-m.y0*s)+'px';
+  d.appendChild(i);
+  if(label!=null&&key==='StartOnKeyPressBlock'){
+    const t=document.createElement('div'); t.className='kletter';
+    t.style.left=(KEYCAP.x*s)+'px'; t.style.top=(KEYCAP.y*s)+'px';
+    t.style.width=(KEYCAP.w*s)+'px'; t.style.height=(KEYCAP.h*s)+'px';
+    t.style.fontSize=(Math.round(KEYCAP.h*0.74)*s)+'px';
+    t.textContent=String(label);
+    d.appendChild(t);
+  }
+  if(label!=null&&EDITABLE.indexOf(key)>=0){
+    const t=document.createElement('div');t.className='ival';
+    t.style.left=(FIELD.x*s)+'px'; t.style.top=(FIELD.y*s)+'px';
+    t.style.width=(FIELD.w*s)+'px'; t.style.height=(FIELD.h*s)+'px';
+    t.style.fontSize=(Math.round(FIELD.h*0.62)*s)+'px';
+    t.textContent=String(label);
+    d.appendChild(t);
+  }
+  return d;
+}
+
+/* an input lives either in a socket (on its parent) or loose on the canvas */
+const inputKeyOf=h => h.t==='i'?h.key:h.input;
+const inputValOf=h => h.t==='i'?h.value:h.inputValue;
+function setInputVal(h,v){ if(h.t==='i') h.value=v; else h.inputValue=v; }
+const defaultValueFor=k => k==='NumberInput'?'1':(k==='TextInput'?'':undefined);
+function archEl(contentW,s,finite){
+  const m=S.RepeatBlock,capEnd=finite?RP_CUT_FIN:RP_W,capW=capEnd-RP_M1,
+        total=contentW+(CAV_L+(finite?CAV_R_FIN:CAV_R_INF))*s,
+        midW=total-(RP_L+capW)*s;
+  const box=document.createElement('div');box.className='wrap blk';
+  box.style.width=total+'px';box.style.height=(ARCH_H*s)+'px';
+  const sl=(x,w,dw,off)=>{const c=document.createElement('div');
+    c.style.cssText='position:absolute;top:0;overflow:hidden;height:'+(ARCH_H*s)+'px;left:'+x+'px;width:'+w+'px';
+    const i=document.createElement('img');i.src=m.d;
+    i.style.cssText='position:absolute;top:0;height:'+(ARCH_H*s)+'px;width:'+dw+'px;left:'+off+'px';
+    c.appendChild(i);box.appendChild(c);};
+  sl(0,RP_L*s,RP_W*s,0);
+  const k=midW/((RP_M1-RP_M0)*s);
+  sl(RP_L*s,midW,RP_W*s*k,-RP_M0*s*k);
+  sl(RP_L*s+midW,capW*s,RP_W*s,-RP_M1*s);
+  return box;
+}
+
+/* ---- layout: renders a sequence, collects snap anchors ---- */
+function buildSeq(items,x,y,s,ctx,stack,inLoop){
+  /* an input sitting loose on the canvas is not a link in a chain —
+     code blocks must not be able to snap onto it */
+  let w=0,sealed=items.some(it=>it.t==='i');
+  const at=(el,px,py,ref)=>{el.style.left=px+'px';el.style.top=py+'px';
+    if(ref) el.__ref=ref;
+    if(ref&&ref.type==='item'&&ctx.map) ctx.map.set(ref.arr[ref.index],el);
+    ctx.el.appendChild(el);};
+  items.forEach((it,idx)=>{
+    if(ctx.anchors&&!sealed) ctx.anchors.push({kind:'seq',arr:items,index:idx,x:x+w,y:y,stack,inLoop:!!inLoop});
+    if(it.t==='r'){
+      const probe={el:document.createDocumentFragment(),anchors:null};
+      const inner=buildSeq(it.children,0,0,s,probe,stack,true);
+      const childW=Math.max(inner,S.MotorOffBlock.w*s);
+      const fin=!!it.input;
+      const aw=childW+(CAV_L+(fin?CAV_R_FIN:CAV_R_INF))*s;
+      at(archEl(childW,s,fin),x+w,y-ARCH_TOP*s,{type:'item',arr:items,index:idx,stack});
+      buildSeq(it.children,x+w+CAV_L*s,y,s,ctx,stack,true);
+      const sx=x+w+aw-(fin?SOCK_FIN:SOCK_INF)*s;
+      if(ctx.anchors) ctx.anchors.push({kind:'socket',item:it,x:sx,y:y+BH*s});
+      if(it.input) at(blockEl(it.input,s,it.inputValue),sx-S[it.input].w*s/2,y+(BH-OVER)*s,
+                      {type:'input',item:it,arr:items,index:idx,stack});
+      if(!fin) sealed=true;
+      w+=aw;
+    } else if(it.t==='i'){
+      at(blockEl(it.key,s,it.value),x+w,y,{type:'item',arr:items,index:idx,stack});
+      w+=S[it.key].w*s;
+    } else {
+      const m=S[it.key];
+      at(blockEl(it.key,s,it.letter),x+w,y+(BH-m.h)*s,{type:'item',arr:items,index:idx,stack});
+      if(SOCKETED.has(it.key)){
+        const sx=x+w+m.w*s/2;
+        if(ctx.anchors) ctx.anchors.push({kind:'socket',item:it,x:sx,y:y+BH*s});
+        if(it.input) at(blockEl(it.input,s,it.inputValue),sx-S[it.input].w*s/2,y+(BH-OVER)*s,
+                        {type:'input',item:it,stack});
+      }
+      w+=m.w*s;
+    }
+  });
+  if(ctx.anchors&&!sealed) ctx.anchors.push({kind:'seq',arr:items,index:items.length,x:x+w,y:y,stack,inLoop:!!inLoop});
+  return w;
+}
+
+/* ================= Stage 7: sensors ================= */
+const DEV_MOTOR=1, DEV_TILT=34, DEV_DISTANCE=35;
+const DEV_NAMES={1:'motor',34:'tilt sensor',35:'distance sensor'};
+/* direction codes the hub reports for the tilt sensor */
+/* One table per tilt code: its name in the readout and the block it satisfies.
+   Left and right were the other way round on the real sensor. */
+const TILT={NONE:0, UP:3, LEFT:5, RIGHT:7, DOWN:9};
+const TILT_INFO={};
+TILT_INFO[TILT.NONE] ={name:'no tilt',key:'TiltSensorInput'};
+TILT_INFO[TILT.UP]   ={name:'up',     key:'TiltUp'};
+TILT_INFO[TILT.LEFT] ={name:'left',   key:'TiltThisWay'};
+TILT_INFO[TILT.RIGHT]={name:'right',  key:'TiltThatWay'};
+TILT_INFO[TILT.DOWN] ={name:'down',   key:'TiltDown'};
+
+const DIST_EPS=0.2;     /* how much movement counts as a distance change */
+const EDGE_MS=400;      /* how long a change stays lit in the readout */
+
+/* Tilt directions are states: true for as long as the sensor is held there.
+   Changes are moments: they happen between two readings and are gone. Those are
+   counted, so a wait can tell "it happened again" from "it is still true". */
+const STATE_KEYS=['TiltUp','TiltDown','TiltThisWay','TiltThatWay','TiltSensorInput'];
+const EDGE_KEYS =['AnyTilt','AnyDistanceChange','DistanceChangeCloser','DistanceChangeFurther',
+                  'SoundSensorInput'];
+const KEY_SENSOR={TiltUp:'tilt',TiltDown:'tilt',TiltThisWay:'tilt',TiltThatWay:'tilt',
+  TiltSensorInput:'tilt',AnyTilt:'tilt',AnyDistanceChange:'distance',
+  DistanceChangeCloser:'distance',DistanceChangeFurther:'distance',DistanceSensorInput:'distance'};
+
+const EVENT_KEYS=['AnyTilt','AnyDistanceChange','DistanceChangeCloser','DistanceChangeFurther',
+                  'TiltUp','TiltDown','TiltThisWay','TiltThatWay','TiltSensorInput',
+                  'SoundSensorInput'];
+const newEvents=()=>{const o={};EVENT_KEYS.forEach(k=>o[k]={n:0,at:0});return o;};
+
+
+const sensors={
+  tilt:{port:null,dir:TILT.NONE,raw:null},
+  distance:{port:null,value:null,prev:null,raw:null},
+  motors:[], events:newEvents()
+};
+function bump(key){ const e=sensors.events[key]; e.n++; e.at=Date.now(); }
+function clearSensors(){
+  sensors.tilt={port:null,dir:TILT.NONE,raw:null};
+  sensors.distance={port:null,value:null,prev:null,raw:null};
+  sensors.motors=[]; sensors.events=newEvents();
+  renderPorts();
+}
+
+/* tell a port which mode to report in, and to notify us as it changes */
+const inputFormat=(port,type,mode,unit)=>
+  [0x01,0x02,port,type,mode,0x01,0x00,0x00,0x00,unit,0x01];
+
+async function configurePort(port,type){
+  const h=connectedHub();
+  if(!h||!h.inp) return;
+  const bytes = type===DEV_TILT     ? inputFormat(port,DEV_TILT,1,2)      /* direction, SI */
+              : type===DEV_DISTANCE ? inputFormat(port,DEV_DISTANCE,0,2)  /* distance, SI */
+              : null;
+  if(!bytes) return;
+  const data=new Uint8Array(bytes);
+  try{
+    if(h.inp.writeValueWithResponse) await h.inp.writeValueWithResponse(data);
+    else await h.inp.writeValue(data);
+    log('port '+port+' configured as '+(DEV_NAMES[type]||type));
+  }catch(e){ log('port '+port+' setup failed: '+e.message); }
+}
+
+function onPortEvent(ev){
+  const v=new Uint8Array(ev.target.value.buffer);
+  log('port event ['+[...v].join(',')+']');
+  const port=v[0], attached=v[1];
+  if(!attached){
+    if(sensors.tilt.port===port) sensors.tilt={port:null,dir:TILT.NONE,raw:null};
+    if(sensors.distance.port===port) sensors.distance={port:null,value:null,prev:null,raw:null};
+    sensors.motors=sensors.motors.filter(p=>p!==port);
+    log('port '+port+' emptied'); renderPorts(); return;
+  }
+  /* write-ups disagree on which byte carries the device type, so look for a
+     value we recognise instead of trusting one offset */
+  let type=null;
+  for(const i of [3,2,4]) if([DEV_MOTOR,DEV_TILT,DEV_DISTANCE].indexOf(v[i])>=0){type=v[i];break;}
+  if(type===null){ log('port '+port+': device not recognised'); renderPorts(); return; }
+  if(type===DEV_TILT){ sensors.tilt.port=port; configurePort(port,DEV_TILT); }
+  else if(type===DEV_DISTANCE){ sensors.distance.port=port; configurePort(port,DEV_DISTANCE); }
+  else if(sensors.motors.indexOf(port)<0) sensors.motors.push(port);
+  log('port '+port+' holds a '+(DEV_NAMES[type]||type));
+  renderPorts();
+}
+
+function onSensorValue(ev){
+  const buf=ev.target.value.buffer;
+  const v=new Uint8Array(buf), dv=new DataView(buf);
+  if(v.length<6) return;
+  const val=dv.getFloat32(2,true);
+  let port=v[1];                                   /* byte 1 is the port... */
+  if(port!==sensors.tilt.port&&port!==sensors.distance.port) port=v[0];   /* ...usually */
+  const raw='['+[...v].join(',')+']';
+  if(port===sensors.tilt.port){
+    const was=sensors.tilt.dir, now=Math.round(val);
+    sensors.tilt.dir=now; sensors.tilt.raw=raw;
+    /* no direction mode is free while we are reading direction, so a shake is
+       inferred from flipping straight between two tilts */
+    if(was!==now){
+      const k=(TILT_INFO[now]||{}).key; if(k) bump(k);
+      if(was!==TILT.NONE&&now!==TILT.NONE) bump('AnyTilt');
+    }
+  }else if(port===sensors.distance.port){
+    const prev=sensors.distance.value, cur=Math.max(0,Math.min(10,val));
+    sensors.distance.prev=prev; sensors.distance.value=cur; sensors.distance.raw=raw;
+    if(prev!=null){
+      const d=cur-prev;
+      if(Math.abs(d)>DIST_EPS) bump('AnyDistanceChange');
+      if(d<-DIST_EPS) bump('DistanceChangeCloser');
+      if(d> DIST_EPS) bump('DistanceChangeFurther');
+    }
+  }
+  renderPorts();
+}
+
+function sensorCondition(key){
+  const t=sensors.tilt;
+  switch(key){
+    case 'TiltUp':          return t.dir===TILT.UP;
+    case 'TiltDown':        return t.dir===TILT.DOWN;
+    case 'TiltThisWay':     return t.dir===TILT.LEFT;
+    case 'TiltThatWay':     return t.dir===TILT.RIGHT;
+    case 'TiltSensorInput': return t.port!=null&&t.dir===TILT.NONE;
+  }
+  const e=sensors.events[key];
+  return e ? Date.now()-e.at<EDGE_MS : false;   /* recently happened */
+}
+/* A loop body can take seconds, so a condition may come and go while it runs.
+   Comparing counts against a snapshot catches that; a held tilt is also true
+   simply by still being held. */
+function snapshotEvents(){
+  const s={}; for(const k in sensors.events) s[k]=sensors.events[k].n; return s;
+}
+function metSince(key,snap){
+  const e=sensors.events[key];
+  if(e&&snap[key]!=null&&e.n>snap[key]) return true;
+  return STATE_KEYS.indexOf(key)>=0 ? sensorCondition(key) : false;
+}
+function sensorAttached(key){
+  if(key==='SoundSensorInput') return micOn;     /* the tablet's mic, not a hub port */
+  const which=KEY_SENSOR[key];
+  return !which || sensors[which].port!=null;
+}
+
+const COND_KEYS=['TiltUp','TiltDown','TiltThisWay','TiltThatWay','TiltSensorInput','AnyTilt',
+                 'AnyDistanceChange','DistanceChangeCloser','DistanceChangeFurther'];
+function renderPorts(){
+  const el=document.getElementById('ports'); if(!el) return;
+  const t=sensors.tilt, d=sensors.distance;
+  el.innerHTML=
+    '<div class="prow"><b>Tilt</b> '+(t.port?'port '+t.port+' — code '+t.dir+
+        ' ('+((TILT_INFO[t.dir]||{}).name||'?')+')':'not attached')+
+        (t.raw?'<span class="raw">'+t.raw+'</span>':'')+'</div>'+
+    '<div class="prow"><b>Distance</b> '+(d.port?'port '+d.port+
+        (d.value!=null?' — '+d.value.toFixed(1):''):'not attached')+
+        (d.raw?'<span class="raw">'+d.raw+'</span>':'')+'</div>'+
+    '<div class="prow"><b>Motor</b> '+(sensors.motors.length?'port '+sensors.motors.join(', ')
+        :'not detected')+'</div>'+
+    '<div class="prow"><b>Microphone</b> '+(micOn?'on — level '+micLevel.toFixed(3):'off')+'</div>'+
+    '<div class="conds">'+COND_KEYS.map(k=>'<span class="'+(sensorCondition(k)?'on':'')+'">'+
+        k.replace(/([A-Z])/g,' $1').trim()+'</span>').join('')+'</div>';
+}
+setInterval(renderPorts,250);
+
+/* ================= Stage 11: sound ================= */
+let audioCtx=null, micOn=false, micStream=null, micAnalyser=null, micTimer=null, micLevel=0;
+const SB=WEDO_DATA.soundbank;
+const SOUND_NAMES=SB.names, SOUND_DATA=SB.clips;   /* base64 Opus, decoded on first use */
+const SOUND_BANK={};        /* index -> decoded AudioBuffer */
+const soundName=i => SOUND_NAMES[i-1]||('sound '+i);
+async function loadSound(i){
+  if(SOUND_BANK[i]) return SOUND_BANK[i];
+  const b64=SOUND_DATA[String(i)];
+  if(!b64) return null;
+  const raw=atob(b64), bytes=new Uint8Array(raw.length);
+  for(let k=0;k<raw.length;k++) bytes[k]=raw.charCodeAt(k);
+  try{ SOUND_BANK[i]=await ac().decodeAudioData(bytes.buffer); }
+  catch(e){ log('could not decode sound '+i+': '+e.message); return null; }
+  return SOUND_BANK[i];
+}
+let customSound=null;       /* your own recording, played as sound 0 */
+let mediaRec=null, recChunks=[], recState='idle';
+
+function ac(){
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+let currentSource=null;
+function playBuffer(buf){
+  const c=ac(), src=c.createBufferSource();
+  src.buffer=buf; src.connect(c.destination); src.start();
+  currentSource=src;
+  return buf.duration;
+}
+function stopSound(){
+  if(currentSource){ try{ currentSource.stop(); }catch(e){} currentSource=null; }
+}
+/* stand-in until the real LEGO samples are dropped in: a distinct note per number */
+const PLACEHOLDER_SECS=0.4;
+function playPlaceholder(i){
+  const c=ac(), t=c.currentTime;
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=['sine','triangle','square','sawtooth'][i%4];
+  o.frequency.setValueAtTime(196*Math.pow(2,((i-1)%12)/12),t);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.22,t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.38);
+  o.connect(g); g.connect(c.destination);
+  o.start(t); o.stop(t+PLACEHOLDER_SECS);
+  return PLACEHOLDER_SECS;
+}
+/* returns how long the sound runs for, so the caller can wait it out */
+async function playSound(n){
+  const i=Math.max(0,Math.round(n));
+  if(i===0){
+    if(!customSound){ log('sound 0: nothing recorded yet'); return 0; }
+    log('playing your recording'); return playBuffer(customSound);
+  }
+  const buf=await loadSound(i);
+  if(buf){ log('playing sound '+i+' — '+soundName(i)); return playBuffer(buf); }
+  log('sound '+i+' ('+soundName(i)+') not loaded — placeholder tone');
+  return playPlaceholder(i);
+}
+
+/* ---- microphone: needed for the sound sensor and for recording ---- */
+async function ensureMic(){
+  if(micOn) return true;
+  try{
+    micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const c=ac(), src=c.createMediaStreamSource(micStream);
+    micAnalyser=c.createAnalyser(); micAnalyser.fftSize=1024;
+    src.connect(micAnalyser);
+    const buf=new Float32Array(micAnalyser.fftSize);
+    let prev=null;
+    micTimer=setInterval(()=>{
+      micAnalyser.getFloatTimeDomainData(buf);
+      let sum=0; for(let i=0;i<buf.length;i++) sum+=buf[i]*buf[i];
+      micLevel=Math.sqrt(sum/buf.length);
+      if(prev!=null&&Math.abs(micLevel-prev)>SOUND_EPS) bump('SoundSensorInput');
+      prev=micLevel;
+    },60);
+    micOn=true; log('microphone on');
+    return true;
+  }catch(e){ log('microphone unavailable: '+e.message); return false; }
+}
+const SOUND_EPS=0.035;   /* how big a jump in loudness counts as a change */
+
+/* The microphone is held only while something needs it: a recording in
+   progress, or a running program using Sound Sensor Change. */
+let micForSensor=false;
+function releaseMic(){
+  if(micTimer){ clearInterval(micTimer); micTimer=null; }
+  if(micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
+  micAnalyser=null; micOn=false; micLevel=0;
+  log('microphone released');
+  renderPorts();
+}
+function maybeReleaseMic(){
+  if(micOn && !micForSensor && recState==='idle') releaseMic();
+}
+
+/* The microphone follows what is on the canvas: as soon as a Sound Sensor
+   Change block is placed it is requested, and once the last one is gone it is
+   released. Asking at build time beats asking halfway through a running program. */
+let micDenied=false;
+function hasSoundSensor(){
+  let found=false;
+  const scan=items=>{
+    for(let i=0;i<items.length&&!found;i++){
+      const it=items[i];
+      if(it.t==='i'&&it.key==='SoundSensorInput') found=true;
+      else if(it.input==='SoundSensorInput') found=true;
+      else if(it.children) scan(it.children);
+    }
+  };
+  for(let i=0;i<stacks.length&&!found;i++) scan(stacks[i].items);
+  /* a block being dragged has left the canvas model but is still in the user's
+     hand — without this, detaching one briefly looks like it was deleted */
+  if(!found&&drag&&drag.payload){
+    if(drag.payload.kind==='input') found=drag.payload.key==='SoundSensorInput';
+    else if(drag.payload.items) scan(drag.payload.items);
+  }
+  return found;
+}
+async function syncSensorMic(){
+  if(hasSoundSensor()){
+    micForSensor=true;
+    if(!micOn&&!micDenied&&!await ensureMic()) micDenied=true;
+  }else{
+    micForSensor=false;
+    maybeReleaseMic();
+  }
+}
+
+
+async function startRecording(){
+  micDenied=false;
+  if(!await ensureMic()) return;
+  recChunks=[];
+  mediaRec=new MediaRecorder(micStream);
+  mediaRec.ondataavailable=e=>{ if(e.data.size) recChunks.push(e.data); };
+  mediaRec.onstop=async ()=>{
+    try{
+      const blob=new Blob(recChunks,{type:mediaRec.mimeType||'audio/webm'});
+      customSound=await ac().decodeAudioData(await blob.arrayBuffer());
+      log('recorded '+customSound.duration.toFixed(1)+'s as sound 0');
+    }catch(e){ log('could not decode the recording: '+e.message); }
+    recState='idle'; paintSoundDialog();
+    maybeReleaseMic();
+  };
+  mediaRec.start(); recState='recording'; paintSoundDialog();
+  setTimeout(()=>{ if(recState==='recording') stopRecording(); },10000);   /* safety cap */
+}
+function stopRecording(){
+  if(mediaRec&&recState==='recording'){ recState='saving'; mediaRec.stop(); paintSoundDialog(); }
+}
+
+/* ================= Stage 4: execution engine ================= */
+const STEP=200;            /* how long an instantaneous block stays highlighted */
+const DEFAULT_LOOPS=3;     /* until number inputs carry a value (Stage 10) */
+const runners=new Map();   /* stack.id -> runner */
+const highlighted=new Set();
+let itemEl=new Map();
+
+function mark(it,on){
+  if(on) highlighted.add(it); else highlighted.delete(it);
+  const e=itemEl.get(it);
+  if(e) e.classList.toggle('exec',on);
+}
+function clearMarks(items){
+  items.forEach(it=>{mark(it,false); if(it.children) clearMarks(it.children);});
+}
+function sleep(ms,r){
+  return new Promise(res=>{
+    const t=setTimeout(res,ms);
+    r.cancels.add(()=>{clearTimeout(t);res();});
+  });
+}
+/* waits until test() passes, or until the program is stopped */
+function until(test,r,pollMs=30){
+  return new Promise(res=>{
+    if(r.stop||test()) return res();
+    const id=setInterval(()=>{ if(r.stop||test()){ clearInterval(id); res(); } },pollMs);
+    r.cancels.add(()=>{ clearInterval(id); res(); });
+  });
+}
+const prettyKey=k=>k.replace(/([A-Z])/g,' $1').trim().toLowerCase();
+
+/* Wait For, and later Repeat-until, both resolve an input the same way. */
+async function waitForInput(it,r){
+  const key=it.input;
+  if(key==='SoundSensorInput'){ micForSensor=true; await ensureMic(); }
+  if(EDGE_KEYS.indexOf(key)>=0){
+    if(!sensorAttached(key)) log('Wait For: no '+KEY_SENSOR[key]+' sensor attached — this will wait');
+    const start=sensors.events[key].n;
+    log('waiting for '+prettyKey(key));
+    await until(()=>sensors.events[key].n>start,r);   /* the next one, not the last one */
+    return;
+  }
+  if(STATE_KEYS.indexOf(key)>=0){
+    if(!sensorAttached(key)) log('Wait For: no '+KEY_SENSOR[key]+' sensor attached — this will wait');
+    log('waiting for '+prettyKey(key));
+    await until(()=>sensorCondition(key),r);          /* passes straight away if already true */
+    return;
+  }
+  const secs=inputNumber(it,DEFAULT_SECONDS);
+  const s=(secs==null?DEFAULT_SECONDS:secs);
+  log('waiting '+s+'s');
+  await sleep(s*1000,r);
+}
+
+function loopCount(it){
+  const v=inputNumber(it,DEFAULT_LOOPS);
+  const n=Math.round(v==null?DEFAULT_LOOPS:v);
+  return n>0?n:0;      /* a count of zero means the body never runs */
+}
+/* ---- motor state. Power and direction are remembered but never assumed:
+   until a program sets both, Motor On For does nothing. ---- */
+const motorState={power:null,dir:null};
+const DEFAULT_SECONDS=3;   /* until On For carries a value (Stage 10) */
+const DEFAULT_LEVEL=10;    /* likewise for Motor Power */
+
+/* Level 1-10 maps onto 35-100%. The motor stalls below roughly a third power —
+   measured on real hardware: 29% would not turn, 38% would. */
+const POWER_FLOOR=35;
+const levelToPower=l => l<=0 ? 0
+  : Math.round(POWER_FLOOR+(Math.min(l,10)-1)*((100-POWER_FLOOR)/9));
+
+/* Random takes its range from whatever it is plugged into */
+const RAND_RANGE={MotorPowerBlock:[1,10],LightBlock:[0,10],MotorOnForBlock:[1,10],
+  WaitForBlock:[1,10],RepeatBlock:[1,10],PlaySoundBlock:[1,10],DisplayBackgroundBlock:[1,10],
+  DisplayBlock:[0,10],AddtoDisplayBlock:[1,10],SubtractfromDisplayBlock:[1,10],
+  MultiplybyDisplayBlock:[1,10],DividebyDisplayBlock:[1,10]};
+function randomFor(it){
+  const parent=it.t==='r'?'RepeatBlock':it.key;
+  const r=RAND_RANGE[parent]||[1,10];
+  const n=r[0]+Math.floor(Math.random()*(r[1]-r[0]+1));
+  log('random '+n+' (from '+r[0]+'–'+r[1]+')');
+  return n;
+}
+/* ---- display area ---- */
+const BGB=WEDO_DATA.bgbank;
+const BG_COUNT=BGB.count, BG_THUMBS=BGB.thumbs, BG_FULL=BGB.full||{};
+/* the display uses the full image where we have it, and falls back to the
+   thumbnail — soft, but better than nothing — until the rest arrive */
+function bgUrl(i){
+  const k=String(i), d=BG_FULL[k]||BG_THUMBS[k];
+  return d ? 'url(data:image/webp;base64,'+d+')' : null;
+}
+
+/* blank rather than 0, so a program that only sets a background shows the
+   picture alone with no stray number floating over it */
+let displayContent='';
+let displaySize='closed';    /* closed | medium | full */
+let displayBg=0;
+const displayNumber=()=>{ const v=parseFloat(displayContent); return Number.isFinite(v)?v:0; };
+
+let dispPos=null;      /* null means centred; otherwise where you dragged it to */
+const BG_RATIO=256/160;      /* the shape of every background image */
+function paintDisplay(){
+  const d=document.getElementById('display'); if(!d) return;
+  d.className=displaySize;
+  if(displaySize!=='closed'){
+    const work=document.getElementById('work');
+    const aw=work.clientWidth, ah=work.clientHeight;
+    const wf=displaySize==='full'?0.96:0.58, hf=displaySize==='full'?0.96:0.58;
+    let W=aw*wf, H=W/BG_RATIO;
+    if(H>ah*hf){ H=ah*hf; W=H*BG_RATIO; }       /* short screens clamp on height */
+    d.style.width=Math.round(W)+'px';
+    d.style.height=Math.round(H)+'px';
+    d.dataset.h=Math.round(H);
+  }
+  if(dispPos){ d.style.left=dispPos.x+'px'; d.style.top=dispPos.y+'px'; d.style.transform='none'; }
+  else { d.style.left='50%'; d.style.top='50%'; d.style.transform='translate(-50%,-50%)'; }
+  const bg=document.getElementById('dispbg'), u=displayBg?bgUrl(displayBg):null;
+  bg.style.background=u?(u+' center/cover no-repeat'):'#fff';
+  const box=document.getElementById('disptext'), span=box.firstElementChild;
+  span.textContent=String(displayContent);
+  if(displaySize!=='closed') fitDisplayText(box,span,+d.dataset.h);
+}
+
+/* Shrink the text until it fits the window, down to half the normal size.
+   Binary search rather than stepping down, so this costs about eight layout
+   reads instead of a hundred. */
+function fitDisplayText(box,span,H){
+  const max=Math.max(12,Math.round(H*0.3)), min=Math.max(8,Math.round(H*0.15));
+  box.style.fontSize=max+'px';
+  if(!span.textContent) return;
+  const fits=()=>span.offsetWidth<=box.clientWidth+1 && span.offsetHeight<=box.clientHeight+1;
+  if(fits()) return;
+  let lo=min, hi=max, best=min;
+  while(hi-lo>1){
+    const mid=Math.round((lo+hi)/2);
+    box.style.fontSize=mid+'px';
+    if(fits()){ best=mid; lo=mid; } else hi=mid;
+  }
+  box.style.fontSize=best+'px';
+}
+
+/* drag the display by its title bar, and close it by hand */
+let dispDrag=null;
+function wireDisplayChrome(){
+  const d=document.getElementById('display'), head=document.getElementById('disphead');
+  if(!d||!head) return;
+  head.addEventListener('pointerdown',e=>{
+    if(e.target.closest('#dispclose')) return;
+    const r=d.getBoundingClientRect();
+    dispDrag={dx:e.clientX-r.left, dy:e.clientY-r.top};
+    head.classList.add('moving');
+    e.stopPropagation(); e.preventDefault();
+  },true);
+  addEventListener('pointermove',e=>{
+    if(!dispDrag) return;
+    const w=document.getElementById('work').getBoundingClientRect();
+    const r=d.getBoundingClientRect();
+    const x=Math.min(Math.max(e.clientX-dispDrag.dx-w.left,-r.width+80), w.width-80);
+    const y=Math.min(Math.max(e.clientY-dispDrag.dy-w.top,0), w.height-40);
+    dispPos={x,y}; paintDisplay();
+  });
+  addEventListener('pointerup',()=>{
+    if(!dispDrag) return;
+    dispDrag=null; head.classList.remove('moving');
+  });
+  document.getElementById('dispclose').onclick=()=>{
+    displaySize='closed'; log('display closed by hand'); paintDisplay();
+  };
+}
+wireDisplayChrome();
+function openDisplay(){ if(displaySize==='closed') displaySize='medium'; }
+
+function applyMath(op,it){
+  const n=inputNumber(it,null);
+  if(n==null){ log('display maths skipped — no input attached'); return; }
+  const cur=displayNumber();
+  let out;
+  if(op==='+') out=cur+n;
+  else if(op==='-') out=cur-n;
+  else if(op==='*') out=cur*n;
+  else { if(n===0){ log('divide by zero ignored — display unchanged'); return; } out=cur/n; }
+  displayContent=Math.round(out*1e6)/1e6;
+  log('display '+op+' '+n+' = '+displayContent);
+  openDisplay(); paintDisplay();
+}
+
+function inputNumber(it,fallback){
+  const key=it.input;
+  if(!key) return null;
+  /* the distance sensor reads as a live number wherever a number is wanted */
+  if(key==='DistanceSensorInput')
+    return sensors.distance.value==null?null:sensors.distance.value;
+  if(key==='RandomInput')  return randomFor(it);
+  if(key==='DisplayInput') return displayNumber();
+  const v=parseFloat(it.inputValue);
+  if(Number.isFinite(v)) return v;
+  return fallback==null?null:fallback;
+}
+
+/* Write mode is chosen once per hub. Without-response matters for the motors:
+   an acknowledged write makes the second port wait a round trip for the first,
+   which is long enough to see two motors start out of step. */
+function writeOut(c,data,h){
+  if(!h.writeMode){
+    h.writeMode = (c.properties&&c.properties.writeWithoutResponse&&c.writeValueWithoutResponse)
+                    ? 'nr' : (c.writeValueWithResponse ? 'wr' : 'legacy');
+    log('output write mode: '+h.writeMode);
+  }
+  if(h.writeMode==='nr') return c.writeValueWithoutResponse(data);
+  if(h.writeMode==='wr') return c.writeValueWithResponse(data);
+  return c.writeValue(data);
+}
+async function sendOut(bytes){
+  const h=connectedHub();
+  if(!h||!h.out){ log('no hub connected — command skipped'); return false; }
+  try{ await writeOut(h.out,new Uint8Array(bytes),h); return true; }
+  catch(e){ log('write failed: '+e.message); return false; }
+}
+/* -100..100; negative is encoded as 256+value. Both ports are addressed so any
+   attached motor responds, and both packets are dispatched before either is
+   awaited so the motors start and stop together. */
+async function motorRun(power){
+  const h=connectedHub();
+  if(!h||!h.out){ log('motor: no hub connected — command skipped'); return false; }
+  const p=Math.max(-100,Math.min(100,Math.round(power)));
+  const b=p<0?256+p:p;
+  const pk=[new Uint8Array([1,0x01,0x01,b]),new Uint8Array([2,0x01,0x01,b])];
+  const t0=(self.performance||Date).now();
+  try{
+    /* dispatched one after the other, but unacknowledged: each resolves as soon
+       as it is queued rather than waiting a round trip for the hub to reply */
+    for(const d of pk) await writeOut(h.out,d,h);
+  }catch(e){ log('motor write failed: '+e.message); return false; }
+  log('motor -> '+p+'%  (both ports in '+Math.round((self.performance||Date).now()-t0)+'ms)');
+  return true;
+}
+
+/* Hub LED: port 6, command 4, one byte — an index into the hub's own palette,
+   not an RGB value. Names are for the log only; sources disagree on 4, 5 and 10. */
+const LED_NAMES=['off','pink','purple','blue','sky blue','teal',
+                 'green','yellow','orange','red','white'];
+const LED_IDLE=3;          /* what the hub shows when it is just sitting connected */
+const DEFAULT_COLOUR=9;    /* placeholder until inputs carry a value (Stage 10) */
+
+async function ledSet(idx){
+  const i=Math.max(0,Math.min(10,Math.round(idx)));
+  log('light -> '+i+' ('+LED_NAMES[i]+')');
+  return sendOut([0x06,0x04,0x01,i]);
+}
+
+async function execBlock(it,r){
+  switch(it.key){
+    case 'MotorPowerBlock':{
+      const lvl=inputNumber(it,DEFAULT_LEVEL);
+      if(lvl==null) log('Motor Power: no input attached — power left unset');
+      else { motorState.power=levelToPower(lvl); log('power set to '+motorState.power+'%'); }
+      await sleep(STEP,r); break;
+    }
+    case 'MotorThisWayBlock':
+      motorState.dir=-1; log('direction set: this way');  await sleep(STEP,r); break;
+    case 'MotorThatWayBlock':
+      motorState.dir=1;  log('direction set: that way');  await sleep(STEP,r); break;
+    case 'MotorOffBlock':
+      await motorRun(0); await sleep(STEP,r); break;
+    case 'WaitForBlock':{
+      if(!it.input){ log('Wait For skipped — no input attached'); await sleep(STEP,r); break; }
+      await waitForInput(it,r);
+      break;
+    }
+    case 'PlaySoundBlock':{
+      const n=inputNumber(it,1);
+      if(n==null){ log('Play Sound skipped — no input attached'); await sleep(STEP,r); break; }
+      const secs=await playSound(n);
+      if(secs>0){
+        /* hold the program until the sound finishes, and cut it off if stopped */
+        try{ await sleep(secs*1000,r); }
+        finally{ if(r.stop) stopSound(); }
+      }else await sleep(STEP,r);
+      break;
+    }
+    case 'DisplayBlock':{
+      if(!it.input){ log('Display skipped — no input attached'); await sleep(STEP,r); break; }
+      displayContent = it.input==='TextInput'
+        ? String(it.inputValue==null?'':it.inputValue)
+        : (inputNumber(it,0)??0);
+      log('display shows "'+displayContent+'"');
+      openDisplay(); paintDisplay(); await sleep(STEP,r); break;
+    }
+    case 'AddtoDisplayBlock':      applyMath('+',it); await sleep(STEP,r); break;
+    case 'SubtractfromDisplayBlock': applyMath('-',it); await sleep(STEP,r); break;
+    case 'MultiplybyDisplayBlock': applyMath('*',it); await sleep(STEP,r); break;
+    case 'DividebyDisplayBlock':   applyMath('/',it); await sleep(STEP,r); break;
+    case 'DisplayClosedBlock':
+      displaySize='closed'; log('display closed'); paintDisplay(); await sleep(STEP,r); break;
+    case 'DisplayMediumsizeBlock':
+      displaySize='medium'; log('display medium'); paintDisplay(); await sleep(STEP,r); break;
+    case 'DisplayFullsizeBlock':
+      displaySize='full'; log('display full size'); paintDisplay(); await sleep(STEP,r); break;
+    case 'DisplayBackgroundBlock':{
+      const n=inputNumber(it,1);
+      if(n==null) log('Display Background skipped — no input attached');
+      else{
+        displayBg=Math.max(0,Math.min(BG_COUNT,Math.round(n)));
+        log('background '+displayBg+(bgUrl(displayBg)||displayBg===0?'':' — image not loaded yet'));
+        openDisplay(); paintDisplay();
+      }
+      await sleep(STEP,r); break;
+    }
+    case 'SendMessageBlock':{
+      if(!it.input){ log('Send Message skipped — no input attached'); await sleep(STEP,r); break; }
+      const msg = it.input==='TextInput' ? String(it.inputValue==null?'':it.inputValue)
+                                         : String(inputNumber(it,0)??'');
+      broadcast(msg);
+      await sleep(STEP,r); break;
+    }
+    case 'LightBlock':{
+      const c=inputNumber(it,DEFAULT_COLOUR);
+      if(c==null) log('Light skipped — no input attached');
+      else await ledSet(c);
+      await sleep(STEP,r); break;
+    }
+    case 'MotorOnForBlock':{
+      if(motorState.power==null||motorState.dir==null){
+        log('Motor On For skipped — '+
+            (motorState.power==null?'no power set':'')+
+            (motorState.power==null&&motorState.dir==null?' and ':'')+
+            (motorState.dir==null?'no direction set':''));
+        await sleep(STEP,r); break;
+      }
+      const secs=inputNumber(it,DEFAULT_SECONDS)??DEFAULT_SECONDS;
+      await motorRun(motorState.power*motorState.dir);
+      /* the stop is in a finally so the motor cannot be left spinning by an
+         error, a stop press, or the program being edited mid-run */
+      try{ await sleep(secs*1000,r); }
+      finally{ await motorRun(0); }
+      break;
+    }
+    default: await sleep(STEP,r);
+  }
+}
+
+async function runBody(it,r){
+  if(it.children.length===0) await sleep(STEP,r);   /* the arch itself never lights up */
+  else await execSeq(it.children,r);
+}
+async function execRepeat(it,r){
+  const key=it.input;
+  if(!key){                                    /* no count: forever */
+    while(!r.stop) await runBody(it,r);
+    return;
+  }
+  if(STATE_KEYS.indexOf(key)>=0||EDGE_KEYS.indexOf(key)>=0){
+    if(key==='SoundSensorInput'){ micForSensor=true; await ensureMic(); }
+    if(!sensorAttached(key))
+      log('Repeat until '+prettyKey(key)+': no '+(KEY_SENSOR[key]||'sound')+' sensor available');
+    const snap=snapshotEvents();
+    log('repeating until '+prettyKey(key));
+    while(!r.stop&&!metSince(key,snap)) await runBody(it,r);
+    return;
+  }
+  const n=loopCount(it);
+  log('repeating '+n+'x');
+  for(let i=0;i<n&&!r.stop;i++) await runBody(it,r);
+}
+
+async function execSeq(items,r){
+  for(const it of items){
+    if(r.stop) return;
+    if(it.t==='r'){
+      await execRepeat(it,r);
+    }else if(it.t==='b'){
+      mark(it,true);
+      try{ await execBlock(it,r); } finally { mark(it,false); }
+    }
+  }
+}
+/* messages match exactly on case, ignoring spaces around the edges */
+const sameMsg=(a,b)=>String(a==null?'':a).trim()===String(b==null?'':b).trim();
+function broadcast(msg){
+  let n=0;
+  stacks.forEach(st=>{
+    const head=st.items[0];
+    if(head&&head.t==='b'&&head.key==='StartOnMessageBlock'&&sameMsg(head.inputValue,msg)){
+      n++; runStack(st);              /* not awaited: the sender carries straight on */
+    }
+  });
+  log('message "'+String(msg).trim()+'" sent — '+n+' program'+(n===1?'':'s')+' started');
+}
+function triggerKey(letter){
+  let n=0;
+  stacks.forEach(st=>{
+    const head=st.items[0];
+    if(head&&head.t==='b'&&head.key==='StartOnKeyPressBlock'&&(head.letter||'A')===letter){
+      n++; keyPressAnim(itemEl.get(head)); runStack(st);
+    }
+  });
+  if(n) log('key "'+letter+'" pressed — '+n+' program'+(n===1?'':'s')+' started');
+}
+addEventListener('keydown',ev=>{
+  if(letterTarget||editing) return;                       /* a dialog is open */
+  const t=ev.target;
+  if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA')) return;
+  const k=ev.key||'';
+  if(k.length===1&&/[A-Za-z0-9]/.test(k)) triggerKey(k);   /* case-sensitive, like messages */
+});
+
+async function runStack(stack){
+  if(runners.has(stack.id)) return;      /* already running — the press is ignored */
+  const r={stop:false,cancels:new Set()};
+  runners.set(stack.id,r); updateStop();
+  try{
+    const head=stack.items[0];
+    if(head&&head.t==='b'){ mark(head,true); await sleep(Math.round(STEP*0.6),r); mark(head,false); }
+    await execSeq(stack.items.slice(1),r);
+  }finally{
+    runners.delete(stack.id);
+    clearMarks(stack.items);
+    updateStop();
+    if(runners.size===0) syncSensorMic();
+  }
+}
+function stopStack(stack){
+  const r=runners.get(stack.id); if(!r) return;
+  r.stop=true; r.cancels.forEach(f=>f()); r.cancels.clear();
+}
+function stopAll(){ stacks.slice().forEach(stopStack); }
+
+/* Chrome throttles timers in a backgrounded tab, so a running On For could
+   overshoot its duration by a long way. Halt everything instead. */
+function haltEverything(reason){
+  if(runners.size===0) return;
+  log('halted — '+reason);
+  stopAll(); stopSound();
+  motorRun(0);            /* best effort; the On For finally also stops it */
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden) haltEverything('app left the foreground');
+});
+addEventListener('pagehide',()=>haltEverything('page closed'));
+function updateStop(){
+  document.getElementById('stop').classList.toggle('active',runners.size>0);
+}
+
+let anchors=[], ejectAnim=null;
+
+/* Where an ejected input should land: down and to the side, and not on top of
+   something that is already there. */
+function occupiedRects(){
+  const sheet=document.getElementById('sheet');
+  return Array.prototype.map.call(sheet.querySelectorAll('.wrap'),
+    e=>({x:e.offsetLeft,y:e.offsetTop,w:e.offsetWidth,h:e.offsetHeight}));
+}
+function overlapFrac(a,b){
+  const ix=Math.max(0,Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x));
+  const iy=Math.max(0,Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y));
+  if(!ix||!iy) return 0;
+  return (ix*iy)/Math.min(a.w*a.h, b.w*b.h);   /* 90% of the smaller block counts */
+}
+function findFreeSpot(base,w,h,s){
+  const stepX=w*0.62, stepY=h+16*s;
+  const tries=[[stepX,stepY],[-stepX,stepY],[stepX*2,stepY],[-stepX*2,stepY],
+               [stepX,stepY*2],[-stepX,stepY*2],[stepX*2,stepY*2],[-stepX*2,stepY*2],
+               [0,stepY*2],[stepX*3,stepY],[0,stepY*3]];
+  const rects=occupiedRects();
+  for(let i=0;i<tries.length;i++){
+    const cand={x:base.x+tries[i][0], y:base.y+tries[i][1], w:w, h:h};
+    if(cand.x<6||cand.y<6) continue;
+    let worst=0;
+    for(let k=0;k<rects.length;k++) worst=Math.max(worst,overlapFrac(cand,rects[k]));
+    if(worst<0.9) return cand;
+  }
+  return {x:base.x+tries[0][0], y:base.y+tries[0][1]};
+}
+
+function render(){
+  const sheet=document.getElementById('sheet');
+  [...sheet.querySelectorAll('.wrap')].forEach(e=>e.remove());
+  const s=scale();
+  anchors=[];
+  itemEl=new Map();
+  const ctx={el:sheet,anchors,map:itemEl};
+  /* stack positions are held unscaled; multiplying here keeps the gaps between
+     programs in proportion to the blocks at every zoom level */
+  stacks.forEach(st=>buildSeq(st.items,st.x*s,st.y*s,s,ctx,st));
+  document.getElementById('empty').style.display=stacks.length?'none':'block';
+  highlighted.forEach(it=>{const e=itemEl.get(it);if(e)e.classList.add('exec');});
+  syncSensorMic();
+  if(ejectAnim){
+    const e=itemEl.get(ejectAnim.item);
+    if(e){
+      e.style.setProperty('--dx',ejectAnim.dx+'px');
+      e.style.setProperty('--dy',ejectAnim.dy+'px');
+      e.classList.add('ejecting');
+    }
+    ejectAnim=null;
+  }
+}
+
+/* ---- palette ---- */
+/* each tab is tinted like the blocks it holds */
+const TAB_COLOUR={'Flow':'#c69500','Motor':'#2f8a33','Output':'#c02a2e',
+                  'Sensor Input':'#d4740c','Other Input':'#2379a8'};
+let activeTab=0;
+function drawTray(){
+  const tabs=document.getElementById('traytabs'); tabs.innerHTML='';
+  ORDER.forEach(([g],i)=>{
+    const b=document.createElement('button');
+    b.className='tab'+(i===activeTab?' on':'');
+    b.textContent=g;
+    b.style.color=TAB_COLOUR[g]||'#5b6b7a';
+    b.onclick=()=>{ activeTab=i; drawTray(); };
+    tabs.appendChild(b);
+  });
+  const tray=document.getElementById('tray'); tray.innerHTML='';
+  const s=pscale();
+  const d=document.createElement('div'); d.className='grp';
+  /* fixed to the tallest block there is — the repeat arch — so the toolbar
+     does not change height as you move between tabs */
+  d.style.height=(ARCH_H*s)+'px';
+  ORDER[activeTab][1].forEach(([key,label])=>{
+    const h=document.createElement('div');h.className='pitem';h.title=label;h.dataset.key=key;
+    const e=key==='RepeatBlock'?archEl(S.MotorOffBlock.w*s,s,false):blockEl(key,s);
+    e.style.position='relative';h.appendChild(e);d.appendChild(h);
+  });
+  tray.appendChild(d);
+  tray.scrollLeft=0;
+}
+
+/* ---- coordinate helpers ---- */
+const stageEl=()=>document.getElementById('stage');
+function toSheet(clientX,clientY){
+  const r=stageEl().getBoundingClientRect();
+  return {x:clientX-r.left+stageEl().scrollLeft, y:clientY-r.top+stageEl().scrollTop};
+}
+
+/* ---- dragging ---- */
+let drag=null;   /* {payload,grabX,grabY,w,h} */
+const ghost=document.getElementById('ghost'),
+      caret=document.getElementById('caret'),
+      ring=document.getElementById('ring'),
+      band=document.getElementById('band');
+
+/* a bare loop dragged over a run of blocks swallows them instead of being refused */
+function isBareLoop(p){
+  return p.kind==='chain'&&p.items.length===1&&p.items[0].t==='r'
+         &&p.items[0].children.length===0;
+}
+const wrapsAt=(p,a)=>isBareLoop(p)&&a.kind==='seq'&&a.index<a.arr.length;
+
+function ghostFor(payload,s){
+  ghost.innerHTML='';
+  const holder=document.createElement('div');
+  holder.style.cssText='position:relative';
+  if(payload.kind==='input'){
+    const e=blockEl(payload.key,s,payload.value);e.style.position='relative';holder.appendChild(e);
+    ghost.appendChild(holder);return {w:S[payload.key].w*s,h:S[payload.key].h*s};
+  }
+  const ctx={el:holder,anchors:null};
+  const w=buildSeq(payload.items,0,ARCH_TOP*s,s,ctx,null);
+  holder.style.width=w+'px';holder.style.height=(ARCH_H*s)+'px';
+  ghost.appendChild(holder);
+  return {w,h:BH*s};
+}
+
+function startDrag(payload,ev,grabX,grabY){
+  const s=scale();
+  const g=ghostFor(payload,s);
+  drag={payload,grabX,grabY,w:g.w,h:g.h};
+  moveGhost(ev.clientX,ev.clientY);
+  ghost.style.display='block';
+}
+function moveGhost(cx,cy){
+  ghost.style.transform='translate('+(cx-drag.grabX)+'px,'+(cy-drag.grabY-(drag.payload.kind==='input'?0:ARCH_TOP*scale()))+'px)';
+}
+
+function bestAnchor(){
+  if(!drag) return null;
+  const r=stageEl().getBoundingClientRect();
+  const gx=lastX-drag.grabX-r.left+stageEl().scrollLeft;
+  const gy=lastY-drag.grabY-r.top +stageEl().scrollTop;
+  let best=null,bd=SNAP;
+  anchors.forEach(a=>{
+    if(drag.payload.kind==='input'){
+      if(a.kind!=='socket') return;      /* an occupied socket is fine — the old one pops out */
+      const parent=a.item.t==='r'?'RepeatBlock':a.item.key;
+      if(!canAccept(parent,drag.payload.key)) return;
+      const d=Math.hypot(a.x-(gx+drag.w/2), a.y-(gy+OVER*scale()));
+      if(d<bd){bd=d;best=a;}
+    } else {
+      if(a.kind!=='seq') return;
+      const first=drag.payload.items[0];
+      if(a.inLoop&&drag.payload.items.some(it=>it.t==='r')) return;
+      /* Nothing may ever sit after an infinite loop. Two ways that could happen:
+         dropping past one that already exists, or dropping one in front of
+         blocks that would then trail it. Both are refused here. */
+      if(a.arr.slice(0,a.index).some(it=>it.t==='r'&&!it.input)) return;
+      if(drag.payload.items.some(it=>it.t==='r'&&!it.input)&&a.index!==a.arr.length){
+        /* an empty loop may still land here if it encloses the rest of the chain,
+           since then nothing is left trailing it — but it can't swallow a loop */
+        if(!(isBareLoop(drag.payload)&&!a.arr.slice(a.index).some(it=>it.t==='r'))) return;
+      }
+      const isStart=first.t==='b'&&STARTS.has(first.key);
+      const arrIsTop=a.stack&&a.stack.items===a.arr;
+      if(isStart&&(a.index!==0||!arrIsTop)) return;
+      if(!isStart&&a.index===0&&a.arr[0]&&a.arr[0].t==='b'&&STARTS.has(a.arr[0].key)) return;
+      /* Joining on the right lines the chain's LEFT edge up with the join.
+         Joining on the left lines its RIGHT edge up instead, so measure both
+         and take whichever the user is actually closer to. */
+      let dx=Math.abs(a.x-gx);
+      if(a.index<a.arr.length) dx=Math.min(dx,Math.abs(a.x-(gx+drag.w)));
+      const d=Math.hypot(dx, a.y-gy);
+      if(d<bd){bd=d;best=a;}
+    }
+  });
+  return best;
+}
+function showIndicator(a){
+  const s=scale();
+  caret.style.display=ring.style.display=band.style.display='none';
+  if(!a) return;
+  if(drag&&wrapsAt(drag.payload,a)){
+    const endA=anchors.find(z=>z.kind==='seq'&&z.arr===a.arr&&z.index===a.arr.length);
+    const endX=endA?endA.x:a.x+S.MotorOffBlock.w*s;
+    band.style.display='block';
+    band.style.left=(a.x-8)+'px';band.style.top=(a.y-ARCH_TOP*s)+'px';
+    band.style.width=(endX-a.x+16)+'px';band.style.height=(ARCH_H*s)+'px';
+    return;
+  }
+  if(a.kind==='seq'){
+    caret.style.display='block';
+    caret.style.left=(a.x-4)+'px';caret.style.top=(a.y-6)+'px';
+    caret.style.width='8px';caret.style.height=(BH*s+12)+'px';
+  } else {
+    const w=S.NumberInput.w*s,h=S.NumberInput.h*s;
+    ring.style.display='block';
+    ring.classList.toggle('replace',!!a.item.input);
+    ring.style.left=(a.x-w/2)+'px';ring.style.top=(a.y-OVER*s)+'px';
+    ring.style.width=w+'px';ring.style.height=h+'px';
+  }
+}
+
+let lastX=0,lastY=0;
+let pending=null;
+addEventListener('pointerdown',ev=>{
+  if(ev.button!==undefined&&ev.button!==0) return;
+  const pit=ev.target.closest('.pitem');
+  if(pit){
+    /* no preventDefault here: a sideways swipe must reach the tray as a scroll.
+       The block is only lifted once the finger moves upward (see pointermove). */
+    pending={from:'tray',key:pit.dataset.key,rect:pit.getBoundingClientRect(),
+             sx:ev.clientX,sy:ev.clientY,pt:ev.pointerType,t0:Date.now()};
+    lastX=ev.clientX;lastY=ev.clientY;return;
+  }
+  const el=ev.target.closest('.blk');
+  if(el&&el.__ref&&document.getElementById('sheet').contains(el)){
+    pending={from:'sheet',el,ref:el.__ref,rect:el.getBoundingClientRect(),
+             sx:ev.clientX,sy:ev.clientY,pt:ev.pointerType,t0:Date.now()};
+    pending.hold=setTimeout(holdFired,600);
+    lastX=ev.clientX;lastY=ev.clientY;ev.preventDefault();
+  }
+},true);
+
+/* A long press is ours — used to pick the key letter — so the browser's own
+   context menu must not appear on top of it. Text areas keep theirs so the
+   diagnostics log can still be selected and copied. */
+addEventListener('contextmenu',ev=>{
+  const t=ev.target;
+  if(t&&t.closest&&t.closest('#diag')) return;   /* only the diagnostics log */
+  ev.preventDefault();
+});
+
+const clearHold=p=>{ if(p&&p.hold){ clearTimeout(p.hold); p.hold=null; } };
+/* a long press on a Start On Key Press block picks its letter */
+function holdFired(){
+  if(!pending||drag||pending.from!=='sheet') return;
+  const ref=pending.ref;
+  if(ref.type!=='item') return;
+  const it=ref.arr[ref.index];
+  if(it&&it.t==='b'&&it.key==='StartOnKeyPressBlock'){
+    pending.consumed=true;
+    openLetterPicker(it);
+  }
+}
+
+/* a press only becomes a drag once the pointer travels far enough;
+   a press that never travels is a tap, which is how programs are started */
+function beginDrag(ev){
+  const p=pending;pending=null;clearHold(p);
+  if(p.from==='tray'){
+    const key=p.key;
+    const payload=INPUTS.has(key)
+      ? {kind:'input',key,value:defaultValueFor(key)}
+      : {kind:'chain',items:[mkItem(key)]};
+    const s=scale(),ps=pscale(),k=s/ps,isArch=key==='RepeatBlock';
+    startDrag(payload,ev,(p.sx-p.rect.left)*k,(p.sy-p.rect.top-(isArch?ARCH_TOP*ps:0))*k);
+    return;
+  }
+  const ref=p.ref,r=p.rect,s=scale();
+  if(ref.stack) stopStack(ref.stack);          /* editing a running program halts it */
+  let payload,isArch=false,origin=null;
+  if(ref.type==='input'){
+    origin=ref.item;
+    payload={kind:'input',key:ref.item.input,value:ref.item.inputValue};
+    ref.item.input=null; ref.item.inputValue=undefined;
+    if(ref.item.t==='r'&&ref.arr&&ref.index<ref.arr.length-1){
+      const trailing=ref.arr.splice(ref.index+1);
+      const st=ref.stack;
+      stacks.push({id:uid++,x:(st?st.x:60)+40,
+                   y:(st?st.y:100)+ARCH_H+70,items:trailing});
+    }
+  }else{
+    const it0=ref.arr[ref.index];
+    if(it0&&it0.t==='i'){
+      ref.arr.splice(ref.index,1);
+      payload={kind:'input',key:it0.key,value:it0.value};
+    }else{
+      isArch=!!(it0&&it0.t==='r');
+      payload={kind:'chain',items:ref.arr.splice(ref.index)};
+    }
+    if(ref.stack&&ref.stack.items===ref.arr&&ref.arr.length===0)
+      stacks=stacks.filter(x=>x!==ref.stack);
+  }
+  /* the drag must be live before re-rendering: render() decides what is on the
+     canvas, and a block in mid-air only counts if the drag state already exists */
+  startDrag(payload,ev,p.sx-r.left,p.sy-r.top-(isArch?ARCH_TOP*s:0));
+  drag.origin=origin; drag.t0=p.t0; drag.sx=p.sx; drag.sy=p.sy;
+  render();
+}
+
+function handleTap(p){
+  if(p.from!=='sheet') return;
+  const ref=p.ref;
+  if(ref.type==='input'){ openInputUI(ref.item); return; }
+  if(ref.type!=='item'||!ref.stack) return;
+  const tapped=ref.arr[ref.index];
+  if(tapped&&tapped.t==='i'){ openEditor(tapped); return; }
+  if(tapped&&tapped.t==='b'&&tapped.key==='PlaySoundBlock'){ openSoundDialog(tapped); return; }
+  if(tapped&&tapped.t==='b'&&tapped.key==='LightBlock'){ openColourDialog(tapped); return; }
+  if(tapped&&tapped.t==='b'&&tapped.key==='DisplayBackgroundBlock'){ openBgPicker(tapped); return; }
+  if(tapped&&tapped.t==='b'&&tapped.key==='MotorPowerBlock'){ openSpeedPicker(tapped); return; }
+  if(ref.arr!==ref.stack.items||ref.index!==0) return;   /* only the head of a program */
+  const it=ref.arr[0];
+  if(!it||it.t!=='b') return;
+  if(it.key==='StartBlock'){ runStack(ref.stack); }
+  /* same path as a real key press, so every block with that letter runs */
+  else if(it.key==='StartOnKeyPressBlock'){ triggerKey(it.letter||'A'); }
+}
+/* ---- editing an input's value ---- */
+let editing=null, edBuf='';
+const edEl=()=>document.getElementById('editor');
+/* a Play Sound block's number is chosen from the list, not typed */
+function openInputUI(holder){
+  if(holder&&holder.t==='b'&&holder.key==='PlaySoundBlock'){ openSoundDialog(holder); return; }
+  if(holder&&holder.t==='b'&&holder.key==='LightBlock'){ openColourDialog(holder); return; }
+  if(holder&&holder.t==='b'&&holder.key==='DisplayBackgroundBlock'){ openBgPicker(holder); return; }
+  if(holder&&holder.t==='b'&&holder.key==='MotorPowerBlock'){ openSpeedPicker(holder); return; }
+  openEditor(holder);
+}
+function openEditor(holder){
+  const key=inputKeyOf(holder);
+  if(EDITABLE.indexOf(key)<0) return;      /* random, display and sensor plugs aren't typed */
+  editing=holder;
+  const isNum=key==='NumberInput';
+  edBuf=String(inputValOf(holder)??'');
+  document.getElementById('edtitle').textContent=isNum?'Number':'Text';
+  document.getElementById('edview').style.display=isNum?'flex':'none';
+  document.getElementById('edpad').style.display=isNum?'grid':'none';
+  const ti=document.getElementById('edtext');
+  ti.style.display=isNum?'none':'block';
+  if(isNum) drawPad(); else { ti.value=edBuf; setTimeout(()=>ti.focus(),320); }
+  paintView();
+  edEl().classList.add('open');
+  edEl().classList.remove('armed');
+  setTimeout(()=>{ if(editing) edEl().classList.add('armed'); },300);
+}
+function paintView(){ document.getElementById('edview').textContent=edBuf===''?'0':edBuf; }
+function drawPad(){
+  const pad=document.getElementById('edpad'); pad.innerHTML='';
+  ['1','2','3','4','5','6','7','8','9','.','0','⌫'].forEach(lab=>{
+    const b=document.createElement('button'); b.textContent=lab;
+    b.onclick=()=>{
+      if(lab==='⌫') edBuf=edBuf.slice(0,-1);
+      else if(lab==='.'){ if(edBuf.indexOf('.')<0) edBuf=(edBuf||'0')+'.'; }
+      else edBuf=(edBuf==='0'?'':edBuf)+lab;
+      paintView();
+    };
+    pad.appendChild(b);
+  });
+}
+function closeEditor(save){
+  if(save&&editing){
+    const key=inputKeyOf(editing);
+    const v=key==='NumberInput'
+      ? (edBuf===''?'0':edBuf)
+      : document.getElementById('edtext').value;
+    setInputVal(editing,v);
+  }
+  editing=null; edEl().classList.remove('open'); edEl().classList.remove('armed'); render();
+}
+document.getElementById('edok').onclick=()=>closeEditor(true);
+document.getElementById('edcancel').onclick=()=>closeEditor(false);
+edEl().onclick=e=>{ if(e.target===edEl()) closeEditor(false); };
+
+/* ---- sound dialog ---- */
+/* ---- motor speed picker ---- */
+const spEl=()=>document.getElementById('speeds');
+let speedTarget=null;
+function openSpeedPicker(item){
+  speedTarget=item;
+  const g=document.getElementById('spgrid'); g.innerHTML='';
+  const cur=String(item?item.inputValue:'');
+  for(let i=0;i<=10;i++){
+    const b=document.createElement('button');
+    b.className='sptile'+(cur===String(i)?' chosen':'');
+    b.textContent=i;
+    b.onclick=()=>chooseSpeed(i);
+    g.appendChild(b);
+  }
+  spEl().classList.add('open'); spEl().classList.remove('armed');
+  setTimeout(()=>{ if(spEl().classList.contains('open')) spEl().classList.add('armed'); },300);
+}
+function chooseSpeed(i){
+  if(speedTarget){
+    speedTarget.input='NumberInput'; speedTarget.inputValue=String(i);
+    log('motor speed '+i+' ('+levelToPower(i)+'%) chosen');
+  }
+  closeSpeedPicker(); render();
+}
+function closeSpeedPicker(){
+  spEl().classList.remove('open'); spEl().classList.remove('armed'); speedTarget=null;
+}
+document.getElementById('spclose').onclick=closeSpeedPicker;
+spEl().onclick=e=>{ if(e.target===spEl()) closeSpeedPicker(); };
+
+/* ---- background picker ---- */
+const bgEl=()=>document.getElementById('backgrounds');
+let bgTarget=null;
+function openBgPicker(item){
+  bgTarget=item;
+  const g=document.getElementById('bggrid'); g.innerHTML='';
+  const cur=String(item?item.inputValue:'');
+  for(let i=0;i<=BG_COUNT;i++){
+    const have=i===0||!!BG_THUMBS[String(i)];
+    const b=document.createElement('button');
+    b.className='bgtile'+(cur===String(i)?' chosen':'')+(have?'':' pending');
+    if(i===0) b.innerHTML='<span class="none">no picture</span>';
+    else if(have) b.innerHTML='<img src="data:image/webp;base64,'+BG_THUMBS[String(i)]+'" alt="">';
+    else b.innerHTML='<span class="none">not loaded yet</span>';
+    const n=document.createElement('span'); n.className='num'; n.textContent=i;
+    b.appendChild(n);
+    if(have) b.onclick=()=>chooseBg(i);
+    g.appendChild(b);
+  }
+  bgEl().classList.add('open'); bgEl().classList.remove('armed');
+  setTimeout(()=>{ if(bgEl().classList.contains('open')) bgEl().classList.add('armed'); },300);
+}
+function chooseBg(i){
+  if(bgTarget){
+    bgTarget.input='NumberInput'; bgTarget.inputValue=String(i);
+    log('background '+i+' chosen');
+  }
+  closeBgPicker(); render();
+}
+function closeBgPicker(){
+  bgEl().classList.remove('open'); bgEl().classList.remove('armed'); bgTarget=null;
+}
+document.getElementById('bgclose').onclick=closeBgPicker;
+bgEl().onclick=e=>{ if(e.target===bgEl()) closeBgPicker(); };
+
+/* ---- key letter picker ---- */
+const ltEl=()=>document.getElementById('letters');
+let letterTarget=null;
+const KB_ROWS=[['1','2','3','4','5','6','7','8','9','0'],
+               ['q','w','e','r','t','y','u','i','o','p'],
+               ['a','s','d','f','g','h','j','k','l'],
+               ['z','x','c','v','b','n','m']];
+let ltShift=true;
+function drawLetterKeys(){
+  const g=document.getElementById('ltgrid'); g.innerHTML='';
+  const cur=letterTarget?(letterTarget.letter||'A'):null;
+  KB_ROWS.forEach((row,ri)=>{
+    const r=document.createElement('div'); r.className='krow';
+    if(ri===3){
+      const sh=document.createElement('button');
+      sh.className='kkey wide'+(ltShift?' on':'');
+      sh.textContent='Shift';
+      sh.onclick=()=>{ ltShift=!ltShift; drawLetterKeys(); };
+      r.appendChild(sh);
+    }
+    row.forEach(ch=>{
+      const label = ri===0 ? ch : (ltShift?ch.toUpperCase():ch);
+      const b=document.createElement('button');
+      b.className='kkey'+(label===cur?' chosen':'');
+      b.textContent=label;
+      b.onclick=()=>{ letterTarget.letter=label; log('start on key "'+label+'"');
+                      closeLetterPicker(); render(); };
+      r.appendChild(b);
+    });
+    g.appendChild(r);
+  });
+}
+function openLetterPicker(item){
+  letterTarget=item;
+  const cur=item.letter||'A';
+  ltShift = !/[a-z]/.test(cur);        /* open in the case already chosen */
+  drawLetterKeys();
+  ltEl().classList.add('open'); ltEl().classList.remove('armed');
+  setTimeout(()=>{ if(ltEl().classList.contains('open')) ltEl().classList.add('armed'); },300);
+}
+function closeLetterPicker(){
+  ltEl().classList.remove('open'); ltEl().classList.remove('armed'); letterTarget=null;
+}
+document.getElementById('ltclose').onclick=closeLetterPicker;
+ltEl().onclick=e=>{ if(e.target===ltEl()) closeLetterPicker(); };
+
+/* ---- colour picker ---- */
+/* approximations of what the hub shows; the bulb button proves the real thing */
+const LED_HEX=['#7c8892','#ff4fa3','#9b30d9','#1e54d6','#2fa8e8','#17c0b0',
+               '#2fbf3f','#ffd21e','#ff8c1a','#e8322a','#ffffff'];
+const colEl=()=>document.getElementById('colours');
+let colourTarget=null;
+
+function buildColourList(){
+  const g=document.getElementById('colgrid'); g.innerHTML='';
+  const current=colourTarget?String(colourTarget.inputValue):null;
+  for(let i=0;i<=10;i++){
+    const d=document.createElement('div');
+    d.className='srow'+(current===String(i)?' chosen':'');
+    const pick=document.createElement('button'); pick.className='pick';
+    pick.innerHTML='<b>'+i+'</b><span class="swatch'+(i===0?' off':'')+'" style="'+
+      (i===0?'':'background:'+LED_HEX[i])+'"></span>'+LED_NAMES[i];
+    pick.onclick=()=>chooseColour(i);
+    const prev=document.createElement('button'); prev.className='prev';
+    prev.title='Try it on the hub';
+    prev.innerHTML='<svg viewBox="0 0 24 24"><path d="M9 21h6v-1H9v1zm3-19a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>';
+    prev.onclick=e=>{ e.stopPropagation(); ledSet(i); };
+    d.appendChild(pick); d.appendChild(prev); g.appendChild(d);
+  }
+}
+function chooseColour(i){
+  if(colourTarget){
+    colourTarget.input='NumberInput';
+    colourTarget.inputValue=String(i);
+    log('colour '+i+' ('+LED_NAMES[i]+') chosen');
+  }
+  closeColourDialog(); render();
+}
+function closeColourDialog(){
+  colEl().classList.remove('open'); colEl().classList.remove('armed'); colourTarget=null;
+}
+function openColourDialog(item){
+  colourTarget=item||null;
+  buildColourList();
+  colEl().classList.add('open'); colEl().classList.remove('armed');
+  setTimeout(()=>{ if(colEl().classList.contains('open')) colEl().classList.add('armed'); },300);
+}
+document.getElementById('colclose').onclick=closeColourDialog;
+colEl().onclick=e=>{ if(e.target===colEl()) closeColourDialog(); };
+
+const sndEl=()=>document.getElementById('sounds');
+let soundTarget=null;          /* the Play Sound block that opened the list */
+
+function buildSoundList(){
+  const g=document.getElementById('sndgrid'); g.innerHTML='';
+  const current=soundTarget?String(soundTarget.inputValue):null;
+  const row=(i,label,note)=>{
+    const d=document.createElement('div');
+    d.className='srow'+(current===String(i)?' chosen':'');
+    const pick=document.createElement('button'); pick.className='pick';
+    pick.innerHTML='<b>'+i+'</b>'+label+(note||'');
+    pick.onclick=()=>chooseSound(i);
+    const prev=document.createElement('button'); prev.className='prev';
+    prev.title='Listen without choosing';
+    prev.innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>';
+    prev.onclick=e=>{ e.stopPropagation(); playSound(i); };
+    d.appendChild(pick); d.appendChild(prev); g.appendChild(d);
+  };
+  row(0,'own recording', customSound?'':' <i>— none yet</i>');
+  for(let i=1;i<=SOUND_NAMES.length;i++) row(i,soundName(i));
+}
+function chooseSound(i){
+  if(soundTarget){
+    soundTarget.input='NumberInput';      /* re-attach if the input was pulled off */
+    soundTarget.inputValue=String(i);
+    log('sound '+i+' ('+soundName(i)+') chosen');
+  }
+  closeSoundDialog();
+  render();
+}
+function closeSoundDialog(){
+  stopRecording();
+  sndEl().classList.remove('open'); sndEl().classList.remove('armed');
+  soundTarget=null;
+}
+function openSoundDialog(item){
+  soundTarget=item||null;
+  buildSoundList();
+  paintSoundDialog();
+  sndEl().classList.add('open'); sndEl().classList.remove('armed');
+  setTimeout(()=>{ if(sndEl().classList.contains('open')) sndEl().classList.add('armed'); },300);
+}
+function paintSoundDialog(){
+  const st=document.getElementById('sndstate');
+  if(!st) return;
+  st.textContent = recState==='recording' ? 'Recording… tap Stop when finished.'
+                 : recState==='saving'    ? 'Saving…'
+                 : customSound            ? 'Your sound: '+customSound.duration.toFixed(1)+'s'
+                 : 'No recording yet.';
+  document.getElementById('sndrec').disabled  = recState!=='idle';
+  document.getElementById('sndstop').disabled = recState!=='recording';
+  document.getElementById('sndrec').className = recState==='recording'?'rec':'';
+  if(sndEl().classList.contains('open')) buildSoundList();   /* refresh row 0 after recording */
+}
+document.getElementById('sndrec').onclick=startRecording;
+document.getElementById('sndstop').onclick=stopRecording;
+document.getElementById('sndclose').onclick=closeSoundDialog;
+sndEl().onclick=e=>{ if(e.target===sndEl()) closeSoundDialog(); };
+
+function keyPressAnim(el){
+  if(!el) return;
+  el.classList.add('keypress','down');
+  setTimeout(()=>el.classList.remove('down'),130);
+  setTimeout(()=>el.classList.remove('keypress'),420);
+}
+
+const TRAY_LIFT=12;   /* how far up you must swipe to pull a block out of the tray */
+/* Android's own touch slop is around 8 CSS px, so 6 is too tight for a finger:
+   a tap with any roll in it became a drag and the block just snapped back. */
+const slopFor=p => p.pt==='touch' ? 12 : 6;
+addEventListener('pointermove',ev=>{
+  if(pending&&!drag){
+    const dx=ev.clientX-pending.sx, dy=ev.clientY-pending.sy, slop=slopFor(pending);
+    if(pending.from==='tray'){
+      if(Math.abs(dx)>Math.abs(dy)){        /* sideways — leave it to the tray */
+        if(Math.abs(dx)>slop) pending=null;
+        return;
+      }
+      if(dy>-TRAY_LIFT) return;             /* not lifted far enough yet */
+      beginDrag(ev);
+    }else{
+      if(Math.hypot(dx,dy)<slop) return;
+      beginDrag(ev);
+    }
+  }
+  if(!drag) return;
+  lastX=ev.clientX;lastY=ev.clientY;
+  moveGhost(ev.clientX,ev.clientY);
+  const tr=document.getElementById('tray').getBoundingClientRect();
+  const overTray=ev.clientY>=tr.top;
+  document.getElementById('tray').classList.toggle('over',overTray);
+  showIndicator(overTray?null:bestAnchor());
+});
+
+function finishDrag(cx,cy){
+  let tapped=null;
+  const tr=document.getElementById('tray').getBoundingClientRect();
+  const overTray=cy>=tr.top;
+  const a=overTray?null:bestAnchor();
+  if(!overTray){
+    if(a&&drag.payload.kind==='input'){
+      const oldKey=a.item.input, oldVal=a.item.inputValue;
+      a.item.input=drag.payload.key; a.item.inputValue=drag.payload.value;
+      if(oldKey&&oldKey!==drag.payload.key||(oldKey&&drag.origin!==a.item)){
+        /* the one that was here falls out and stays on the canvas, value intact */
+        const s=scale(), m=S[oldKey];
+        const base={x:a.x-m.w*s/2, y:a.y-OVER*s};
+        const spot=findFreeSpot(base, m.w*s, m.h*s, s);
+        const item={t:'i',key:oldKey,value:oldVal};
+        stacks.push({id:uid++, x:spot.x/s, y:spot.y/s, items:[item]});
+        ejectAnim={item, dx:base.x-spot.x, dy:base.y-spot.y};
+        log((oldVal!==undefined?'"'+oldVal+'" ':'')+'input pushed out of the socket');
+      }
+      /* picked up and put straight back, quickly and barely moved: that was a tap */
+      if(drag.origin===a.item && Date.now()-drag.t0<400 &&
+         Math.hypot(cx-drag.sx,cy-drag.sy)<28) tapped=a.item;
+    }
+    else if(a&&wrapsAt(drag.payload,a)){
+      const loop=drag.payload.items[0];
+      loop.children=a.arr.splice(a.index);   /* everything from here on moves inside */
+      a.arr.push(loop);
+    }
+    else if(a) a.arr.splice(a.index,0,...drag.payload.items);
+    else{
+      const p=toSheet(cx-drag.grabX,cy-drag.grabY);
+      const items=drag.payload.kind==='input'
+        ? [{t:'i',key:drag.payload.key,value:drag.payload.value}]
+        : drag.payload.items;
+      const sc=scale();
+      stacks.push({id:uid++,x:Math.max(10,p.x/sc),y:Math.max(10+ARCH_TOP,p.y/sc),items});
+    }
+  }
+  ghost.style.display='none';ghost.innerHTML='';
+  caret.style.display=ring.style.display=band.style.display='none';
+  document.getElementById('tray').classList.remove('over');
+  drag=null;pending=null;render();
+  if(tapped) openInputUI(tapped);
+}
+addEventListener('pointerup',ev=>{
+  if(pending&&!drag){
+    const p=pending;pending=null;clearHold(p);
+    if(!p.consumed) handleTap(p);
+    return;
+  }
+  if(!drag){clearHold(pending);pending=null;return;}
+  finishDrag(ev.clientX,ev.clientY);
+});
+/* the browser claiming the gesture as a scroll cancels the pointer */
+addEventListener('pointercancel',()=>{
+  clearHold(pending);
+  if(!drag){pending=null;return;}
+  finishDrag(lastX,lastY);
+});
+
+/* ---- zoom ---- */
+let cu=118;
+zin.onclick =()=>{cu=Math.min(190,cu+16);document.documentElement.style.setProperty('--cu',cu);render();};
+zout.onclick=()=>{cu=Math.max(70,cu-16);document.documentElement.style.setProperty('--cu',cu);render();};
+addEventListener('resize',()=>{drawTray();paintDisplay();});
+addEventListener('load',()=>setTimeout(()=>splash.classList.add('gone'),900));
+document.getElementById('stop').onclick=stopAll;
+drawTray();render();
+
+
+/* ================= Stage 2: Bluetooth ================= */
+const HUB_SERVICE='00001523-1212-efde-1523-785feabcd123';
+const IO_SERVICE ='00004f0e-1212-efde-1523-785feabcd123';
+const C_NAME='00001524-1212-efde-1523-785feabcd123';
+const C_BUTTON='00001526-1212-efde-1523-785feabcd123';
+const C_ATTACHED='00001527-1212-efde-1523-785feabcd123';
+const C_INPUT   ='00001563-1212-efde-1523-785feabcd123';
+const C_OUTPUT  ='00001565-1212-efde-1523-785feabcd123';
+const C_SENSOR  ='00001560-1212-efde-1523-785feabcd123';
+const listEl=document.getElementById('list'),diagEl=document.getElementById('diag'),
+      hintEl=document.getElementById('hint'),refreshBtn=document.getElementById('refresh');
+const hubs=new Map();let scanning=null,busy=false;
+const connectedHub=()=>[...hubs.values()].find(h=>h.connected);
+const logLines=[];
+function log(m){
+  const line=new Date().toLocaleTimeString()+'  '+m;
+  logLines.push(line);
+  const d=document.createElement('div');d.className='l';
+  d.textContent=line;diagEl.appendChild(d);diagEl.scrollTop=diagEl.scrollHeight;
+}
+function envText(){
+  return 'Secure context: '+isSecureContext+
+       '\nWeb Bluetooth: '+(!!navigator.bluetooth)+
+       '\nLive scanning: '+!!(navigator.bluetooth&&navigator.bluetooth.requestLEScan)+
+       '\nOrigin: '+location.origin+
+       '\nUser agent: '+navigator.userAgent;
+}
+async function copyLog(){
+  const text=envText()+'\n\n'+logLines.join('\n');
+  const btn=document.getElementById('copylog');
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText) await navigator.clipboard.writeText(text);
+    else{
+      const ta=document.createElement('textarea');
+      ta.value=text;ta.style.cssText='position:fixed;top:-1000px';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+    }
+    btn.textContent='Copied';
+  }catch(e){ btn.textContent='Press and hold to select'; }
+  setTimeout(()=>btn.textContent='Copy',1600);
+}
+function capabilities(){
+  const secure=isSecureContext,bt=!!navigator.bluetooth,
+        scan=!!(navigator.bluetooth&&navigator.bluetooth.requestLEScan);
+  const head=document.createElement('div');
+  head.innerHTML='<b>Environment</b><br>Secure context: '+(secure?'yes':'NO \u2014 Bluetooth blocked')+
+    '<br>Web Bluetooth: '+(bt?'available':'NOT available')+
+    '<br>Live scanning: '+(scan?'available':'not available \u2014 using Chrome\u2019s picker')+
+    '<br>Origin: '+location.origin+'<hr style="border:none;border-top:1px solid #e6eaee">';
+  head.dataset.head='1';
+  if(diagEl.firstChild&&diagEl.firstChild.dataset&&diagEl.firstChild.dataset.head)
+    diagEl.replaceChild(head,diagEl.firstChild); else diagEl.insertBefore(head,diagEl.firstChild);
+  return {secure,bt,scan};
+}
+function renderHubs(){
+  const conn=connectedHub();listEl.innerHTML='';
+  refreshBtn.disabled=!!conn||busy;
+  if(conn) hintEl.textContent='Only one Smarthub at a time. Disconnect this one to choose another.';
+  if(hubs.size===0){const p=document.createElement('div');
+    p.style.cssText='color:#a9b4bf;font-size:14px;padding:14px 6px';
+    p.textContent='No Smarthubs yet. Switch the hub on, then press the search button below.';
+    listEl.appendChild(p);return;}
+  hubs.forEach(h=>{
+    const r=document.createElement('div');let cls='row ';
+    if(h.connected) cls+=h.pressed?'pressed':'connected';
+    else if(conn) cls+='blocked'; else cls+=h.pressed?'pressed':'found';
+    r.className=cls;
+    r.innerHTML='<div class="hbrick"></div><div class="nm">'+(h.name||'Unnamed hub')+'</div>';
+    if(h.connected){
+      const b=document.createElement('div');b.className='batt';
+      b.textContent=(h.battery!=null?h.battery+'%':'--');r.appendChild(b);
+      const k=document.createElement('button');k.className='kill';k.title='Disconnect';
+      k.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      k.onclick=e=>{e.stopPropagation();disconnect(h);};r.appendChild(k);
+    } else if(!conn){ r.onclick=()=>connect(h.device); }
+    listEl.appendChild(r);
+  });
+}
+function setHubWidget(){const on=connectedHub(),w=document.getElementById('hub');
+  w.classList.toggle('on',!!on);w.querySelector('.state').textContent=on?on.name:'Not connected';}
+async function connect(device){
+  if(!device) return;
+  if(connectedHub()){hintEl.textContent='Disconnect the current Smarthub first.';return;}
+  if(busy) return; busy=true;renderHubs();
+  try{
+    log('connecting to '+(device.name||device.id)+' ...');
+    const server=await device.gatt.connect();
+    const svc=await server.getPrimaryService(HUB_SERVICE);
+    let name=device.name;
+    try{const c=await svc.getCharacteristic(C_NAME);
+      name=new TextDecoder().decode(await c.readValue()).replace(/\0+$/,'');}catch(e){log('name read failed: '+e.message);}
+    const h=hubs.get(device.id)||{device};
+    h.device=device;h.name=name;h.connected=true;h.pressed=false;hubs.set(device.id,h);
+    try{const bc=await svc.getCharacteristic(C_BUTTON);await bc.startNotifications();
+      bc.addEventListener('characteristicvaluechanged',ev=>{
+        h.pressed=ev.target.value.getUint8(0)===1;log('button '+(h.pressed?'DOWN':'up'));renderHubs();});
+      try{h.pressed=(await bc.readValue()).getUint8(0)===1;}catch(e){}
+      log('button notifications on');}catch(e){log('button characteristic failed: '+e.message);}
+    try{const bs=await server.getPrimaryService('battery_service');
+      const bl=await bs.getCharacteristic('battery_level');
+      h.battery=(await bl.readValue()).getUint8(0);await bl.startNotifications();
+      bl.addEventListener('characteristicvaluechanged',ev=>{h.battery=ev.target.value.getUint8(0);renderHubs();});
+    }catch(e){log('battery unavailable: '+e.message);}
+    clearSensors();
+    try{
+      const io=await server.getPrimaryService(IO_SERVICE);
+      h.out=await io.getCharacteristic(C_OUTPUT);
+      h.inp=await io.getCharacteristic(C_INPUT);
+      h.val=await io.getCharacteristic(C_SENSOR);
+      await h.val.startNotifications();
+      h.val.addEventListener('characteristicvaluechanged',onSensorValue);
+      log('I/O characteristics ready');
+    }catch(e){log('I/O service unavailable: '+e.message);}
+    try{const ac=await svc.getCharacteristic(C_ATTACHED);await ac.startNotifications();
+      ac.addEventListener('characteristicvaluechanged',onPortEvent);
+    }catch(e){log('attached-IO unavailable: '+e.message);}
+    if(!h.wired){h.wired=true;
+      device.addEventListener('gattserverdisconnected',()=>{
+        h.connected=false;h.pressed=false;h.battery=null;h.out=null;h.inp=null;h.val=null;
+        clearSensors();
+        log('disconnected: '+(h.name||''));hintEl.textContent='';renderHubs();setHubWidget();});}
+    log('connected to '+name);hintEl.textContent='';
+  }catch(e){log('connect failed: '+e.message);hintEl.textContent='Could not connect: '+e.message;
+    const h=hubs.get(device.id);if(h)h.connected=false;
+  }finally{busy=false;renderHubs();setHubWidget();}
+}
+async function disconnect(h){
+  haltEverything('hub disconnected');
+  /* put the LED back before the link goes down, so the next person to pick this
+     hub up doesn't find it still showing the last program's colour */
+  try{ if(h.out) await ledSet(LED_IDLE); }
+  catch(e){ log('could not reset the light: '+e.message); }
+  try{if(h.device.gatt.connected)h.device.gatt.disconnect();log('disconnect requested');}
+  catch(e){log('disconnect error: '+e.message);}
+  h.connected=false;h.pressed=false;h.battery=null;h.out=null;h.inp=null;h.val=null;
+  clearSensors();
+  hintEl.textContent='';renderHubs();setHubWidget();
+}
+async function search(){
+  if(connectedHub()){hintEl.textContent='Disconnect the current Smarthub first.';return;}
+  const cap=capabilities();
+  if(!cap.secure){hintEl.textContent='Serve this page over https:// or http://localhost.';return;}
+  if(!cap.bt){hintEl.textContent='Web Bluetooth is not available in this browser.';return;}
+  if(cap.scan) return liveScan();
+  hintEl.textContent='Chrome will show its own list of nearby Smarthubs.';
+  try{const device=await navigator.bluetooth.requestDevice({
+      filters:[{services:[HUB_SERVICE]}],
+      optionalServices:[IO_SERVICE,'battery_service','device_information']});
+    if(!hubs.has(device.id))hubs.set(device.id,{device,name:device.name,connected:false,pressed:false});
+    renderHubs();connect(device);
+  }catch(e){log('picker cancelled/failed: '+e.message);hintEl.textContent='';}
+}
+async function liveScan(){
+  if(scanning){scanning.stop();scanning=null;}
+  hintEl.textContent='Scanning for Smarthubs\u2026';
+  try{navigator.bluetooth.addEventListener('advertisementreceived',onAdvert);
+    scanning=await navigator.bluetooth.requestLEScan({filters:[{services:[HUB_SERVICE]}],keepRepeatedDevices:true});
+    log('live scan started');
+    setTimeout(()=>{if(scanning){scanning.stop();scanning=null;log('scan stopped');
+      hintEl.textContent='Scan finished. Press search to look again.';}},20000);
+  }catch(e){log('requestLEScan failed: '+e.message);hintEl.textContent='Live scanning refused; using Chrome\u2019s picker.';}
+}
+function onAdvert(e){
+  const h=hubs.get(e.device.id)||{device:e.device,connected:false,pressed:false};
+  h.device=e.device;h.name=e.name||h.name||e.device.name;h.rssi=e.rssi;
+  let dump='';
+  e.manufacturerData&&e.manufacturerData.forEach((v,k)=>{dump+=' mfr'+k+'=['+[...new Uint8Array(v.buffer)].join(',')+']';});
+  e.serviceData&&e.serviceData.forEach((v,k)=>{dump+=' svc'+String(k).slice(4,8)+'=['+[...new Uint8Array(v.buffer)].join(',')+']';});
+  if(dump) log((h.name||e.device.id)+dump);
+  hubs.set(e.device.id,h);renderHubs();
+}
+function openPanel(){
+  panel.classList.add('open'); scrim.classList.add('open'); work.classList.add('dim');
+  panel.setAttribute('aria-hidden','false'); capabilities(); renderHubs();
+}
+function closePanel(){
+  panel.classList.remove('open'); scrim.classList.remove('open'); work.classList.remove('dim');
+  panel.setAttribute('aria-hidden','true');
+}
+document.getElementById('hub').onclick=openPanel;
+document.getElementById('close').onclick=closePanel;
+document.getElementById('scrim').onclick=closePanel;   /* tapping the canvas closes it */
+refreshBtn.onclick=search;
+document.getElementById('diagtoggle').onclick=()=>document.getElementById('diagwrap').classList.toggle('closed');
+document.getElementById('copylog').onclick=copyLog;
+capabilities();renderHubs();
