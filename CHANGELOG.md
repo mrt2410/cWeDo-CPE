@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-09-16 (9)
+
+- Task 2 of the block-file split: extracted Tilt Sensor state, constants, and condition logic
+  into a new `js/blocks/tilt-sensor.js`, loaded after `js/blocks/core.js` and before `js/app.js`.
+  Moved `STATE_KEYS` from `js/app.js` (where it was temporarily defined) into `tilt-sensor.js`,
+  eliminating the `ReferenceError: Tilt is not defined` that was recurring in console/logs. The
+  `Tilt` namespace (with `state`, `reset()`, `onAttach()`, `onDetach()`, `onValue()`, `condition()`,
+  `attached()`, and `describe()` methods) is now fully defined and working; tests expect and
+  correctly encounter the next error (`Motion is not defined`) which will be fixed by Task 3.
+
 ## 2026-09-16 (8)
 
 - Began splitting the monolithic `js/app.js` (1966 lines) into per-device files under
