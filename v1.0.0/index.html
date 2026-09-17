@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>cWeDo CPE</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="splash">
+  <div class="studs"><i class="stud"></i><i class="stud"></i><i class="stud"></i><i class="stud"></i><i class="stud"></i></div>
+  <h1>cWeDo CPE</h1>
+</div>
+
+<div id="app">
+  <div id="work">
+    <div id="stage"><div id="sheet">
+      <div id="empty">Drag blocks from the tray below to build a program.<br>Start each program with a Start block.</div>
+      <div id="caret"></div><div id="ring"></div><div id="band"></div>
+    </div></div>
+
+    <button id="hub">
+      <div class="brick"></div>
+      <div class="badge"><svg viewBox="0 0 24 24"><path d="M12 2l5 5-5 5 5 5-5 5V2z"/><path d="M7 8l10 8M7 16L17 8" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+      <div class="state">Not connected</div>
+    </button>
+
+    <div id="filerail">
+      <button class="rbtn" id="saveasbtn" aria-label="Save As"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg></button>
+      <button class="rbtn" id="openbtn" aria-label="Open"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>
+    </div>
+    <input id="openfile" type="file" accept="application/json,.json" style="display:none">
+
+    <div id="rail">
+      <button class="rbtn" id="zin"  aria-label="Zoom in"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6M16.5 16.5L21 21"/></svg></button>
+      <button class="rbtn" id="zout" aria-label="Zoom out"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M16.5 16.5L21 21"/></svg></button>
+    </div>
+
+    <div id="display">
+      <div id="dispbg"></div>
+      <div id="disphead">
+        <div class="grip"><i></i><i></i><i></i></div>
+        <button id="dispclose" aria-label="Close display"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div id="disptext"><span></span></div>
+    </div>
+
+    <button id="stop" aria-label="Stop all programs"><span></span></button>
+
+    <div id="scrim"></div>
+    <aside id="panel" aria-hidden="true">
+      <header><h2>Choose Smarthub</h2>
+        <button class="xbtn" id="close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+      </header>
+      <div id="list"></div>
+      <div id="panelfoot">
+        <button id="refresh" aria-label="Search again"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button>
+        <div id="hint"></div>
+      </div>
+      <div id="ports"></div>
+      <div id="diagwrap">
+        <div id="diagbar">
+          <button id="diagtoggle"><span class="car">&#9660;</span> Diagnostics (development only)</button>
+          <button id="copylog">Copy</button>
+        </div>
+        <div id="diag"></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <div id="traytabs"></div>
+    <div id="tray"></div>
+    <div class="banner" id="banner">All 40 blocks working. Build a program, press Start, or press the letter on a Start On Key block.</div>
+  </footer>
+</div>
+<div id="ghost"></div>
+<div id="speeds">
+  <div id="spcard">
+    <h3>Motor speed</h3>
+    <div id="spgrid"></div>
+    <button id="spclose">Cancel</button>
+  </div>
+</div>
+<div id="tones">
+  <div id="tncard">
+    <h3>Piezo tone</h3>
+    <p>Tap a note to choose it, set the octave, and tap the triangle to listen.</p>
+    <div id="tngrid"></div>
+    <div id="tnoctrow">
+      <label for="tnoctave">Octave</label>
+      <input id="tnoctave" type="number" min="1" max="6" step="1">
+      <button id="tnplay" title="Listen"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg></button>
+    </div>
+    <button id="tnclose">Done</button>
+  </div>
+</div>
+<div id="backgrounds">
+  <div id="bgcard">
+    <h3>Background image</h3>
+    <p>Tap a picture to choose it.</p>
+    <div id="bggrid"></div>
+    <button id="bgclose">Cancel</button>
+  </div>
+</div>
+<div id="letters">
+  <div id="ltcard">
+    <h3>Start on key</h3>
+    <p>Pick the letter that starts this program.</p>
+    <div id="ltgrid"></div>
+    <button id="ltclose">Cancel</button>
+  </div>
+</div>
+<div id="colours">
+  <div id="colcard">
+    <h3>Light colour</h3>
+    <p>Tap a colour to choose it, or the bulb to try it on the hub.</p>
+    <div id="colgrid"></div>
+    <div id="rgbsliders">
+      <div class="rgbrow"><label for="rgbr">R</label><input id="rgbr" type="range" min="0" max="255"><span id="rgbrval" class="rgbval"></span></div>
+      <div class="rgbrow"><label for="rgbg">G</label><input id="rgbg" type="range" min="0" max="255"><span id="rgbgval" class="rgbval"></span></div>
+      <div class="rgbrow"><label for="rgbb">B</label><input id="rgbb" type="range" min="0" max="255"><span id="rgbbval" class="rgbval"></span></div>
+      <button id="rgbapply">Apply custom colour</button>
+    </div>
+    <button id="colclose">Done</button>
+  </div>
+</div>
+<div id="sounds">
+  <div id="sndcard">
+    <h3>Sounds</h3>
+    <p>Tap a sound to choose it, or the triangle to listen.</p>
+    <div id="sndgrid"></div>
+    <div class="sndrow">
+      <button id="sndrec">Record</button>
+      <button id="sndstop">Stop</button>
+    </div>
+    <div id="sndstate"></div>
+    <button id="sndclose">Done</button>
+  </div>
+</div>
+<div id="editor">
+  <div id="edcard">
+    <div id="edtitle"></div>
+    <div id="edview"></div>
+    <input id="edtext" type="text" autocomplete="off">
+    <div id="edpad"></div>
+    <div id="edrow">
+      <button id="edcancel">Cancel</button>
+      <button id="edok">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="saveas">
+  <div id="sacard">
+    <div id="satitle">Save As</div>
+    <input id="saname" type="text" autocomplete="off">
+    <div id="sarow">
+      <button id="sacancel">Cancel</button>
+      <button id="saok">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="data/bundle.js"></script>
+<script src="data/soundbank.js"></script>
+<script src="data/bgbank.js"></script>
+<script src="js/blocks/core.js"></script>
+<script src="js/blocks/tilt-sensor.js"></script>
+<script src="js/blocks/motion-sensor.js"></script>
+<script src="js/blocks/motor.js"></script>
+<script src="js/blocks/rgb-light.js"></script>
+<script src="js/blocks/piezo-tone-player.js"></script>
+<script src="js/blocks/sound.js"></script>
+<script src="js/blocks/display.js"></script>
+<script src="js/blocks/messaging.js"></script>
+<script src="js/telemetry/button-battery.js"></script>
+<script src="js/telemetry/voltage-current.js"></script>
+<script src="js/ble/capacitor-ble-shim.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
