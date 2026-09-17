@@ -6,7 +6,7 @@ sensors directly from a web page. No app store, no install, no build step.
 
 <p align="center">
   <a href="https://mrt2410.github.io/cWeDo-CPE/" target="_blank" rel="noopener noreferrer">
-    <img alt="Try it live" src="https://img.shields.io/badge/%E2%96%B6%20Try%20it%20live-2ea44f?style=for-the-badge">
+    <img alt="Try it live" width="340" src="https://img.shields.io/badge/%E2%96%B6%C2%A0%C2%A0Try%20it%20live%C2%A0%C2%A0-2ea44f?style=for-the-badge">
   </a>
   <br>
   <sub>No install, no download — works in <b>Chrome, Edge, Opera, or Brave</b> (Web Bluetooth required for hub connection).</sub>
