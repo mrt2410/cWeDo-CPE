@@ -56,3 +56,25 @@ test("stopTone writes the piezo stop command", async (t) => {
   await window.eval(`stopTone()`);
   assert.deepEqual(sent[0], [5, 0x03, 0]);
 });
+
+// PiezoTonePlayer.preview() is the tone picker's "Play" button: it should
+// synthesise the note locally (same playToneAudio() path as an executed
+// PlayToneBlock) without sending any BLE command — previewing a sound while
+// building a program shouldn't move a motor or click a relay via sendOut.
+test("preview does not send a BLE command", async (t) => {
+  // PiezoTonePlayer is a top-level `const` (see the eval-scoping comment
+  // above): capture its preview() via `probe`, in the same eval call that
+  // declares it, rather than reaching for it from a later window.eval().
+  const dom = await loadApp({ probe: "window.__hubs = hubs; window.__preview = PiezoTonePlayer.preview;" });
+  t.after(() => dom.window.close());
+  const { window } = dom;
+  const sent = [];
+  window.__hubs.set("test-hub", { out: {}, connected: true });
+  window.writeOut = (c, data) => { sent.push([...data]); return Promise.resolve(); };
+  // jsdom has no Web Audio (see header comment in piezo-tone-player.js); the
+  // point of this test is only that no BLE command goes out, not that sound
+  // plays — playToneAudio()'s own try/catch swallows the missing-AudioContext
+  // error the same way it does for an executed PlayToneBlock.
+  window.__preview('A', 4);
+  assert.equal(sent.length, 0);
+});

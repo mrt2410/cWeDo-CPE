@@ -615,6 +615,10 @@ function openTonePicker(item){
     toneTarget.octave=Math.max(1,Math.min(6,Math.round(+oc.value)||4));
     render();      /* picking a note re-renders and so autosaves; an octave change must too */
   };
+  document.getElementById('tnplay').onclick=()=>{
+    const note=(toneTarget&&toneTarget.note)||'A', octave=(toneTarget&&toneTarget.octave)||4;
+    PiezoTonePlayer.preview(note,octave);
+  };
   tnEl().classList.add('open'); tnEl().classList.remove('armed');
   setTimeout(()=>{ if(tnEl().classList.contains('open')) tnEl().classList.add('armed'); },300);
 }

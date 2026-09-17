@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-09-17 (25)
+
+- **Added a Play button to the Tone block's note/octave picker**, so you can
+  hear the selected note before closing the dialog. `#tnplay` sits next to
+  the octave field in `#tones` ([cWeDo CPE v1.0.html](cWeDo%20CPE%20v1.0.html)),
+  using the same triangle icon as the Sounds picker's "listen" button.
+  [js/blocks/piezo-tone-player.js](js/blocks/piezo-tone-player.js) gained
+  `PiezoTonePlayer.preview(note,octave)`, which reuses the existing
+  `playToneAudio()` Web Audio synth (the same oscillator an executed
+  `PlayToneBlock` plays through) but skips `sendOut()` — previewing a sound
+  while building a program shouldn't send any BLE command to the hub. Also
+  bumped that oscillator's peak gain from `0.2` to `0.22` to exactly match
+  `sound.js`'s `playPlaceholder()` gain, so the tone block and the Sounds
+  block's placeholder tone are equally loud. See
+  [docs/io-inventory-vs-wedo2-sdk.md](docs/io-inventory-vs-wedo2-sdk.md).
+
 ## 2026-09-17 (24)
 
 - **Two-finger pinch now zooms the canvas on touch devices.** `#stage` uses
@@ -43,6 +59,30 @@
   directly when the press starts on blank canvas (not on a `.blk` block),
   with a `grab`/`grabbing` cursor to match. Touch panning is unchanged. See
   [docs/canvas-panning.md](docs/canvas-panning.md).
+
+## 2026-09-17 (19)
+
+- **Piezo tone now audible on real hardware.** A user reported `PlayToneBlock` produced
+  no sound even at frequencies near the hub's 1500Hz cap. Debugging against a real
+  Smarthub's "Attached I/O" broadcast confirmed the previously "unverified guess" port
+  numbers were all correct all along — connect ID `5`/IO type `22` (piezo), `4`/`20`
+  (voltage), `3`/`21` (current) — and the BLE command bytes matched the reference SDK's
+  `output_command.py` exactly, byte for byte. The real cause: **the retail WeDo 2.0
+  Smarthub has no physical speaker** — its firmware accepts the piezo command harmlessly
+  but there's nothing to make sound with, which is also why LEGO's own app never shipped
+  a hub-tone block. Fixed by having `playTone()`/`stopTone()` in
+  [js/blocks/piezo-tone-player.js](js/blocks/piezo-tone-player.js) also synthesise the
+  tone locally via Web Audio (an oscillator through `ac()`, reused from
+  [js/blocks/sound.js](js/blocks/sound.js)), the same mechanism `PlaySoundBlock` uses —
+  the BLE command is still sent unchanged, both because it's harmless and to keep the
+  block working on other LEGO hubs that do have a piezo (e.g. BOOST/Powered Up). Updated
+  [docs/io-inventory-vs-wedo2-sdk.md](docs/io-inventory-vs-wedo2-sdk.md) to mark the
+  piezo/voltage/current port numbers as hardware-confirmed instead of unverified guesses,
+  and to record the no-speaker finding. Not covered by the automated test suite — jsdom
+  has no Web Audio, the same limitation already noted for `sound.js`'s mic/recording
+  code — so the tablet-audio path needs manual verification in a real browser; the
+  existing BLE-bytes tests in `test/blocks/piezo-tone-player.test.js` still pass
+  unchanged (60/60 overall).
 
 ## 2026-09-17 (17)
 
