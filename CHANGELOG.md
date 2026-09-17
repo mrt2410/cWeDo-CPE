@@ -1,5 +1,78 @@
 # Changelog
 
+## 2026-09-17 (17)
+
+- Final whole-branch review fixes for the 16-task block-file split + I/O feature plan.
+  Eight findings, no new features.
+  - **Stale `customRGB` survived socket changes.** `RgbLight.execLight` checks `it.customRGB`
+    before the socket's attached input, so a custom colour left on a `LightBlock` kept
+    overriding whatever number was plugged in afterwards. `chooseColour()` already deleted it
+    when a discrete colour was picked; the two drag/drop sites did not. Added
+    `delete ref.item.customRGB` in `beginDrag()` (input pulled out of a socket) and
+    `delete a.item.customRGB` in `finishDrag()` (a new input dropped into one), both in
+    [js/app.js](js/app.js). Two regression tests in `test/blocks/rgb-light.test.js` drive the
+    app's real pointer handlers rather than poking the fields, so they cover the actual
+    editor paths. They need `--cu`/`--pu` set inline on the root element first: jsdom's
+    `getComputedStyle` doesn't resolve custom properties from a stylesheet, so `scale()`
+    returns `NaN` and every anchor lands at `NaN`.
+  - **RGB Light mode-switch write, reinstated.** The design spec and Task 14's plan both
+    called for an input-format write putting the LED into the right mode before the payload;
+    the shipped code dropped it and the docs asserted, as fact, that payload length alone was
+    enough — a claim nobody can check without hardware, and out of step with how carefully
+    every other unverified port/behaviour in this project is caveated. Added `DEV_RGB_LIGHT=23`,
+    `LED_PORT=6` and `ledSetMode(mode)` to [js/blocks/rgb-light.js](js/blocks/rgb-light.js),
+    reusing core.js's `inputFormat()` and following `configurePort()`'s
+    `writeValueWithResponse`/`writeValue` + try/catch/`log()` pattern. `ledSet()` now declares
+    mode 0 and `ledSetRGB()` mode 1 before their `sendOut()` payload, so neither depends on
+    what mode the other left the hub in. The code comment,
+    `docs/io-inventory-vs-wedo2-sdk.md` and this entry all state plainly that the write is
+    **unverified against real hardware** — same caveat category as the piezo port and the
+    voltage/current ports. Three tests assert the exact mode bytes land on `h.inp` before the
+    payload lands on `h.out`, for both commands, and that a hub without an input
+    characteristic still gets its payload.
+  - **Voltage/current notifications could corrupt tilt/distance parsing.** Task 15 added a
+    second listener on the sensor characteristic, so voltage/current notifications now also
+    reach `onSensorValue()` in [js/blocks/core.js](js/blocks/core.js). Their ports (4/3) match
+    no attached sensor, so they fell through to the `v[0]` port guess — and if `v[0]` happened
+    to equal a real tilt/motion port, a raw millivolt float was read as a tilt direction code
+    or a distance. `onSensorValue` now returns early for `v[1]===VOLTAGE_PORT||v[1]===CURRENT_PORT`.
+    Those constants live in `js/telemetry/voltage-current.js`, which loads *after* core.js —
+    fine, since the function body is only evaluated at call time, exactly like the existing
+    `Tilt`/`Motion` forward references in the same function. Test in `test/blocks/core.test.js`
+    feeds voltage- and current-shaped events whose byte 0 collides with the attached tilt and
+    distance ports and asserts neither reaches `Tilt.onValue`/`Motion.onValue`, plus a
+    positive control that a genuine tilt notification still does.
+  - **Stale `js/app.js:NNN` references in `docs/io-inventory-vs-wedo2-sdk.md`.** Seven prose
+    citations still pointed at pre-split locations. Repointed to the current files (and
+    re-checked line numbers): the `execBlock` switch and the block roster to
+    `js/blocks/core.js`, `playSound()`/`getUserMedia` to `js/blocks/sound.js`, the tilt sensor
+    to `js/blocks/tilt-sensor.js`, the distance sensor to `js/blocks/motion-sensor.js`,
+    `sendOut`/`writeOut`/`configurePort` to `js/blocks/core.js`, and the hub button state to
+    `js/telemetry/button-battery.js`. The two remaining `js/app.js` references (the colour
+    dialog's `buildColourList()`/`openRgbSliders()`/`openColourDialog()`) are still correct.
+  - **Resolved-but-open-looking note in the Task 11 entry.** Its "`io-inventory-vs-wedo2-sdk.md`
+    does not exist anywhere in this repository's git history … flagged for a follow-up"
+    paragraph was fixed two commits later by `91332e0`. Struck through and annotated as
+    resolved instead of left reading as a live problem.
+  - **Tone-picker octave changes weren't persisted.** The `#tnoctave` stepper's `oninput`
+    mutated `toneTarget.octave` but never called `render()`, which is what schedules
+    `persistProgram()` — so a program whose only edit was an octave change was never
+    autosaved. Picking a note always persisted, via the tile's own `render()`. Fixed in
+    [js/app.js](js/app.js); test in `test/persistence.test.js`.
+  - **Dead branch in `js/telemetry/voltage-current.js`.** `const port=v[1]!=null?v[1]:v[0]`
+    sits after a `if(v.length<6) return;` guard on a `Uint8Array`, so `v[1]` is always a
+    number and the fallback was unreachable. Simplified to `const port=v[1];`.
+  - **`h.voltageMv`/`h.currentMa` now cleared on disconnect**, next to the existing
+    `h.battery=null`, in both the `gattserverdisconnected` handler and `disconnect()` in
+    [js/app.js](js/app.js) — otherwise the hub panel kept showing the last reading from a hub
+    that is no longer connected.
+  - **Stale task-number breadcrumbs removed.** The "moved to … in Tasks 2/3" / "which Tasks
+    4-8 create" comments in [js/app.js](js/app.js) referenced internal plan task numbers that
+    mean nothing now the restructuring has landed. Replaced with one short map of what each
+    directory owns. Same for the header comment of `test/blocks/core.test.js`, which claimed
+    `onSensorValue` was untested.
+  - Suite: 60 tests passing (53 before this wave, +7 new).
+
 ## 2026-09-17 (16)
 
 - Task 16: Hub button as a programmable block (`StartOnButtonPressBlock`). The final task
@@ -65,8 +138,12 @@
   no sprite art for a second light block). Adds `ledSetRGB(r,g,b)` to
   [js/blocks/rgb-light.js](js/blocks/rgb-light.js), sending `[6, 0x04, 3, r, g, b]` — same
   port (6) and command (`0x04`) as the existing discrete-index write, just a 3-byte RGB
-  payload instead of 1 byte; the hub tells the two modes apart by payload length alone, so
-  no separate mode-switch write is needed. `RgbLight.execLight(it,r)` now checks
+  payload instead of 1 byte. ~~The hub tells the two modes apart by payload length alone, so
+  no separate mode-switch write is needed.~~ **Superseded by the 2026-09-17 (17) review-fix
+  entry above:** that claim could not be checked without real hardware and should never have
+  been stated as fact. The input-format mode-switch write the design spec and this task's
+  plan both called for is now implemented (`ledSetMode()`), and is itself documented as
+  unverified. `RgbLight.execLight(it,r)` now checks
   `it.customRGB` first, falling back to the discrete-index path when it's absent. The
   chosen RGB triple is stored directly on the block item as `it.customRGB={r,g,b}` — the
   same pattern already used for `StartOnKeyPressBlock.letter` — leaving `it.input`/
@@ -141,13 +218,15 @@
   octave 1–6 number input), wired into `handleTap`/`openInputUI` alongside the other
   block-specific dialogs. New tests in `test/blocks/piezo-tone-player.test.js` cover frequency
   conversion and the exact output byte payloads for play/stop.
-  - Known gap: `docs/io-inventory-vs-wedo2-sdk.md`, which several earlier tasks' plans call
+  - ~~Known gap: `docs/io-inventory-vs-wedo2-sdk.md`, which several earlier tasks' plans call
     for updating, does not exist anywhere in this repository's git history (confirmed via
     `git log --all -- docs/io-inventory-vs-wedo2-sdk.md`) and isn't present in this worktree
     either — it appears to have been created only in a since-discarded, untracked local copy
     by an earlier task and never committed. Left uncreated here rather than fabricated from
     scratch without visibility into what it documented for other tasks; flagged for a
-    follow-up to reconstruct it if still wanted.
+    follow-up to reconstruct it if still wanted.~~
+    **Resolved** two commits later (`91332e0`): the doc was reconstructed and committed, and
+    every task from Task 12 onward updates it. No longer an open problem.
 
 ## 2026-09-16 (17)
 

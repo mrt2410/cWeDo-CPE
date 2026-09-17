@@ -133,6 +133,15 @@ function onSensorValue(ev){
   const buf=ev.target.value.buffer;
   const v=new Uint8Array(buf), dv=new DataView(buf);
   if(v.length<6) return;
+  /* The hub's own voltage/current telemetry rides this same characteristic —
+     js/telemetry/voltage-current.js adds a second listener to it, so those
+     notifications arrive here too. They always carry their port in byte 1, and
+     it never matches an attached tilt/distance sensor, so without this they
+     would fall through to the v[0] guess below and a raw millivolt float could
+     be read as a tilt direction. (VOLTAGE_PORT/CURRENT_PORT are declared in
+     voltage-current.js, which loads after this file; that's fine — like the
+     Tilt/Motion references below, they are only resolved when this runs.) */
+  if(v[1]===VOLTAGE_PORT||v[1]===CURRENT_PORT) return;
   const val=dv.getFloat32(2,true);
   let port=v[1];                                   /* byte 1 is the port... */
   if(port!==Tilt.state.port&&port!==Motion.state.port) port=v[0];   /* ...usually */

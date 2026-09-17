@@ -30,7 +30,7 @@ Object.assign(Telemetry,{
         const buf=ev.target.value.buffer;
         const v=new Uint8Array(buf), dv=new DataView(buf);
         if(v.length<6) return;
-        const port=v[1]!=null?v[1]:v[0], reading=dv.getFloat32(2,true);
+        const port=v[1], reading=dv.getFloat32(2,true);
         if(port===VOLTAGE_PORT){ h.voltageMv=reading; renderHubs(); }
         else if(port===CURRENT_PORT){ h.currentMa=reading; renderHubs(); }
       });

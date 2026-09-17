@@ -12,16 +12,18 @@ RGB Light(23), Tilt Sensor(34), Motion/Distance Sensor(35).
 
 ## 1. What this app currently implements
 
-Block roster is defined in `js/app.js` (`SOCKETED`/`INPUTS` sets near the top, and
-the `execBlock` switch around [js/app.js:789](js/app.js#L789)).
+Block roster is defined in [js/blocks/core.js](../js/blocks/core.js) (`SOCKETED`/`INPUTS`
+sets near the top, and the `execBlock` switch around
+[js/blocks/core.js:300](../js/blocks/core.js#L300)), which dispatches to the per-device
+files under `js/blocks/` and `js/telemetry/`.
 
 ### Outputs (actuators)
 
 | Block(s) | Hub feature | Notes |
 |---|---|---|
 | `MotorPowerBlock`, `MotorThisWayBlock`, `MotorThatWayBlock`, `MotorOffBlock`, `MotorOnForBlock`, `MotorBrakeBlock` | Motor (type 1) | [js/blocks/motor.js](../js/blocks/motor.js): `motorRun()` (run at %), `MotorOffBlock`/`execOff` for drift (power 0), and `MotorBrakeBlock`/`execBrake` for instant brake (power 127) per `MOTOR_POWER_BRAKE`. Always writes to **both** ports 1 and 2 with the same command rather than the actual attached motor's port — fine for the classic single-motor WeDo model, but not per-motor addressable. |
-| `LightBlock` | RGB Light (type 23), **Discrete + Absolute mode** | [js/blocks/rgb-light.js](../js/blocks/rgb-light.js) `ledSet()`/`ledSetRGB()`. Discrete: `[0x06, 0x04, 0x01, index]`, 1-byte palette index 0–10, matches the SDK's `set_color_index()`. Absolute (full-colour): `[0x06, 0x04, 0x03, r, g, b]`, 3-byte RGB payload, matches `set_color()`/`RGBLightMode.RGB_LIGHT_MODE_ABSOLUTE` — same port (6) and command (`0x04`) as the discrete write; the hub tells the two apart by payload length alone, so no separate mode-switch write is needed. Reachable in the UI via a 12th "Custom…" tile in the existing colour dialog (`js/app.js` `buildColourList()`/`openRgbSliders()`), which opens three R/G/B sliders; the chosen triple is stored on the block item as `it.customRGB={r,g,b}` (same pattern as `StartOnKeyPressBlock.letter`), with `it.input`/`it.inputValue` left as a display-only `'RGB'` placeholder. |
-| `PlaySoundBlock` | *(not a hub feature)* | Plays a bundled/recorded sound through the **tablet's own speaker** via Web Audio (`js/app.js:432` `playSound()`), not the hub's piezo buzzer. |
+| `LightBlock` | RGB Light (type 23), **Discrete + Absolute mode** | [js/blocks/rgb-light.js](../js/blocks/rgb-light.js) `ledSet()`/`ledSetRGB()`. Discrete: `[0x06, 0x04, 0x01, index]`, 1-byte palette index 0–10, matches the SDK's `set_color_index()`. Absolute (full-colour): `[0x06, 0x04, 0x03, r, g, b]`, 3-byte RGB payload, matches `set_color()`/`RGBLightMode.RGB_LIGHT_MODE_ABSOLUTE` — same port (6) and command (`0x04`) as the discrete write, differing only in payload length. Each command declares its mode first: `ledSetMode()` writes an input format (`inputFormat(6, 23, mode, 0)` — the same byte layout `configurePort()` uses for tilt/distance) to the input characteristic, mode `0` before a discrete write and mode `1` before an absolute one, so neither command depends on what mode the other left the hub in. **This mode-switch write is UNVERIFIED against real hardware** — same caveat category as the piezo port and the voltage/current ports below: nobody has confirmed on a real hub whether it is actually required (payload length alone may be enough to disambiguate), nor that `23`/`0`/`1` are the right type and mode bytes. It is written because the SDK's own device classes set an input format before driving a device, and a redundant write is cheaper than a silently misread colour command. Reachable in the UI via a 12th "Custom…" tile in the existing colour dialog (`js/app.js` `buildColourList()`/`openRgbSliders()`), which opens three R/G/B sliders; the chosen triple is stored on the block item as `it.customRGB={r,g,b}` (same pattern as `StartOnKeyPressBlock.letter`), with `it.input`/`it.inputValue` left as a display-only `'RGB'` placeholder. |
+| `PlaySoundBlock` | *(not a hub feature)* | Plays a bundled/recorded sound through the **tablet's own speaker** via Web Audio ([js/blocks/sound.js:82](../js/blocks/sound.js#L82) `playSound()`), not the hub's piezo buzzer. |
 | `PlayToneBlock` | Piezo Tone Player (type 22) — **implemented** | [js/blocks/piezo-tone-player.js](../js/blocks/piezo-tone-player.js) `playTone()`/`stopTone()`. Sends `[port, 0x02, 0x04, freq_lo, freq_hi, dur_lo, dur_hi]` to play (command `0x02` = `PLAY_PIEZO_TONE_COMMAND_ID`, little-endian u16 frequency/duration) and `[port, 0x03, 0x00]` to stop (`0x03` = `STOP_PIEZO_TONE_COMMAND_ID`), matching `output_command.py` exactly. Note-to-frequency uses equal temperament (A4=440Hz). **The hub port (`5`) is an unverified guess** by analogy with the LED's hardcoded port `6` — the SDK doesn't hardcode a port for the piezo (it discovers `connect_id` dynamically), so this needs confirming against real hardware. |
 | `DisplayBlock`, `DisplayBackgroundBlock`, `DisplayClosedBlock`, `DisplayMediumsizeBlock`, `DisplayFullsizeBlock`, `Add/Subtract/Multiply/DivideDisplayBlock` | *(not a hub feature)* | A virtual on-screen "display" widget, purely software (mirrors the original WeDo/ScratchJr-style app screen). |
 | `SendMessageBlock` / `StartOnMessageBlock` / `StartOnKeyPressBlock` / `WaitForBlock` | *(not a hub feature)* | In-app broadcast/messaging between block stacks. |
@@ -30,10 +32,10 @@ the `execBlock` switch around [js/app.js:789](js/app.js#L789)).
 
 | Block(s) | Hub feature | Notes |
 |---|---|---|
-| `AnyTilt`, `TiltUp`, `TiltDown`, `TiltThisWay`, `TiltThatWay`, `TiltSensorInput` | Tilt Sensor (type 34), **Tilt/direction mode only** | [js/app.js:186](js/app.js#L186)–302. Reports the same 5-state direction enum as the SDK's `TiltSensorMode.TILT_SENSOR_MODE_TILT` (0/3/5/7/9). Auto-detected and auto-configured on attach via `configurePort()`. |
-| `AnyDistanceChange`, `DistanceChangeCloser`, `DistanceChangeFurther`, `DistanceSensorInput` | Motion/Distance Sensor (type 35), **Detect mode only** | Same file, 0–10 range clamp matches the SDK's `MAX_DISTANCE`/`MIN_DISTANCE`. |
+| `AnyTilt`, `TiltUp`, `TiltDown`, `TiltThisWay`, `TiltThatWay`, `TiltSensorInput` | Tilt Sensor (type 34), **Tilt/direction mode only** | [js/blocks/tilt-sensor.js](../js/blocks/tilt-sensor.js). Reports the same 5-state direction enum as the SDK's `TiltSensorMode.TILT_SENSOR_MODE_TILT` (0/3/5/7/9). Auto-detected and auto-configured on attach via `configurePort()`. |
+| `AnyDistanceChange`, `DistanceChangeCloser`, `DistanceChangeFurther`, `DistanceSensorInput` | Motion/Distance Sensor (type 35), **Detect mode only** | [js/blocks/motion-sensor.js](../js/blocks/motion-sensor.js), 0–10 range clamp matches the SDK's `MAX_DISTANCE`/`MIN_DISTANCE`. |
 | `StartOnButtonPressBlock` | Hub button (standard GATT), **implemented** | [js/blocks/messaging.js](../js/blocks/messaging.js) `triggerButtonPress()` and [js/telemetry/button-battery.js](../js/telemetry/button-battery.js) for state tracking. Reuses the existing `h.pressed` boolean flag updated on every button characteristic notification. |
-| `SoundSensorInput` | *(not a hub feature)* | Uses the **tablet's microphone** via `getUserMedia` ([js/app.js:444](js/app.js#L444)), not a hub sensor — WeDo 2.0 never had a physical sound sensor. |
+| `SoundSensorInput` | *(not a hub feature)* | Uses the **tablet's microphone** via `getUserMedia` ([js/blocks/sound.js:98](../js/blocks/sound.js#L98)), not a hub sensor — WeDo 2.0 never had a physical sound sensor. |
 | `NumberInput`, `TextInput`, `DisplayInput`, `RandomInput` | *(not a hub feature)* | Generic literal/software inputs used to feed numeric sockets. |
 
 ### Extras beyond the SDK's scope
@@ -61,8 +63,9 @@ Also now implemented, this time an actual `IOType` the SDK does cover:
 ## 3. Proposed implementation
 
 Ordered roughly by value vs. effort. All of these reuse the existing `sendOut()` /
-`writeOut()` output-command plumbing ([js/app.js:743](js/app.js#L743)) and the
-`configurePort()` / `onSensorValue()` input-format plumbing already in the file —
+`writeOut()` output-command plumbing ([js/blocks/core.js:283](../js/blocks/core.js#L283)) and
+the `configurePort()` / `onSensorValue()` input-format plumbing already in
+[js/blocks/core.js](../js/blocks/core.js) —
 no new architecture needed, just new device types and blocks.
 
 1. ~~**Piezo Tone Player output**~~ — **Implemented** (`PlayToneBlock`, see section 1's
@@ -117,7 +120,8 @@ no new architecture needed, just new device types and blocks.
 7. **Hub Button as a programmable input** (not an SDK gap, but adjacent — cheap since
    the button is already read)
    - Add `StartOnButtonPressBlock` alongside the existing `StartOnKeyPressBlock`,
-     reusing the `h.pressed` state already tracked at [js/app.js:1874](js/app.js#L1874).
+     reusing the `h.pressed` state already tracked at
+     [js/telemetry/button-battery.js:11](../js/telemetry/button-battery.js#L11).
 
 Items 1 (Piezo Tone Player), 2 (Motor brake), 3 (RGB Light Absolute mode), 4 (Motor power offset compensation), 5 (Voltage/Current telemetry), and 7 (Hub Button as a programmable input) have been implemented — see section 1's Outputs/Extras tables and the "Inputs" section.
 
