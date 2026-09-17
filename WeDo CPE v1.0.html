@@ -114,6 +114,12 @@
     <h3>Light colour</h3>
     <p>Tap a colour to choose it, or the bulb to try it on the hub.</p>
     <div id="colgrid"></div>
+    <div id="rgbsliders">
+      <div class="rgbrow"><label for="rgbr">R</label><input id="rgbr" type="range" min="0" max="255"><span id="rgbrval" class="rgbval"></span></div>
+      <div class="rgbrow"><label for="rgbg">G</label><input id="rgbg" type="range" min="0" max="255"><span id="rgbgval" class="rgbval"></span></div>
+      <div class="rgbrow"><label for="rgbb">B</label><input id="rgbb" type="range" min="0" max="255"><span id="rgbbval" class="rgbval"></span></div>
+      <button id="rgbapply">Apply custom colour</button>
+    </div>
     <button id="colclose">Done</button>
   </div>
 </div>

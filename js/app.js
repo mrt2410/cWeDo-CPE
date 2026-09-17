@@ -683,7 +683,7 @@ function buildColourList(){
   const current=colourTarget?String(colourTarget.inputValue):null;
   for(let i=0;i<=10;i++){
     const d=document.createElement('div');
-    d.className='srow'+(current===String(i)?' chosen':'');
+    d.className='srow'+(current===String(i)&&!(colourTarget&&colourTarget.customRGB)?' chosen':'');
     const pick=document.createElement('button'); pick.className='pick';
     pick.innerHTML='<b>'+i+'</b><span class="swatch'+(i===0?' off':'')+'" style="'+
       (i===0?'':'background:'+LED_HEX[i])+'"></span>'+LED_NAMES[i];
@@ -694,11 +694,47 @@ function buildColourList(){
     prev.onclick=e=>{ e.stopPropagation(); ledSet(i); };
     d.appendChild(pick); d.appendChild(prev); g.appendChild(d);
   }
+  const custom=document.createElement('div');
+  custom.className='srow'+(colourTarget&&colourTarget.customRGB?' chosen':'');
+  const pick=document.createElement('button'); pick.className='pick';
+  const rgb=colourTarget&&colourTarget.customRGB;
+  pick.innerHTML='<b>—</b><span class="swatch" style="background:rgb('+
+    (rgb?rgb.r+','+rgb.g+','+rgb.b:'0,255,255')+')"></span>Custom…';
+  pick.onclick=()=>openRgbSliders();
+  custom.appendChild(pick); g.appendChild(custom);
 }
+function openRgbSliders(){
+  const rgb=(colourTarget&&colourTarget.customRGB)||{r:0,g:255,b:255};
+  const r=document.getElementById('rgbr'), gg=document.getElementById('rgbg'), b=document.getElementById('rgbb');
+  r.value=rgb.r; gg.value=rgb.g; b.value=rgb.b;
+  document.getElementById('rgbrval').textContent=rgb.r;
+  document.getElementById('rgbgval').textContent=rgb.g;
+  document.getElementById('rgbbval').textContent=rgb.b;
+  document.getElementById('rgbsliders').style.display='block';
+}
+['rgbr','rgbg','rgbb'].forEach(id=>{
+  document.getElementById(id).oninput=e=>{
+    document.getElementById(id+'val').textContent=e.target.value;
+  };
+});
+document.getElementById('rgbapply').onclick=()=>{
+  if(colourTarget){
+    colourTarget.customRGB={
+      r:+document.getElementById('rgbr').value,
+      g:+document.getElementById('rgbg').value,
+      b:+document.getElementById('rgbb').value
+    };
+    colourTarget.input='NumberInput'; colourTarget.inputValue='RGB';
+    log('custom colour rgb('+colourTarget.customRGB.r+','+colourTarget.customRGB.g+','+
+        colourTarget.customRGB.b+') chosen');
+  }
+  closeColourDialog(); render();
+};
 function chooseColour(i){
   if(colourTarget){
     colourTarget.input='NumberInput';
     colourTarget.inputValue=String(i);
+    delete colourTarget.customRGB;
     log('colour '+i+' ('+LED_NAMES[i]+') chosen');
   }
   closeColourDialog(); render();
@@ -708,6 +744,7 @@ function closeColourDialog(){
 }
 function openColourDialog(item){
   colourTarget=item||null;
+  document.getElementById('rgbsliders').style.display='none';
   buildColourList();
   colEl().classList.add('open'); colEl().classList.remove('armed');
   setTimeout(()=>{ if(colEl().classList.contains('open')) colEl().classList.add('armed'); },300);
