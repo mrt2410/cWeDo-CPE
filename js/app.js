@@ -585,7 +585,7 @@ function openTonePicker(item){
   setTimeout(()=>{ if(tnEl().classList.contains('open')) tnEl().classList.add('armed'); },300);
 }
 function closeTonePicker(){
-  tnEl().classList.remove('open'); tnEl().classList.remove('armed'); toneTarget=null; render();
+  tnEl().classList.remove('open'); tnEl().classList.remove('armed'); toneTarget=null;
 }
 document.getElementById('tnclose').onclick=closeTonePicker;
 tnEl().onclick=e=>{ if(e.target===tnEl()) closeTonePicker(); };
