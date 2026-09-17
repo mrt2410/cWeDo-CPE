@@ -1,1 +1,9 @@
 node_modules/
+mobile/node_modules/
+mobile/www/
+mobile/android/
+release/*
+!release/.gitkeep
+docs/
+.claude/
+AGENTS.md
