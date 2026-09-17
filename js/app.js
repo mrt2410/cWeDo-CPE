@@ -48,10 +48,20 @@ const EDITABLE=['NumberInput','TextInput'];
 function blockEl(key,s,label){
   const m=S[key],d=document.createElement('div');d.className='wrap blk';
   d.style.width=(m.w*s)+'px';d.style.height=(m.h*s)+'px';
-  const i=document.createElement('img');i.src=m.d;
-  i.style.width=(m.cw*s)+'px';i.style.height=(m.ch*s)+'px';
-  i.style.left=(-m.x0*s)+'px';i.style.top=(-m.y0*s)+'px';
-  d.appendChild(i);
+  if(m.custom){
+    d.classList.add('custom-blk');
+    d.style.background=m.colour;
+    d.style.borderRadius=Math.round(18*s)+'px';
+    const t=document.createElement('div');t.className='custom-label';
+    t.style.fontSize=Math.round(m.h*0.22*s)+'px';
+    t.textContent=m.label;
+    d.appendChild(t);
+  }else{
+    const i=document.createElement('img');i.src=m.d;
+    i.style.width=(m.cw*s)+'px';i.style.height=(m.ch*s)+'px';
+    i.style.left=(-m.x0*s)+'px';i.style.top=(-m.y0*s)+'px';
+    d.appendChild(i);
+  }
   if(label!=null&&key==='StartOnKeyPressBlock'){
     const t=document.createElement('div'); t.className='kletter';
     t.style.left=(KEYCAP.x*s)+'px'; t.style.top=(KEYCAP.y*s)+'px';
