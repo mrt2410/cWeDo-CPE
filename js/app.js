@@ -371,8 +371,26 @@ let pending=null;
    does nothing on its own, so without this the hidden scrollbar would have
    been the only way to pan sideways with a mouse */
 let panDrag=null;
+/* two-finger pinch to zoom: touch-action:pan-x pan-y already tells the
+   browser not to handle pinch itself (and the viewport meta blocks page
+   zoom too), so a second touch has nowhere to go unless we drive it. */
+const touchPts=new Map();   /* pointerId -> {x,y} */
+let pinch=null;             /* {dist,cu0} */
+const touchDist=()=>{
+  const [a,b]=[...touchPts.values()];
+  return Math.hypot(a.x-b.x,a.y-b.y);
+};
 addEventListener('pointerdown',ev=>{
   if(ev.button!==undefined&&ev.button!==0) return;
+  if(ev.pointerType==='touch'&&ev.target.closest('#stage')){
+    touchPts.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+    if(touchPts.size===2){
+      if(drag) finishDrag(lastX,lastY);   /* safely drop whatever was mid-drag */
+      clearHold(pending);pending=null;
+      pinch={dist:touchDist(),cu0:cu};
+    }
+    if(touchPts.size>=2){ ev.preventDefault(); return; }
+  }
   if(ev.pointerType==='mouse'&&ev.target.closest('#stage')&&!ev.target.closest('.blk')){
     const stage=stageEl();
     panDrag={sx:ev.clientX,sy:ev.clientY,left:stage.scrollLeft,top:stage.scrollTop};
@@ -839,6 +857,14 @@ const TRAY_LIFT=12;   /* how far up you must swipe to pull a block out of the tr
    a tap with any roll in it became a drag and the block just snapped back. */
 const slopFor=p => p.pt==='touch' ? 12 : 6;
 addEventListener('pointermove',ev=>{
+  if(ev.pointerType==='touch'&&touchPts.has(ev.pointerId)){
+    touchPts.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+    if(pinch&&touchPts.size>=2){
+      applyZoom(pinch.cu0*(touchDist()/pinch.dist));
+      ev.preventDefault();
+      return;
+    }
+  }
   if(panDrag){
     const stage=stageEl();
     stage.scrollLeft=panDrag.left-(ev.clientX-panDrag.sx);
@@ -917,6 +943,7 @@ function finishDrag(cx,cy){
   if(tapped) openInputUI(tapped);
 }
 addEventListener('pointerup',ev=>{
+  if(ev.pointerType==='touch'){ touchPts.delete(ev.pointerId); if(touchPts.size<2) pinch=null; }
   if(panDrag){ panDrag=null; stageEl().classList.remove('panning'); return; }
   if(pending&&!drag){
     const p=pending;pending=null;clearHold(p);
@@ -927,7 +954,8 @@ addEventListener('pointerup',ev=>{
   finishDrag(ev.clientX,ev.clientY);
 });
 /* the browser claiming the gesture as a scroll cancels the pointer */
-addEventListener('pointercancel',()=>{
+addEventListener('pointercancel',ev=>{
+  if(ev.pointerType==='touch'){ touchPts.delete(ev.pointerId); if(touchPts.size<2) pinch=null; }
   if(panDrag){ panDrag=null; stageEl().classList.remove('panning'); }
   clearHold(pending);
   if(!drag){pending=null;return;}
@@ -936,11 +964,12 @@ addEventListener('pointercancel',()=>{
 
 /* ---- zoom ---- */
 let cu=118;
-function setZoom(delta){
-  cu=Math.max(70,Math.min(190,cu+delta));
+function applyZoom(newCu){
+  cu=Math.max(70,Math.min(190,Math.round(newCu)));
   document.documentElement.style.setProperty('--cu',cu);
   render();
 }
+function setZoom(delta){ applyZoom(cu+delta); }
 zin.onclick =()=>setZoom(16);
 zout.onclick=()=>setZoom(-16);
 /* the canvas is bigger than the viewport in every direction, so a plain wheel
