@@ -19,7 +19,7 @@ the `execBlock` switch around [js/app.js:789](js/app.js#L789)).
 
 | Block(s) | Hub feature | Notes |
 |---|---|---|
-| `MotorPowerBlock`, `MotorThisWayBlock`, `MotorThatWayBlock`, `MotorOffBlock`, `MotorOnForBlock` | Motor (type 1) | [js/app.js:760](js/app.js#L760) `motorRun()`. Always writes to **both** ports 1 and 2 with the same command rather than the actual attached motor's port — fine for the classic single-motor WeDo model, but not per-motor addressable. Only "run at %" is implemented; no brake vs. drift distinction (see gap below). |
+| `MotorPowerBlock`, `MotorThisWayBlock`, `MotorThatWayBlock`, `MotorOffBlock`, `MotorOnForBlock`, `MotorBrakeBlock` | Motor (type 1) | [js/blocks/motor.js](../js/blocks/motor.js): `motorRun()` (run at %), `MotorOffBlock`/`execOff` for drift (power 0), and `MotorBrakeBlock`/`execBrake` for instant brake (power 127) per `MOTOR_POWER_BRAKE`. Always writes to **both** ports 1 and 2 with the same command rather than the actual attached motor's port — fine for the classic single-motor WeDo model, but not per-motor addressable. |
 | `LightBlock` | RGB Light (type 23), **Discrete mode only** | [js/app.js:783](js/app.js#L783) `ledSet()`. Sends `[0x06, 0x04, 0x01, index]` — port 6 (the hub's built-in LED), command `0x04` (`WRITE_RGB_COMMAND_ID` in the SDK), 1-byte palette index 0–10. Matches the SDK's `set_color_index()` exactly. |
 | `PlaySoundBlock` | *(not a hub feature)* | Plays a bundled/recorded sound through the **tablet's own speaker** via Web Audio (`js/app.js:432` `playSound()`), not the hub's piezo buzzer. |
 | `PlayToneBlock` | Piezo Tone Player (type 22) — **implemented** | [js/blocks/piezo-tone-player.js](../js/blocks/piezo-tone-player.js) `playTone()`/`stopTone()`. Sends `[port, 0x02, 0x04, freq_lo, freq_hi, dur_lo, dur_hi]` to play (command `0x02` = `PLAY_PIEZO_TONE_COMMAND_ID`, little-endian u16 frequency/duration) and `[port, 0x03, 0x00]` to stop (`0x03` = `STOP_PIEZO_TONE_COMMAND_ID`), matching `output_command.py` exactly. Note-to-frequency uses equal temperament (A4=440Hz). **The hub port (`5`) is an unverified guess** by analogy with the LED's hardcoded port `6` — the SDK doesn't hardcode a port for the piezo (it discovers `connect_id` dynamically), so this needs confirming against real hardware. |
@@ -47,7 +47,6 @@ them — they're standard BLE GATT services the hub also implements):
 | Missing capability | SDK reference | Why it matters |
 |---|---|---|
 | **RGB Light Absolute mode** (full 0–255/0–255/0–255 color) | `rgb_light.py::set_color()`, `RGBLightMode.RGB_LIGHT_MODE_ABSOLUTE` | Only the 11-color discrete palette is reachable today; the hub also supports arbitrary RGB. |
-| **Motor brake vs. drift** | `motor.py`: `MOTOR_POWER_BRAKE = 127`, `MOTOR_POWER_DRIFT = 0` | `MotorOffBlock` always sends power 0 (drift/coast). There's no "brake" (`127`, instant stop) distinct from "drift" (coast to a stop from inertia). |
 | **Motor power offset compensation** | `bluetooth_io.py::write_motor_power()` — remaps 1–100 input onto an actual 35–100 output range | Low motor power settings in this app may do nothing (motor stall), since raw percentages are sent unmodified — the SDK compensates so "low power" still reliably moves the motor. |
 | **Tilt Sensor Angle mode** (continuous x/y degrees, −45..45) | `tilt_sensor.py::get_angle()`, `TiltSensorMode.TILT_SENSOR_MODE_ANGLE` | Only the 5-state discrete direction is read; no continuous tilt angle input exists for e.g. steering-wheel-style controls. |
 | **Motion Sensor Count mode** (counts objects passing) | `motion_sensor.py::get_count()`, `MotionSensorMode.MOTION_SENSOR_MODE_COUNT` | Only "current distance" (Detect mode) is read; there's no "count objects that passed" input. |
@@ -68,10 +67,14 @@ no new architecture needed, just new device types and blocks.
    picker); duration comes from the block's own numeric socket, same as every other
    timed block. The one item from this proposal still outstanding: **the hub port (`5`)
    is an unverified guess** and needs confirming against real hardware — everything else
-   below (wire format, command IDs, note-to-frequency math) was carried over unchanged
+   (wire format, command IDs, note-to-frequency math) was carried over unchanged
    from this proposal.
 
-2. **RGB Light Absolute mode** (extends the existing `LightBlock`/`ledSet` path)
+2. ~~**Motor brake**~~ — **Implemented** (`MotorBrakeBlock`, see section 1's Outputs table
+   and [js/blocks/motor.js](../js/blocks/motor.js)) sending power byte `127` for instant
+   stop, distinct from `MotorOffBlock`'s drift behavior (power byte `0`).
+
+3. **RGB Light Absolute mode** (extends the existing `LightBlock`/`ledSet` path)
    - Add a mode switch (`[0x01,0x02,port,23,1,...]` input-format write to select
      Absolute mode 1 vs. Discrete mode 0, same as `configurePort()` already does for
      tilt/distance) plus a new output write `[0x06, 0x04, 0x03, r, g, b]` (command
@@ -79,11 +82,6 @@ no new architecture needed, just new device types and blocks.
    - UI: either a second block ("Set Light Color RGB") or upgrade the existing colour
      dialog ([js/app.js:1277](js/app.js#L1277) `openColourDialog`) with an RGB picker
      alongside the current 11-swatch palette.
-
-3. **Motor brake** (small, high-value fix)
-   - Add a `MotorBrakeBlock` (or extend `MotorOffBlock` with a variant) sending power
-     byte `127` instead of `0`, per `MOTOR_POWER_BRAKE` in the SDK. Keep `MotorOffBlock`
-     as drift (`0`) since that's the current, tested behavior.
 
 4. **Motor power offset compensation** (bug-fix-sized, no new block)
    - In `motorRun()` ([js/app.js:760](js/app.js#L760)), remap the 1–100 input range to
@@ -111,7 +109,7 @@ no new architecture needed, just new device types and blocks.
    - Add `StartOnButtonPressBlock` alongside the existing `StartOnKeyPressBlock`,
      reusing the `h.pressed` state already tracked at [js/app.js:1874](js/app.js#L1874).
 
-Item 1 (Piezo Tone Player) has since been implemented — see section 1's Outputs table.
+Items 1 (Piezo Tone Player) and 2 (Motor brake) have been implemented — see section 1's Outputs table.
 The rest of this document remains the inventory/proposal only, per the original request.
 Follow the project's TDD convention (`AGENTS.md`) when building any of the above: write a
 failing test in `test/` first, since the BLE writes themselves can't be exercised in

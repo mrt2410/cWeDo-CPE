@@ -29,6 +29,19 @@ async function motorRun(power){
   return true;
 }
 
+/* the LEGO SDK's MOTOR_POWER_BRAKE constant: instant stop (vs. power 0,
+   which drifts/coasts to a stop under inertia — MotorOffBlock's behavior) */
+const MOTOR_POWER_BRAKE=127;
+async function motorBrake(){
+  const h=connectedHub();
+  if(!h||!h.out){ log('motor brake: no hub connected — command skipped'); return false; }
+  const pk=[new Uint8Array([1,0x01,0x01,MOTOR_POWER_BRAKE]),new Uint8Array([2,0x01,0x01,MOTOR_POWER_BRAKE])];
+  try{ for(const d of pk) await writeOut(h.out,d,h); }
+  catch(e){ log('motor brake write failed: '+e.message); return false; }
+  log('motor -> brake');
+  return true;
+}
+
 const Motor={
   async execPower(it,r){
     const lvl=inputNumber(it,DEFAULT_LEVEL);
@@ -59,5 +72,10 @@ const Motor={
        error, a stop press, or the program being edited mid-run */
     try{ await sleep(secs*1000,r); }
     finally{ await motorRun(0); }
+  },
+  async execBrake(it,r){
+    await motorBrake(); await sleep(STEP,r);
   }
 };
+
+registerCustomBlock('MotorBrakeBlock',{label:'Brake',group:'Motor'});

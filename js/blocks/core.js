@@ -295,6 +295,7 @@ async function execBlock(it,r){
     case 'MotorThatWayBlock':  await Motor.execThatWay(it,r); break;
     case 'MotorOffBlock':      await Motor.execOff(it,r); break;
     case 'MotorOnForBlock':    await Motor.execOnFor(it,r); break;
+    case 'MotorBrakeBlock':    await Motor.execBrake(it,r); break;
     case 'WaitForBlock':{
       if(!it.input){ log('Wait For skipped — no input attached'); await sleep(STEP,r); break; }
       await waitForInput(it,r);

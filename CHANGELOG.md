@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-09-17 (12)
+
+- Task 12: Motor brake (`MotorBrakeBlock`). New instant-stop capability (power byte 127)
+  distinct from `MotorOffBlock`'s drift behavior (power byte 0), per `MOTOR_POWER_BRAKE` in
+  the LEGO-WeDo-2.0-Python-SDK. Adds `motorBrake()` function and `Motor.execBrake(it,r)`
+  method to [js/blocks/motor.js](js/blocks/motor.js), `MotorBrakeBlock` case in
+  [js/blocks/core.js](js/blocks/core.js)'s `execBlock` dispatcher, and `MotorBrakeBlock`
+  registration via `registerCustomBlock` (CSS-fallback rendering). New tests in
+  `test/blocks/motor.test.js` cover both `motorRun()` with negative power (encoding check)
+  and `motorBrake()` with the brake power byte, using the corrected hub-mocking pattern from
+  Task 11's tests (probe option + direct hubs Map mutation). Updated
+  `docs/io-inventory-vs-wedo2-sdk.md` to mark motor brake as implemented and remove it from
+  the "what's missing" gaps list. The test suite passes cleanly (44/44 tests).
+
 ## 2026-09-17
 
 - Task 11: Piezo Tone Player (`PlayToneBlock`). New `js/blocks/piezo-tone-player.js`
