@@ -12,7 +12,9 @@ sensors directly from a web page. No app store, no install, no build step.
   <sub>No install, no download — works in <b>Chrome, Edge, Opera, or Brave</b> (Web Bluetooth required for hub connection).</sub>
 </p>
 
-![cWeDo CPE screenshot](assets/screenshot.png)
+| Block editor | Hub connection panel |
+| :---: | :---: |
+| ![cWeDo CPE screenshot](assets/screenshot.png) | ![Hub connected and running a program](assets/screenshot_1.png) |
 
 ## Why this exists
 
