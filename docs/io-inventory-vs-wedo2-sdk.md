@@ -42,6 +42,9 @@ them — they're standard BLE GATT services the hub also implements):
 - **Hub button** state (`C_BUTTON` characteristic, [js/app.js:1872](js/app.js#L1872)) — currently telemetry-only (shown in the hub panel), not wired to a programmable block.
 - **Battery level** (standard `battery_level` GATT characteristic, [js/app.js:1878](js/app.js#L1878)) — same, telemetry-only.
 
+Also now implemented, this time an actual `IOType` the SDK does cover:
+- **Voltage (type 20) / Current (type 21) sensors**, read-only hub-panel telemetry — [js/telemetry/voltage-current.js](../js/telemetry/voltage-current.js) `wireVoltageCurrent()`. Configured once per connect (hub-internal, not port-attached, so no `configurePort()`/attach-detection needed) via an `inputFormat` write against each sensor's own fixed connect ID, same idea as the SDK's `VoltageSensor`/`CurrentSensor` constructors. Readings are shown next to the battery badge in the hub panel (`.voltcur` in `renderHubs()`). **Ports 4 (voltage) and 3 (current) are unverified guesses**, same caveat as the piezo's port `5` — needs confirming against real hardware. No block/program use case yet, per the design doc — telemetry-only for now.
+
 ## 2. What's missing, compared to the SDK
 
 | Missing capability | SDK reference | Why it matters |
@@ -50,8 +53,8 @@ them — they're standard BLE GATT services the hub also implements):
 | ~~**Motor power offset compensation**~~ — **Implemented** | `bluetooth_io.py::write_motor_power()` — remaps 1–100 input onto an actual 35–100 output range | Remaps input power 1–100 onto output 35–100 before sending so low settings still move the motor (hardware stall floor ~35%), matching the SDK's behavior. See [js/blocks/motor.js](../js/blocks/motor.js) `motorRun()`. |
 | **Tilt Sensor Angle mode** (continuous x/y degrees, −45..45) | `tilt_sensor.py::get_angle()`, `TiltSensorMode.TILT_SENSOR_MODE_ANGLE` | Only the 5-state discrete direction is read; no continuous tilt angle input exists for e.g. steering-wheel-style controls. |
 | **Motion Sensor Count mode** (counts objects passing) | `motion_sensor.py::get_count()`, `MotionSensorMode.MOTION_SENSOR_MODE_COUNT` | Only "current distance" (Detect mode) is read; there's no "count objects that passed" input. |
-| **Voltage sensor** (type 20) | `smarthub.py::get_voltage()` | Hub reports its own battery voltage in mV; not read at all (the app only reads the coarse GATT `battery_level` %, a different, standard BLE service). |
-| **Current sensor** (type 21) | `smarthub.py::get_current()` | Hub reports live current draw in mA; not read at all. |
+| ~~**Voltage sensor** (type 20)~~ — **Implemented** | `smarthub.py::get_voltage()` | Now read as hub-panel telemetry (mV, shown as V). See [js/telemetry/voltage-current.js](../js/telemetry/voltage-current.js). |
+| ~~**Current sensor** (type 21)~~ — **Implemented** | `smarthub.py::get_current()` | Now read as hub-panel telemetry (mA). Same file. |
 | **Hub button as a programmable input** | *(not in SDK — see note)* | Not an SDK gap, but a related gap in this app: button state is tracked but not exposed as a "Start on Button Press" block, even though the wiring to read it already exists. |
 
 ## 3. Proposed implementation
@@ -92,14 +95,16 @@ no new architecture needed, just new device types and blocks.
      35–100 before sending, exactly as `bluetooth_io.py::write_motor_power()` does:
      `actual = round(35 + (100 - 35) / 100 * power)` (sign preserved separately).
 
-5. **Voltage / Current telemetry** (read-only, low risk)
-   - These are hub-internal sensors (not port-attached), so no `configurePort()` /
+5. ~~**Voltage / Current telemetry**~~ — **Implemented** (read-only, hub-panel telemetry,
+   see section 1's Extras and [js/telemetry/voltage-current.js](../js/telemetry/voltage-current.js))
+   - Hub-internal sensors (not port-attached), so no `configurePort()` /
      attach-detection needed — just an `inputFormat` write once per connect targeting
-     the hub's fixed voltage/current connect IDs, then read notifications the same way
-     `onSensorValue` already does for tilt/distance.
-   - Start as hub-panel telemetry (like button/battery today) rather than new blocks,
-     since there's no obvious "program" use case yet — a natural follow-up once it's
-     wired up would be a `BatteryLowInput` condition block.
+     the hub's fixed voltage/current connect IDs, then a second listener on the
+     existing sensor-value characteristic, the same way `onSensorValue` already
+     does for tilt/distance.
+   - Shipped as hub-panel telemetry (like button/battery today) rather than a new
+     block, since there's no obvious "program" use case yet — a natural follow-up
+     once it's wired up would be a `BatteryLowInput` condition block.
 
 6. **Tilt Angle mode** and **Motion Count mode** (nice-to-have, more UI design work)
    - Both require: (a) a way to pick the sensor's mode from the block UI (today mode
@@ -113,7 +118,7 @@ no new architecture needed, just new device types and blocks.
    - Add `StartOnButtonPressBlock` alongside the existing `StartOnKeyPressBlock`,
      reusing the `h.pressed` state already tracked at [js/app.js:1874](js/app.js#L1874).
 
-Items 1 (Piezo Tone Player), 2 (Motor brake), and 4 (Motor power offset compensation) have been implemented — see section 1's Outputs table.
+Items 1 (Piezo Tone Player), 2 (Motor brake), 4 (Motor power offset compensation), and 5 (Voltage/Current telemetry) have been implemented — see section 1's Outputs/Extras tables.
 The rest of this document remains the inventory/proposal only, per the original request.
 Follow the project's TDD convention (`AGENTS.md`) when building any of the above: write a
 failing test in `test/` first, since the BLE writes themselves can't be exercised in

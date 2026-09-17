@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-09-17 (15)
+
+- Task 15: Voltage/current telemetry. New `js/telemetry/voltage-current.js` extends the
+  `Telemetry` namespace (from Task 9's `js/telemetry/button-battery.js`) via `Object.assign`
+  with `wireVoltageCurrent(h,io)`, adding read-only hub-panel readouts for the hub's built-in
+  Voltage (type 20) and Current (type 21) sensors — per the design doc, shipped as telemetry
+  rather than a new block, since there's no clear "program" use case yet (unlike tilt/distance,
+  which drive program logic). Both are hub-internal, not port-attached devices, so unlike
+  Tilt/Motion there's no attach-notification flow to hook: `wireVoltageCurrent` just writes an
+  `inputFormat()` configure command directly against each sensor's own fixed connect ID once
+  per connect (mode 0, SI units), then adds a second `characteristicvaluechanged` listener on
+  the existing sensor-value characteristic (`h.val`) alongside `js/app.js`'s own listener —
+  supported directly by the EventTarget API, no need to replace the existing listener. On a
+  matching-port notification it stores `h.voltageMv`/`h.currentMa` and calls `renderHubs()`.
+  **Ports 4 (voltage) and 3 (current) are unverified guesses** by analogy with the piezo's port
+  5 and the LED's port 6 — needs confirming against real hardware. Wired into `connect()` in
+  `js/app.js` right after the existing I/O-service block. `renderHubs()` gained a `.voltcur`
+  readout row next to the battery badge (`V` from mV/1000, `mA` as-is, `--` when unset); added
+  the matching CSS rule to `css/style.css` and the new script's `<script>` tag (after
+  `button-battery.js`, before `app.js`) to `WeDo CPE v1.0.html`. New
+  `test/telemetry/voltage-current.test.js` calls `wireVoltageCurrent` directly off
+  `dom.window.Telemetry` with fake I/O characteristics and asserts both configure writes
+  happen — this required the same `probe: "window.Telemetry = Telemetry;"` treatment as
+  other top-level `const` objects in this suite (`Telemetry` is invisible on `window` without
+  it, since jsdom's indirect `eval()` never assigns `const`/`let` bindings to the global
+  object — confirmed empirically), even though the task brief's own test snippet omitted it.
+  Added `js/telemetry/voltage-current.js` to `test/helpers.js`'s `SCRIPTS` list. Updated
+  `docs/io-inventory-vs-wedo2-sdk.md` to mark the Voltage/Current sensor rows and proposal
+  item 5 as implemented. The test suite passes cleanly (51/51 tests: 50 existing + 1 new).
+
 ## 2026-09-17 (14)
 
 - Task 14: RGB Light absolute (full-colour) mode. Extends the existing `LightBlock`'s
