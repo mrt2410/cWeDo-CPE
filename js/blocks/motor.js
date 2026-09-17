@@ -4,11 +4,9 @@
 const motorState={power:null,dir:null};
 const DEFAULT_LEVEL=10;    /* until Motor Power carries an input */
 
-/* Level 1-10 maps onto 35-100%. The motor stalls below roughly a third power —
-   measured on real hardware: 29% would not turn, 38% would. */
-const POWER_FLOOR=35;
-const levelToPower=l => l<=0 ? 0
-  : Math.round(POWER_FLOOR+(Math.min(l,10)-1)*((100-POWER_FLOOR)/9));
+/* Level 1-10 maps onto raw 1-100 power range; motorRun() applies the stall-floor
+   compensation (remaps 1-100 → 35-100), so this function provides the uncompensated input. */
+const levelToPower=l => l<=0 ? 0 : Math.min(l,10)*10;
 
 /* -100..100; negative is encoded as 256+value. Both ports are addressed so any
    attached motor responds, and both packets are dispatched before either is
