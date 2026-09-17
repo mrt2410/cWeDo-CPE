@@ -1,9 +1,8 @@
-// Covers the pieces of js/blocks/core.js that are usable in isolation today —
-// pure classification/data helpers and the execution engine's non-sensor
-// building blocks. execBlock/runStack/onPortEvent/onSensorValue/
-// sensorCondition/etc. all need Tilt/Motion/Motor to exist and are left for
-// the full suite once those land (Task 9) — see the module comment in
-// js/blocks/core.js and docs/superpowers/plans/2026-09-16-wedo2-io-blocks.md.
+// Covers js/blocks/core.js: the pure classification/data helpers, the
+// execution engine's non-sensor building blocks, and the shared sensor bus's
+// port dispatch (onSensorValue). The block-running side (execBlock/runStack/
+// execRepeat) is exercised through the per-device suites instead, since what
+// it does is delegate to Motor/Display/RgbLight/etc.
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { loadApp } = require("../helpers.js");
@@ -143,4 +142,56 @@ test("randomFor uses a Repeat block's own range regardless of its (absent) key",
   const n = dom.window.randomFor({ t: "r" });
   assert.equal(Number.isInteger(n), true);
   assert.ok(n >= 1 && n <= 10, `expected 1-10, got ${n}`);
+});
+
+// ---------------------------------------------------------------------------
+// onSensorValue's port dispatch. The hub reports the port in byte 1, but some
+// write-ups put it in byte 0, so there is a fallback to v[0] when v[1] matches
+// no attached sensor. js/telemetry/voltage-current.js adds a *second* listener
+// to the same characteristic, which means voltage/current notifications now
+// also reach onSensorValue — and their ports (4 and 3) never match an attached
+// tilt/distance sensor, so without an explicit guard they hit that fallback and
+// a raw millivolt float can be handed to Tilt.onValue as a direction code.
+//
+// Tilt/Motion are top-level `const` namespace objects; `probe` hands the real
+// ones to the test (see the note above), and their methods are replaced by
+// mutating the object — reassigning the binding from a later eval() wouldn't
+// reach the copy core.js actually closes over.
+
+/** Builds a characteristicvaluechanged event in the shape onSensorValue parses:
+ * byte 0 and byte 1 are both candidate port bytes, bytes 2..5 a LE float32. */
+function fakeSensorEvent(byte0, byte1, reading) {
+  const buf = new ArrayBuffer(6);
+  const dv = new DataView(buf);
+  dv.setUint8(0, byte0);
+  dv.setUint8(1, byte1);
+  dv.setFloat32(2, reading, true);
+  return { target: { value: { buffer: buf } } };
+}
+
+test("onSensorValue ignores voltage/current notifications instead of guessing a sensor port", async (t) => {
+  const dom = await loadApp({ probe: "window.__Tilt = Tilt; window.__Motion = Motion;" });
+  t.after(() => dom.window.close());
+  const { window } = dom;
+
+  window.__Tilt.state.port = 1;
+  window.__Motion.state.port = 2;
+  const tiltValues = [], motionValues = [];
+  window.__Tilt.onValue = (v) => tiltValues.push(v);
+  window.__Motion.onValue = (v) => motionValues.push(v);
+
+  // a voltage reading (port 4 in byte 1) whose byte 0 happens to be the tilt port
+  window.onSensorValue(fakeSensorEvent(1, 4, 12150.5));
+  assert.deepEqual(tiltValues, [],
+    "a voltage notification must not be parsed as a tilt direction");
+
+  // a current reading (port 3 in byte 1) whose byte 0 happens to be the distance port
+  window.onSensorValue(fakeSensorEvent(2, 3, 340.25));
+  assert.deepEqual(motionValues, [],
+    "a current notification must not be parsed as a distance reading");
+
+  // sanity: a genuine tilt notification still gets through
+  window.onSensorValue(fakeSensorEvent(0, 1, 3));
+  assert.deepEqual(tiltValues, [3]);
+  assert.deepEqual(motionValues, []);
 });

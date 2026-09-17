@@ -147,29 +147,24 @@ function buildSeq(items,x,y,s,ctx,stack,inLoop){
   return w;
 }
 
-/* Tilt/Motion sensor logic (port dispatch, event bus, execution engine) moved
-   to js/blocks/core.js. The per-device tilt/distance state and condition
-   logic itself moves to js/blocks/tilt-sensor.js / motion-sensor.js in
-   Tasks 2/3. STATE_KEYS is defined in tilt-sensor.js. */
+/* Everything below the rendering code used to live in this file. It is now
+   split by concern, and this file keeps only the app shell: layout/rendering,
+   the drag-and-drop editor, the dialogs, save/open, and hub connection.
 
-/* Execution engine (STEP/mark/sleep/until/waitForInput/loopCount/runBody/
-   execRepeat/execSeq/runStack/stopStack/stopAll/haltEverything/updateStop)
-   moved to js/blocks/core.js. */
+   js/blocks/core.js      shared block data, the sensor bus (port dispatch,
+                          event counting, configurePort/sendOut/writeOut) and
+                          the execution engine (execBlock/execSeq/execRepeat/
+                          runStack/sleep/until/haltEverything).
+   js/blocks/*.js         one file per hub device — Tilt, Motion, Motor,
+                          RgbLight, PiezoTonePlayer, sound, display, messaging.
+                          Each owns its own state, constants and exec* methods,
+                          which core.js's execBlock dispatches to. STATE_KEYS
+                          lives in tilt-sensor.js.
+   js/telemetry/*.js      hub-internal readings (button/battery,
+                          voltage/current) that feed the hub panel. */
+
 /* ---- display area wiring (see js/blocks/display.js) ---- */
 wireDisplayChrome();
-
-/* inputNumber/writeOut/sendOut moved to js/blocks/core.js. */
-
-/* execBlock/runBody/execRepeat/execSeq moved to js/blocks/core.js. Note: the
-   per-block behaviour that used to live in execBlock's switch (motor state,
-   display, light, wait-for dispatch) is NOT preserved here — core.js's new
-   execBlock is a dispatcher that calls into per-device namespaces (Motor.*,
-   Display.*, RgbLight.*) which Tasks 4-8 create with their own logic. */
-/* sameMsg/broadcast/triggerKey and the keydown listener moved to
-   js/blocks/messaging.js. */
-
-/* runStack/stopStack/stopAll/haltEverything/updateStop moved to
-   js/blocks/core.js. */
 
 let anchors=[], ejectAnim=null;
 
@@ -432,6 +427,10 @@ function beginDrag(ev){
     origin=ref.item;
     payload={kind:'input',key:ref.item.input,value:ref.item.inputValue};
     ref.item.input=null; ref.item.inputValue=undefined;
+    /* a Light block's custom colour belongs to the socket's contents, not to
+       the block: leaving it behind would keep overriding whatever is plugged
+       in next, since execLight checks customRGB before the attached input */
+    delete ref.item.customRGB;
     if(ref.item.t==='r'&&ref.arr&&ref.index<ref.arr.length-1){
       const trailing=ref.arr.splice(ref.index+1);
       const st=ref.stack;
@@ -581,7 +580,11 @@ function openTonePicker(item){
   });
   const oc=document.getElementById('tnoctave');
   oc.value=item?item.octave:4;
-  oc.oninput=()=>{ if(toneTarget) toneTarget.octave=Math.max(1,Math.min(6,Math.round(+oc.value)||4)); };
+  oc.oninput=()=>{
+    if(!toneTarget) return;
+    toneTarget.octave=Math.max(1,Math.min(6,Math.round(+oc.value)||4));
+    render();      /* picking a note re-renders and so autosaves; an octave change must too */
+  };
   tnEl().classList.add('open'); tnEl().classList.remove('armed');
   setTimeout(()=>{ if(tnEl().classList.contains('open')) tnEl().classList.add('armed'); },300);
 }
@@ -859,6 +862,7 @@ function finishDrag(cx,cy){
     if(a&&drag.payload.kind==='input'){
       const oldKey=a.item.input, oldVal=a.item.inputValue;
       a.item.input=drag.payload.key; a.item.inputValue=drag.payload.value;
+      delete a.item.customRGB;    /* the new input wins — see beginDrag() */
       if(oldKey&&oldKey!==drag.payload.key||(oldKey&&drag.origin!==a.item)){
         /* the one that was here falls out and stays on the canvas, value intact */
         const s=scale(), m=S[oldKey];
@@ -1148,7 +1152,8 @@ async function connect(device){
     }catch(e){log('attached-IO unavailable: '+e.message);}
     if(!h.wired){h.wired=true;
       device.addEventListener('gattserverdisconnected',()=>{
-        h.connected=false;h.pressed=false;h.battery=null;h.out=null;h.inp=null;h.val=null;
+        h.connected=false;h.pressed=false;h.battery=null;h.voltageMv=null;h.currentMa=null;
+        h.out=null;h.inp=null;h.val=null;
         clearSensors();
         log('disconnected: '+(h.name||''));hintEl.textContent='';renderHubs();setHubWidget();});}
     rememberLastHub(device.id,name);
@@ -1165,7 +1170,8 @@ async function disconnect(h){
   catch(e){ log('could not reset the light: '+e.message); }
   try{if(h.device.gatt.connected)h.device.gatt.disconnect();log('disconnect requested');}
   catch(e){log('disconnect error: '+e.message);}
-  h.connected=false;h.pressed=false;h.battery=null;h.out=null;h.inp=null;h.val=null;
+  h.connected=false;h.pressed=false;h.battery=null;h.voltageMv=null;h.currentMa=null;
+  h.out=null;h.inp=null;h.val=null;
   clearSensors();
   hintEl.textContent='';renderHubs();setHubWidget();
 }
