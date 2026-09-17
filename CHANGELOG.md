@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-09-17 (13)
+
+- Task 13: Motor power offset compensation. Remaps input power 1–100 onto output 35–100
+  (hardware stall floor ~35%) so low-power settings still move the motor, matching the
+  LEGO-WeDo-2.0-Python-SDK's `write_motor_power()` behavior. Modified `motorRun()` in
+  [js/blocks/motor.js](js/blocks/motor.js) to apply the formula
+  `compensated = round(35 + (65/100)*|power|)` for non-zero power, preserving sign via a
+  separate `signed` variable before byte encoding. Zero power remains 0 (genuine stop, not
+  minimum speed). No new block — this changes what `MotorPowerBlock`/`MotorOnForBlock` already
+  send. Updated the existing Task 12 test `motorRun(-50)` to expect the new compensated byte
+  value (188, computed as `round(35+65/100*50)=68; 256-68=188` for negative encoding) instead of
+  the old uncompensated value (206). Added 3 new tests covering positive low power, negative
+  low power with sign preservation, and zero (no floor). All tests use the corrected hub-mocking
+  pattern from Task 12 (probe option + direct hubs Map mutation). Updated
+  `docs/io-inventory-vs-wedo2-sdk.md` to mark motor power offset compensation as implemented
+  and removed it from the "what's missing" gaps list. The test suite passes cleanly (47/47 tests:
+  44 existing + 3 new).
+
 ## 2026-09-17 (12)
 
 - Task 12: Motor brake (`MotorBrakeBlock`). New instant-stop capability (power byte 127)
