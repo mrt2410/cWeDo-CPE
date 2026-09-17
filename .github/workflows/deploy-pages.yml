@@ -1,0 +1,73 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+
+      - name: Build static site
+        run: |
+          set -euo pipefail
+          site="$RUNNER_TEMP/site"
+          mkdir -p "$site"
+          cp -L index.html "$site/index.html"
+          cp -r css "$site/css"
+          cp -r js "$site/js"
+          cp -r data "$site/data"
+
+      - name: Publish version to gh-pages
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME}"
+          site="$RUNNER_TEMP/site"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git fetch origin gh-pages
+            git checkout -B gh-pages origin/gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+
+          rm -rf index.html css js data "$version"
+          cp -r "$site/." .
+          mkdir -p "$version"
+          cp -r "$site/." "$version/"
+
+          touch .nojekyll
+
+          {
+            echo "<!DOCTYPE html>"
+            echo "<html lang=\"en\"><head><meta charset=\"utf-8\">"
+            echo "<title>cWeDo CPE — versions</title></head><body>"
+            echo "<h1>cWeDo CPE — versions</h1>"
+            echo "<p><a href=\"./\">Latest (root)</a></p>"
+            echo "<ul>"
+            for d in v*/; do
+              d="${d%/}"
+              echo "  <li><a href=\"$d/\">$d</a></li>"
+            done
+            echo "</ul></body></html>"
+          } > versions.html
+
+          git add -A
+          git commit -m "Publish $version" --allow-empty
+          git push origin gh-pages
