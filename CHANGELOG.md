@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-09-17 (14)
+
+- Task 14: RGB Light absolute (full-colour) mode. Extends the existing `LightBlock`'s
+  colour-picker dialog with a 12th "Custom…" tile rather than adding a new block (there's
+  no sprite art for a second light block). Adds `ledSetRGB(r,g,b)` to
+  [js/blocks/rgb-light.js](js/blocks/rgb-light.js), sending `[6, 0x04, 3, r, g, b]` — same
+  port (6) and command (`0x04`) as the existing discrete-index write, just a 3-byte RGB
+  payload instead of 1 byte; the hub tells the two modes apart by payload length alone, so
+  no separate mode-switch write is needed. `RgbLight.execLight(it,r)` now checks
+  `it.customRGB` first, falling back to the discrete-index path when it's absent. The
+  chosen RGB triple is stored directly on the block item as `it.customRGB={r,g,b}` — the
+  same pattern already used for `StartOnKeyPressBlock.letter` — leaving `it.input`/
+  `it.inputValue` as a display-only `'RGB'` placeholder so `execBlock`'s existing "no input
+  attached" check still works unchanged. In `js/app.js`, `buildColourList()` gained the
+  "Custom…" tile (showing the last-picked RGB as its swatch, or a cyan placeholder),
+  `openRgbSliders()` populates and reveals the new `#rgbsliders` panel, `rgbapply`'s click
+  handler writes `customRGB`/the `'RGB'` placeholder onto the target item, `chooseColour()`
+  now clears any previous `customRGB` when a discrete swatch is picked instead, and
+  `openColourDialog()` hides the slider panel whenever the dialog (re)opens. Added the
+  `#rgbsliders` markup (three `type="range" min="0" max="255"` inputs with R/G/B labels and
+  live numeric readouts, plus an `#rgbapply` button) inside `#colcard` in
+  `WeDo CPE v1.0.html`, and matching CSS in `css/style.css` styled to fit the existing
+  `.srow`/`#colcard`/`#colgrid` dialog family (accent-coloured sliders on a light grey
+  panel, a green "Apply custom colour" button matching `#colclose`'s style). New tests in
+  `test/blocks/rgb-light.test.js` cover `ledSetRGB()`'s byte payload and
+  `RgbLight.execLight`'s `customRGB`-over-discrete-index precedence, using the corrected
+  hub-mocking pattern from prior tasks (`probe` option + direct `hubs` Map mutation); the
+  `RgbLight` object itself needed the same `probe`-exposure treatment as `hubs`, since it's
+  also a top-level `const` invisible to a later separate `eval()` call, so it's read
+  directly off `window.__RgbLight` rather than referenced from inside `window.eval(...)`.
+  The dialog/slider UI itself is manual-verification territory (jsdom doesn't exercise it
+  interactively), same as the rest of this app's UI. The test suite passes cleanly
+  (50/50 tests: 48 existing + 2 new).
+
 ## 2026-09-17 (13)
 
 - Task 13: Motor power offset compensation. Remaps input power 1–100 onto output 35–100
