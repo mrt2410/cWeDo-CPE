@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-09-17 (16)
+
+- Task 16: Hub button as a programmable block (`StartOnButtonPressBlock`). The final task
+  in the 16-task block-file split and I/O feature plan. Adds `triggerButtonPress()` to
+  [js/blocks/messaging.js](js/blocks/messaging.js) alongside `broadcast()` and `triggerKey()`,
+  wired to fire when the hub's physical button is pressed (already tracked by Task 9's
+  `js/telemetry/button-battery.js`). The function iterates `stacks`, finds all programs
+  whose head is a `StartOnButtonPressBlock`, and runs each via `runStack()`, just like
+  `triggerKey()` does for keyboard presses. Logs `"hub button pressed — N program(s) started"`
+  for telemetry. Updated `STARTS` set in [js/blocks/core.js](js/blocks/core.js) to include
+  `'StartOnButtonPressBlock'` and registered the block via
+  `registerCustomBlock('StartOnButtonPressBlock', {label:'Hub Button', group:'Flow'})` with
+  CSS-fallback rendering (no sprite art). Wired tap-to-test into `handleTap()` in
+  [js/app.js](js/app.js) alongside the existing `StartBlock`/`StartOnKeyPressBlock` cases.
+  New tests in `test/blocks/messaging.test.js` use the corrected test-mocking pattern from
+  earlier tasks: `probe: "window.__stacks = stacks;"` to expose the real `stacks` array
+  reference (avoiding the lexical-environment bug with separate `eval()` calls), then mutate
+  it in place with `window.__stacks.length = 0; window.__stacks.push(...)` rather than
+  reassigning. `runStack` is mocked directly via `window.runStack = (st) => ...` since it's
+  a function declaration. Tests verify both that `StartOnButtonPressBlock`-headed stacks run
+  and that other block types are ignored. Updated `docs/io-inventory-vs-wedo2-sdk.md` to mark
+  item 7 (Hub Button as a programmable input) and item 3 (RGB Light Absolute mode) as
+  implemented, and updated the summary to reflect all 5 proposed I/O features now shipped
+  (Piezo Tone Player, Motor brake, RGB Light Absolute, Motor power offset compensation,
+  Voltage/Current telemetry, plus this new Hub Button). Added the button to the Inputs
+  table. The test suite passes cleanly (53/53 tests: 51 existing + 2 new), confirming Task
+  9's forward reference in `js/telemetry/button-battery.js` now resolves cleanly.
+
 ## 2026-09-17 (15)
 
 - Task 15: Voltage/current telemetry. New `js/telemetry/voltage-current.js` extends the

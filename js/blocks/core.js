@@ -2,7 +2,7 @@
 const B=WEDO_DATA.bundle;
 const S=B.sprites, ORDER=B.order;
 
-const STARTS=new Set(['StartBlock','StartOnKeyPressBlock','StartOnMessageBlock']);
+const STARTS=new Set(['StartBlock','StartOnKeyPressBlock','StartOnMessageBlock','StartOnButtonPressBlock']);
 const SOCKETED=new Set(['StartOnMessageBlock','SendMessageBlock','WaitForBlock','MotorPowerBlock',
   'MotorOnForBlock','LightBlock','PlaySoundBlock','DisplayBackgroundBlock','DisplayBlock',
   'AddtoDisplayBlock','SubtractfromDisplayBlock','MultiplybyDisplayBlock','DividebyDisplayBlock']);
@@ -406,3 +406,4 @@ addEventListener('pagehide',()=>haltEverything('page closed'));
 function updateStop(){
   document.getElementById('stop').classList.toggle('active',runners.size>0);
 }
+registerCustomBlock('StartOnButtonPressBlock',{label:'Hub Button',group:'Flow'});

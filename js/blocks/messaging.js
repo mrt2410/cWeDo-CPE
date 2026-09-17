@@ -21,6 +21,16 @@ function triggerKey(letter){
   });
   if(n) log('key "'+letter+'" pressed — '+n+' program'+(n===1?'':'s')+' started');
 }
+function triggerButtonPress(){
+  let n=0;
+  stacks.forEach(st=>{
+    const head=st.items[0];
+    if(head&&head.t==='b'&&head.key==='StartOnButtonPressBlock'){
+      n++; runStack(st);
+    }
+  });
+  if(n) log('hub button pressed — '+n+' program'+(n===1?'':'s')+' started');
+}
 addEventListener('keydown',ev=>{
   if(letterTarget||editing) return;                       /* a dialog is open */
   const t=ev.target;

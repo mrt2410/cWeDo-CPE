@@ -32,6 +32,7 @@ the `execBlock` switch around [js/app.js:789](js/app.js#L789)).
 |---|---|---|
 | `AnyTilt`, `TiltUp`, `TiltDown`, `TiltThisWay`, `TiltThatWay`, `TiltSensorInput` | Tilt Sensor (type 34), **Tilt/direction mode only** | [js/app.js:186](js/app.js#L186)–302. Reports the same 5-state direction enum as the SDK's `TiltSensorMode.TILT_SENSOR_MODE_TILT` (0/3/5/7/9). Auto-detected and auto-configured on attach via `configurePort()`. |
 | `AnyDistanceChange`, `DistanceChangeCloser`, `DistanceChangeFurther`, `DistanceSensorInput` | Motion/Distance Sensor (type 35), **Detect mode only** | Same file, 0–10 range clamp matches the SDK's `MAX_DISTANCE`/`MIN_DISTANCE`. |
+| `StartOnButtonPressBlock` | Hub button (standard GATT), **implemented** | [js/blocks/messaging.js](../js/blocks/messaging.js) `triggerButtonPress()` and [js/telemetry/button-battery.js](../js/telemetry/button-battery.js) for state tracking. Reuses the existing `h.pressed` boolean flag updated on every button characteristic notification. |
 | `SoundSensorInput` | *(not a hub feature)* | Uses the **tablet's microphone** via `getUserMedia` ([js/app.js:444](js/app.js#L444)), not a hub sensor — WeDo 2.0 never had a physical sound sensor. |
 | `NumberInput`, `TextInput`, `DisplayInput`, `RandomInput` | *(not a hub feature)* | Generic literal/software inputs used to feed numeric sockets. |
 
@@ -39,8 +40,8 @@ the `execBlock` switch around [js/app.js:789](js/app.js#L789)).
 
 The app also surfaces two things the SDK doesn't expose at all (no `IOType` covers
 them — they're standard BLE GATT services the hub also implements):
-- **Hub button** state (`C_BUTTON` characteristic, [js/app.js:1872](js/app.js#L1872)) — currently telemetry-only (shown in the hub panel), not wired to a programmable block.
-- **Battery level** (standard `battery_level` GATT characteristic, [js/app.js:1878](js/app.js#L1878)) — same, telemetry-only.
+- **Hub button** state (`C_BUTTON` characteristic, [js/telemetry/button-battery.js](../js/telemetry/button-battery.js)) — **now wired to a programmable block** via `StartOnButtonPressBlock` and `triggerButtonPress()` ([js/blocks/messaging.js](../js/blocks/messaging.js)). Also shown in the hub panel for telemetry.
+- **Battery level** (standard `battery_level` GATT characteristic, [js/telemetry/button-battery.js](../js/telemetry/button-battery.js)) — telemetry-only, shown in the hub panel.
 
 Also now implemented, this time an actual `IOType` the SDK does cover:
 - **Voltage (type 20) / Current (type 21) sensors**, read-only hub-panel telemetry — [js/telemetry/voltage-current.js](../js/telemetry/voltage-current.js) `wireVoltageCurrent()`. Configured once per connect (hub-internal, not port-attached, so no `configurePort()`/attach-detection needed) via an `inputFormat` write against each sensor's own fixed connect ID, same idea as the SDK's `VoltageSensor`/`CurrentSensor` constructors. Readings are shown next to the battery badge in the hub panel (`.voltcur` in `renderHubs()`). **Ports 4 (voltage) and 3 (current) are unverified guesses**, same caveat as the piezo's port `5` — needs confirming against real hardware. No block/program use case yet, per the design doc — telemetry-only for now.
@@ -55,7 +56,7 @@ Also now implemented, this time an actual `IOType` the SDK does cover:
 | **Motion Sensor Count mode** (counts objects passing) | `motion_sensor.py::get_count()`, `MotionSensorMode.MOTION_SENSOR_MODE_COUNT` | Only "current distance" (Detect mode) is read; there's no "count objects that passed" input. |
 | ~~**Voltage sensor** (type 20)~~ — **Implemented** | `smarthub.py::get_voltage()` | Now read as hub-panel telemetry (mV, shown as V). See [js/telemetry/voltage-current.js](../js/telemetry/voltage-current.js). |
 | ~~**Current sensor** (type 21)~~ — **Implemented** | `smarthub.py::get_current()` | Now read as hub-panel telemetry (mA). Same file. |
-| **Hub button as a programmable input** | *(not in SDK — see note)* | Not an SDK gap, but a related gap in this app: button state is tracked but not exposed as a "Start on Button Press" block, even though the wiring to read it already exists. |
+| ~~**Hub button as a programmable input**~~ — **Implemented** | *(not in SDK — see note)* | Wired to `StartOnButtonPressBlock`, reusing `h.pressed` state tracked at [js/telemetry/button-battery.js](../js/telemetry/button-battery.js). See [js/blocks/messaging.js](../js/blocks/messaging.js) `triggerButtonPress()`. |
 
 ## 3. Proposed implementation
 
@@ -118,8 +119,10 @@ no new architecture needed, just new device types and blocks.
    - Add `StartOnButtonPressBlock` alongside the existing `StartOnKeyPressBlock`,
      reusing the `h.pressed` state already tracked at [js/app.js:1874](js/app.js#L1874).
 
-Items 1 (Piezo Tone Player), 2 (Motor brake), 4 (Motor power offset compensation), and 5 (Voltage/Current telemetry) have been implemented — see section 1's Outputs/Extras tables.
-The rest of this document remains the inventory/proposal only, per the original request.
+Items 1 (Piezo Tone Player), 2 (Motor brake), 3 (RGB Light Absolute mode), 4 (Motor power offset compensation), 5 (Voltage/Current telemetry), and 7 (Hub Button as a programmable input) have been implemented — see section 1's Outputs/Extras tables and the "Inputs" section.
+
+Items 6 (Tilt Angle mode and Motion Count mode) remain in the proposal — they require additional UI design work for mode selection per sensor.
+
 Follow the project's TDD convention (`AGENTS.md`) when building any of the above: write a
 failing test in `test/` first, since the BLE writes themselves can't be exercised in
 jsdom (Web Bluetooth isn't available there) — test the byte-encoding/state-management

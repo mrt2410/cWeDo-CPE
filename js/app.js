@@ -475,6 +475,7 @@ function handleTap(p){
   if(it.key==='StartBlock'){ runStack(ref.stack); }
   /* same path as a real key press, so every block with that letter runs */
   else if(it.key==='StartOnKeyPressBlock'){ triggerKey(it.letter||'A'); }
+  else if(it.key==='StartOnButtonPressBlock'){ triggerButtonPress(); }
 }
 /* ---- editing an input's value ---- */
 let editing=null, edBuf='';
