@@ -335,6 +335,7 @@
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .batt{font-size:11px;color:#fff;border:2px solid #fff;border-radius:3px;padding:2px 5px;position:relative;min-width:38px;text-align:center}
   .batt:after{content:"";position:absolute;right:-5px;top:6px;width:3px;height:8px;background:#fff;border-radius:0 2px 2px 0}
+  .voltcur{font-size:11px;color:#8a97a3;margin:0 6px}
   .kill{width:34px;height:34px;border-radius:50%;background:#e03434;border:none;cursor:pointer;display:grid;place-items:center;flex:0 0 auto}
   .kill svg{width:16px;height:16px;stroke:#fff;stroke-width:3;stroke-linecap:round;fill:none}
   #panelfoot{padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;flex:0 0 auto}

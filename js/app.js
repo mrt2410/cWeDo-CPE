@@ -1102,6 +1102,12 @@ function renderHubs(){
     if(h.connected){
       const b=document.createElement('div');b.className='batt';
       b.textContent=(h.battery!=null?h.battery+'%':'--');r.appendChild(b);
+      if(h.voltageMv!=null||h.currentMa!=null){
+        const vc=document.createElement('div');vc.className='voltcur';
+        vc.textContent=(h.voltageMv!=null?(h.voltageMv/1000).toFixed(2)+'V':'--')+' / '+
+                        (h.currentMa!=null?h.currentMa.toFixed(0)+'mA':'--');
+        r.appendChild(vc);
+      }
       const k=document.createElement('button');k.className='kill';k.title='Disconnect';
       k.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
       k.onclick=e=>{e.stopPropagation();disconnect(h);};r.appendChild(k);
@@ -1134,6 +1140,7 @@ async function connect(device){
       await h.val.startNotifications();
       h.val.addEventListener('characteristicvaluechanged',onSensorValue);
       log('I/O characteristics ready');
+      await Telemetry.wireVoltageCurrent(h,io);
     }catch(e){log('I/O service unavailable: '+e.message);}
     try{const ac=await svc.getCharacteristic(C_ATTACHED);await ac.startNotifications();
       ac.addEventListener('characteristicvaluechanged',onPortEvent);
