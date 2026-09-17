@@ -366,8 +366,20 @@ function showIndicator(a){
 
 let lastX=0,lastY=0;
 let pending=null;
+/* mouse-drag panning of the blank canvas: touch already scrolls #stage
+   natively (touch-action:pan-x pan-y), but a mouse press over empty space
+   does nothing on its own, so without this the hidden scrollbar would have
+   been the only way to pan sideways with a mouse */
+let panDrag=null;
 addEventListener('pointerdown',ev=>{
   if(ev.button!==undefined&&ev.button!==0) return;
+  if(ev.pointerType==='mouse'&&ev.target.closest('#stage')&&!ev.target.closest('.blk')){
+    const stage=stageEl();
+    panDrag={sx:ev.clientX,sy:ev.clientY,left:stage.scrollLeft,top:stage.scrollTop};
+    stage.classList.add('panning');
+    ev.preventDefault();
+    return;
+  }
   const pit=ev.target.closest('.pitem');
   if(pit){
     /* no preventDefault here: a sideways swipe must reach the tray as a scroll.
@@ -827,6 +839,12 @@ const TRAY_LIFT=12;   /* how far up you must swipe to pull a block out of the tr
    a tap with any roll in it became a drag and the block just snapped back. */
 const slopFor=p => p.pt==='touch' ? 12 : 6;
 addEventListener('pointermove',ev=>{
+  if(panDrag){
+    const stage=stageEl();
+    stage.scrollLeft=panDrag.left-(ev.clientX-panDrag.sx);
+    stage.scrollTop =panDrag.top -(ev.clientY-panDrag.sy);
+    return;
+  }
   if(pending&&!drag){
     const dx=ev.clientX-pending.sx, dy=ev.clientY-pending.sy, slop=slopFor(pending);
     if(pending.from==='tray'&&pending.pt==='touch'){
@@ -899,6 +917,7 @@ function finishDrag(cx,cy){
   if(tapped) openInputUI(tapped);
 }
 addEventListener('pointerup',ev=>{
+  if(panDrag){ panDrag=null; stageEl().classList.remove('panning'); return; }
   if(pending&&!drag){
     const p=pending;pending=null;clearHold(p);
     if(!p.consumed) handleTap(p);
@@ -909,6 +928,7 @@ addEventListener('pointerup',ev=>{
 });
 /* the browser claiming the gesture as a scroll cancels the pointer */
 addEventListener('pointercancel',()=>{
+  if(panDrag){ panDrag=null; stageEl().classList.remove('panning'); }
   clearHold(pending);
   if(!drag){pending=null;return;}
   finishDrag(lastX,lastY);
@@ -916,8 +936,20 @@ addEventListener('pointercancel',()=>{
 
 /* ---- zoom ---- */
 let cu=118;
-zin.onclick =()=>{cu=Math.min(190,cu+16);document.documentElement.style.setProperty('--cu',cu);render();};
-zout.onclick=()=>{cu=Math.max(70,cu-16);document.documentElement.style.setProperty('--cu',cu);render();};
+function setZoom(delta){
+  cu=Math.max(70,Math.min(190,cu+delta));
+  document.documentElement.style.setProperty('--cu',cu);
+  render();
+}
+zin.onclick =()=>setZoom(16);
+zout.onclick=()=>setZoom(-16);
+/* the canvas is bigger than the viewport in every direction, so a plain wheel
+   would otherwise just scroll it — zoom is more useful there, and dragging
+   blank canvas (see panDrag above) already covers panning with a mouse */
+stageEl().addEventListener('wheel',ev=>{
+  ev.preventDefault();
+  setZoom(ev.deltaY<0?16:-16);
+},{passive:false});
 addEventListener('resize',()=>{drawTray();paintDisplay();});
 addEventListener('load',()=>setTimeout(()=>splash.classList.add('gone'),900));
 document.getElementById('stop').onclick=stopAll;

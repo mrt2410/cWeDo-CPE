@@ -22,7 +22,11 @@
 
   #app{height:100%;display:flex;flex-direction:column}
   #work{flex:1;min-height:0;position:relative;overflow:hidden;background:#fff}
-  #stage{position:absolute;inset:0;overflow:auto;background:#fff;transition:background .2s;touch-action:pan-x pan-y}
+  #stage{position:absolute;inset:0;overflow:auto;background:#fff;transition:background .2s;touch-action:pan-x pan-y;cursor:grab}
+  #stage.panning{cursor:grabbing}
+  /* panning already happens by dragging the canvas (touch, or mouse via .panning above);
+     the native scrollbars are just visual clutter on a whiteboard-style surface */
+  #stage::-webkit-scrollbar{display:none}
   #work.dim #stage{background:#999}
   #work.dim #sheet{opacity:.55}
   #sheet{position:relative;width:3200px;height:1800px}
@@ -300,6 +304,7 @@
   #hub .badge svg{width:17px;height:17px;fill:#fff}
   #hub .state{font-size:13px;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
 
+  #filerail{position:absolute;left:22px;top:16px;z-index:35;display:flex;gap:16px}
   #rail{position:absolute;right:22px;top:50%;transform:translateY(-50%);z-index:35;display:flex;flex-direction:column;gap:16px}
   .rbtn{width:46px;height:46px;border-radius:50%;border:none;background:#f1f4f7;display:grid;place-items:center;
     cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.16)}
