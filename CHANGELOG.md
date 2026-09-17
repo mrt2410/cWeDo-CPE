@@ -149,7 +149,7 @@
     scratch without visibility into what it documented for other tasks; flagged for a
     follow-up to reconstruct it if still wanted.
 
-## 2026-09-16 (10)
+## 2026-09-16 (17)
 
 - Task 10: Custom-block rendering fallback. Modified `blockEl()` in `js/app.js` to detect blocks
   registered via `registerCustomBlock()` (which set `S[key].custom = true`) and render them as
