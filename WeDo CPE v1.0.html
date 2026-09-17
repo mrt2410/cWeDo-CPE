@@ -81,6 +81,18 @@
     <button id="spclose">Cancel</button>
   </div>
 </div>
+<div id="tones">
+  <div id="tncard">
+    <h3>Piezo tone</h3>
+    <p>Tap a note to choose it, and set the octave.</p>
+    <div id="tngrid"></div>
+    <div id="tnoctrow">
+      <label for="tnoctave">Octave</label>
+      <input id="tnoctave" type="number" min="1" max="6" step="1">
+    </div>
+    <button id="tnclose">Done</button>
+  </div>
+</div>
 <div id="backgrounds">
   <div id="bgcard">
     <h3>Background image</h3>
@@ -150,6 +162,7 @@
 <script src="js/blocks/motion-sensor.js"></script>
 <script src="js/blocks/motor.js"></script>
 <script src="js/blocks/rgb-light.js"></script>
+<script src="js/blocks/piezo-tone-player.js"></script>
 <script src="js/blocks/sound.js"></script>
 <script src="js/blocks/display.js"></script>
 <script src="js/blocks/messaging.js"></script>

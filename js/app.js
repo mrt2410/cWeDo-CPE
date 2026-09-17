@@ -468,6 +468,7 @@ function handleTap(p){
   if(tapped&&tapped.t==='b'&&tapped.key==='LightBlock'){ openColourDialog(tapped); return; }
   if(tapped&&tapped.t==='b'&&tapped.key==='DisplayBackgroundBlock'){ openBgPicker(tapped); return; }
   if(tapped&&tapped.t==='b'&&tapped.key==='MotorPowerBlock'){ openSpeedPicker(tapped); return; }
+  if(tapped&&tapped.t==='b'&&tapped.key==='PlayToneBlock'){ openTonePicker(tapped); return; }
   if(ref.arr!==ref.stack.items||ref.index!==0) return;   /* only the head of a program */
   const it=ref.arr[0];
   if(!it||it.t!=='b') return;
@@ -484,6 +485,7 @@ function openInputUI(holder){
   if(holder&&holder.t==='b'&&holder.key==='LightBlock'){ openColourDialog(holder); return; }
   if(holder&&holder.t==='b'&&holder.key==='DisplayBackgroundBlock'){ openBgPicker(holder); return; }
   if(holder&&holder.t==='b'&&holder.key==='MotorPowerBlock'){ openSpeedPicker(holder); return; }
+  if(holder&&holder.t==='b'&&holder.key==='PlayToneBlock'){ openTonePicker(holder); return; }
   openEditor(holder);
 }
 function openEditor(holder){
@@ -561,6 +563,32 @@ function closeSpeedPicker(){
 }
 document.getElementById('spclose').onclick=closeSpeedPicker;
 spEl().onclick=e=>{ if(e.target===spEl()) closeSpeedPicker(); };
+
+/* ---- piezo tone picker ---- */
+const tnEl=()=>document.getElementById('tones');
+let toneTarget=null;
+const PIEZO_NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function openTonePicker(item){
+  toneTarget=item;
+  const g=document.getElementById('tngrid'); g.innerHTML='';
+  PIEZO_NOTE_NAMES.forEach(n=>{
+    const b=document.createElement('button');
+    b.className='tntile'+(item&&item.note===n?' chosen':'');
+    b.textContent=n;
+    b.onclick=()=>{ toneTarget.note=n; log('tone note '+n+' chosen'); closeTonePicker(); render(); };
+    g.appendChild(b);
+  });
+  const oc=document.getElementById('tnoctave');
+  oc.value=item?item.octave:4;
+  oc.oninput=()=>{ if(toneTarget) toneTarget.octave=Math.max(1,Math.min(6,Math.round(+oc.value)||4)); };
+  tnEl().classList.add('open'); tnEl().classList.remove('armed');
+  setTimeout(()=>{ if(tnEl().classList.contains('open')) tnEl().classList.add('armed'); },300);
+}
+function closeTonePicker(){
+  tnEl().classList.remove('open'); tnEl().classList.remove('armed'); toneTarget=null; render();
+}
+document.getElementById('tnclose').onclick=closeTonePicker;
+tnEl().onclick=e=>{ if(e.target===tnEl()) closeTonePicker(); };
 
 /* ---- background picker ---- */
 const bgEl=()=>document.getElementById('backgrounds');

@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-09-17
+
+- Task 11: Piezo Tone Player (`PlayToneBlock`). New `js/blocks/piezo-tone-player.js`
+  implements the hub's built-in buzzer, a capability the real WeDo 2.0 commercial app
+  never exposed as a block but which the LEGO-WeDo-2.0-Python-SDK exposes via
+  `play_note()`/`play_frequency()`/`stop_playing()`. Adds `PIEZO_NOTES` (semitone offset
+  from A), `noteToFrequency(note,octave)` (equal-temperament, A4=440Hz), `playTone(note,
+  octave,durationMs)` and `stopTone()` (writing the SDK's little-endian u16 frequency/
+  duration payload, command IDs `0x02`/`0x03`), and `PiezoTonePlayer.execPlay(it,r)` for
+  `execBlock`'s dispatcher. The hub port (5) is an **unverified guess** by analogy with the
+  LED's port 6 — needs confirming against real hardware. New `PlayToneBlock` registered via
+  `registerCustomBlock` (CSS-fallback rendering from Task 10, since there's no sprite art),
+  with a tap-to-open `#tones` note-picker dialog in `js/app.js`/`WeDo CPE v1.0.html` mirroring
+  the existing `#speeds` motor-speed dialog (a 4-column grid of the 12 note names plus an
+  octave 1–6 number input), wired into `handleTap`/`openInputUI` alongside the other
+  block-specific dialogs. New tests in `test/blocks/piezo-tone-player.test.js` cover frequency
+  conversion and the exact output byte payloads for play/stop.
+  - Known gap: `docs/io-inventory-vs-wedo2-sdk.md`, which several earlier tasks' plans call
+    for updating, does not exist anywhere in this repository's git history (confirmed via
+    `git log --all -- docs/io-inventory-vs-wedo2-sdk.md`) and isn't present in this worktree
+    either — it appears to have been created only in a since-discarded, untracked local copy
+    by an earlier task and never committed. Left uncreated here rather than fabricated from
+    scratch without visibility into what it documented for other tasks; flagged for a
+    follow-up to reconstruct it if still wanted.
+
 ## 2026-09-16 (10)
 
 - Task 10: Custom-block rendering fallback. Modified `blockEl()` in `js/app.js` to detect blocks
