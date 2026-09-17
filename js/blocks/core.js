@@ -59,6 +59,7 @@ function mkItem(k){
   const d=DEFAULT_INPUT[k];
   const it={t:'b',key:k,input:d?d.key:null,inputValue:d?d.value:undefined};
   if(k==='StartOnKeyPressBlock') it.letter='A';
+  if(k==='PlayToneBlock'){ it.note='A'; it.octave=4; }
   return it;
 }
 
@@ -327,6 +328,7 @@ async function execBlock(it,r){
       await sleep(STEP,r); break;
     }
     case 'LightBlock': await RgbLight.execLight(it,r); break;
+    case 'PlayToneBlock': await PiezoTonePlayer.execPlay(it,r); break;
     default: await sleep(STEP,r);
   }
 }
