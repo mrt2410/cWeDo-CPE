@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-09-17 (24)
+
+- **Two-finger pinch now zooms the canvas on touch devices.** `#stage` uses
+  `touch-action:pan-x pan-y` so a one-finger drag pans instead of scrolling,
+  but that also tells the browser not to handle pinch itself, and the
+  `user-scalable=no` viewport meta blocks page zoom too — so a second finger
+  had nothing to do and pinch-to-zoom silently didn't work on tablets.
+  [js/app.js](js/app.js) now tracks touch pointers on `#stage` directly: a
+  second finger landing safely drops anything mid-drag, baselines the
+  distance between the two touches, and every subsequent move rescales zoom
+  continuously by that ratio, sharing the same `70`–`190` clamp as the +/-
+  buttons and wheel via a new shared `applyZoom()` helper. See
+  [docs/canvas-panning.md](docs/canvas-panning.md).
+
 ## 2026-09-17 (22)
 
 - **Mouse wheel now zooms the canvas, and Save/Open moved top-left with
