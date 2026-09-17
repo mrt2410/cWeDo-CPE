@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-09-17 (22)
+
+- **Mouse wheel now zooms the canvas, and Save/Open moved top-left with
+  classic icons.** Follow-up to the canvas panning cleanup above: (1) the
+  mouse wheel over `#stage` used to just scroll the oversized sheet, which
+  fought with the dedicated zoom (+/-) rail — a `wheel` listener in
+  [js/app.js](js/app.js) now calls `preventDefault()` and drives the same
+  `setZoom()` step the buttons use (scroll up zooms in, down zooms out).
+  (2) The Save As / Open buttons moved out of the right-side zoom rail into
+  their own `#filerail` group at the top-left of the canvas
+  ([cWeDo CPE v1.0.html](cWeDo%20CPE%20v1.0.html), styled in
+  [css/style.css](css/style.css)), and got recognisable "old-school" icons —
+  a floppy disk for Save As, a folder for Open — replacing the previous
+  download-arrow/box glyphs. See [docs/canvas-panning.md](docs/canvas-panning.md).
+
+## 2026-09-17 (21)
+
+- **Hid the canvas's native scrollbar and added mouse drag-to-pan.** The
+  program canvas (`#stage`) is a fixed 3200×1800px sheet that's larger than
+  the viewport, so it always needed scrolling/panning — but that meant a
+  visible browser scrollbar sat across the whiteboard-style canvas even
+  though it already has dedicated zoom (+/-) controls, and a mouse press on
+  blank canvas did nothing (only touch got native pan-scrolling). Added
+  `#stage::-webkit-scrollbar{display:none}` in
+  [css/style.css](css/style.css), plus a `panDrag` mouse-drag handler in
+  [js/app.js](js/app.js) that pans by adjusting `scrollLeft`/`scrollTop`
+  directly when the press starts on blank canvas (not on a `.blk` block),
+  with a `grab`/`grabbing` cursor to match. Touch panning is unchanged. See
+  [docs/canvas-panning.md](docs/canvas-panning.md).
+
 ## 2026-09-17 (17)
 
 - Final whole-branch review fixes for the 16-task block-file split + I/O feature plan.
