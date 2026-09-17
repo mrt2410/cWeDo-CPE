@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-09-16 (10)
+
+- Task 10: Custom-block rendering fallback. Modified `blockEl()` in `js/app.js` to detect blocks
+  registered via `registerCustomBlock()` (which set `S[key].custom = true`) and render them as
+  CSS-styled fallback blocks instead of sprite images. Custom blocks render with a colored
+  background (from `m.colour`), white centered text (from `m.label`), rounded corners (18px
+  scaled), and scaled font size (22% of block height). The implementation adds `.custom-blk`
+  and `.custom-label` CSS rules. This provides rendering infrastructure for Tasks 11 (Piezo
+  Tone Player), 12 (Motor brake), and 16 (hub-button), none of which have pre-drawn sprite art
+  in the original commercial app. Existing sprite-based blocks remain unchanged. New tests
+  verify custom block rendering and backward compatibility with sprite blocks.
+
 ## 2026-09-16 (16)
 
 - Task 9 of the block-file split: extracted hub button and battery GATT wiring logic into
