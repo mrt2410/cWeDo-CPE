@@ -185,15 +185,32 @@ Contributions are welcome — [AGENTS.md](AGENTS.md) has the project's conventio
   WeDo 2.0 hub and can help confirm or correct these, that'd be a great first
   contribution.
 
+## Community
+
+Discussion, support, and updates for this project happen in the
+[WeDo Facebook group](https://www.facebook.com/groups/letsdowedo/) — join in if
+you have a WeDo 2.0 hub, questions, or want to help out.
+
 ## Thanks to
 
 - The original **WeDo CPE** community effort this project continues and builds
-  on — [see the announcement post](#) <!-- TODO: Facebook post link -->.
+  on — see [Angela Yang's announcement post](https://www.facebook.com/groups/letsdowedo/posts/3539358399565407)
+  in the [WeDo Facebook group](https://www.facebook.com/groups/letsdowedo/).
 - [jannopet/LEGO-WeDo-2.0-Python-SDK](https://github.com/jannopet/LEGO-WeDo-2.0-Python-SDK),
   the reference used throughout this project to confirm the hub's wire protocol
   for every block and feature.
 - Everyone who reverse-engineered and documented the WeDo 2.0 Bluetooth protocol
   publicly over the years, and LEGO's own [published wireless protocol docs](https://lego.github.io/lego-ble-wireless-protocol-docs/).
+
+## Support this project
+
+If cWeDo CPE has been useful to you, consider chipping in to help keep it going.
+
+<p align="center">
+  <a href="https://www.paypal.com/donate/?business=DYZX2FMHZVULL&no_recurring=0&item_name=Support+for+WeDo+Project&currency_code=USD" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" alt="Donate with PayPal button" border="0">
+  </a>
+</p>
 
 ## License
 

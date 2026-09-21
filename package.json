@@ -1,7 +1,8 @@
 {
-  "name": "wedo-cpe",
+  "name": "cwedo-cpe",
   "private": true,
-  "description": "Dev-only tooling for WeDo CPE. The app itself is plain static files with zero runtime dependencies.",
+  "license": "MIT",
+  "description": "Dev-only tooling for cWeDo CPE. The app itself is plain static files with zero runtime dependencies.",
   "scripts": {
     "test": "node --test"
   },

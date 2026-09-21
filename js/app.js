@@ -1018,30 +1018,89 @@ function downloadText(filename,text){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-function confirmSaveAs(){
+/* On the web this always downloads via a Blob <a> — real browsers handle
+   that natively. Inside the packaged Android app, plain WebView has no
+   handler for it at all (the click silently does nothing, no file is ever
+   written), so js/native/capacitor-file-shim.js's NativeProgramStorage
+   takes over there instead — see docs/android-apk-build.md. */
+async function confirmSaveAs(){
   let name=document.getElementById('saname').value.trim()||defaultProgramName();
   if(!/\.wedo\.json$/i.test(name)) name+='.wedo.json';
-  downloadText(name,serializeProgram());
+  const text=serializeProgram();
+  if(window.NativeProgramStorage&&window.NativeProgramStorage.available){
+    try{ await window.NativeProgramStorage.save(name,text); flashBanner('Saved "'+name+'"'); }
+    catch(e){ flashBanner('Could not save: '+e.message); }
+  }else{
+    downloadText(name,text);
+  }
   closeSaveAsDialog();
+}
+function openProgramText(text,label){
+  try{
+    applyProgram(JSON.parse(text));
+    persistProgram();render();
+    flashBanner('Opened "'+label+'"');
+  }catch(e){
+    flashBanner('Could not open that file: '+e.message);
+  }
 }
 function handleOpenFile(file){
   const reader=new FileReader();
-  reader.onload=()=>{
-    try{
-      applyProgram(JSON.parse(reader.result));
-      persistProgram();render();
-      flashBanner('Opened "'+file.name+'"');
-    }catch(e){
-      flashBanner('Could not open that file: '+e.message);
-    }
-  };
+  reader.onload=()=>openProgramText(reader.result,file.name);
   reader.onerror=()=>flashBanner('Could not read that file.');
   reader.readAsText(file);
 }
+
+/* ---- native "Open" list — app-private storage isn't visible to the OS
+   file picker, so the packaged app gets a small in-app list instead of the
+   <input type=file> flow used on the web ---- */
+function openListEl(){ return document.getElementById('openlist'); }
+async function buildOpenList(){
+  const g=document.getElementById('olgrid'); g.innerHTML='';
+  const names=await window.NativeProgramStorage.list();
+  if(!names.length){
+    const p=document.createElement('div'); p.id='olempty';
+    p.textContent='No saved programs yet.';
+    g.appendChild(p); return;
+  }
+  names.forEach(name=>{
+    const row=document.createElement('div'); row.className='orow';
+    const pick=document.createElement('button'); pick.className='pick';
+    pick.textContent=name;
+    pick.onclick=async()=>{
+      closeOpenListDialog();
+      try{ openProgramText(await window.NativeProgramStorage.load(name),name); }
+      catch(e){ flashBanner('Could not open that file: '+e.message); }
+    };
+    const del=document.createElement('button'); del.className='del'; del.title='Delete';
+    del.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
+    del.onclick=async e=>{
+      e.stopPropagation();
+      try{ await window.NativeProgramStorage.remove(name); }catch(err){}
+      buildOpenList();
+    };
+    row.appendChild(pick); row.appendChild(del); g.appendChild(row);
+  });
+}
+function openOpenListDialog(){
+  const el=openListEl();
+  buildOpenList();
+  el.classList.add('open');
+  setTimeout(()=>{ if(el.classList.contains('open')) el.classList.add('armed'); },300);
+}
+function closeOpenListDialog(){
+  const el=openListEl();
+  el.classList.remove('open'); el.classList.remove('armed');
+}
+
 document.getElementById('saveasbtn').onclick=openSaveAsDialog;
 document.getElementById('sacancel').onclick=closeSaveAsDialog;
 document.getElementById('saok').onclick=confirmSaveAs;
-document.getElementById('openbtn').onclick=()=>document.getElementById('openfile').click();
+document.getElementById('openbtn').onclick=()=>{
+  if(window.NativeProgramStorage&&window.NativeProgramStorage.available) openOpenListDialog();
+  else document.getElementById('openfile').click();
+};
+document.getElementById('olclose').onclick=closeOpenListDialog;
 document.getElementById('openfile').onchange=e=>{
   const file=e.target.files[0];
   e.target.value='';   /* so choosing the same file again still fires 'change' */

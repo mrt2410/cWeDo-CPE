@@ -3,14 +3,14 @@ const path = require("path");
 const fs = require("fs");
 
 const ROOT = path.resolve(__dirname, "..");
-const HTML_PATH = path.join(ROOT, "WeDo CPE v1.0.html");
+const HTML_PATH = path.join(ROOT, "cWeDo CPE v1.0.html");
 
 // jsdom's <script src> file:// loading is unreliable across versions, so the
 // scripts are stripped from the parsed HTML and evaluated manually in order —
 // equivalent to what a browser does with these classic (non-module) scripts,
 // without depending on jsdom's resource loader.
 const SCRIPTS = ["data/bundle.js", "data/soundbank.js", "data/bgbank.js",
-  "js/blocks/core.js", "js/blocks/tilt-sensor.js", "js/blocks/motion-sensor.js", "js/blocks/motor.js", "js/blocks/rgb-light.js", "js/blocks/piezo-tone-player.js", "js/blocks/sound.js", "js/blocks/display.js", "js/blocks/messaging.js", "js/telemetry/button-battery.js", "js/telemetry/voltage-current.js", "js/app.js"];
+  "js/blocks/core.js", "js/blocks/tilt-sensor.js", "js/blocks/motion-sensor.js", "js/blocks/motor.js", "js/blocks/rgb-light.js", "js/blocks/piezo-tone-player.js", "js/blocks/sound.js", "js/blocks/display.js", "js/blocks/messaging.js", "js/telemetry/button-battery.js", "js/telemetry/voltage-current.js", "js/ble/capacitor-ble-shim.js", "js/native/capacitor-file-shim.js", "js/app.js"];
 
 /**
  * Loads the real app (real HTML + real css/js/data files) into a jsdom window,

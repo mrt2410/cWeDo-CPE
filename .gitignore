@@ -4,6 +4,6 @@ mobile/www/
 mobile/android/
 release/*
 !release/.gitkeep
-docs/
 .claude/
 AGENTS.md
+CHANGELOG.md
