@@ -132,6 +132,7 @@ it works, iOS status, and troubleshooting.
 cWeDo CPE v1.0.html   entry point (symlinked as index.html)
 css/                  styles
 data/                 sprite art, sound bank, background images (baked-in assets)
+assets/               screenshots used in this README (not part of the shipped app)
 js/
   app.js              engine: canvas rendering, drag/drop, dialogs, save/open,
                        autosave, Bluetooth connect/disconnect/reconnect
@@ -144,7 +145,9 @@ js/
 docs/                 design docs, feature write-ups, the LEGO-SDK feature inventory
 test/                 the test suite (see below)
 docker/               Dockerfile + build script for the Android APK build
+docker-compose.yml    compose service definition for the Android APK build (docker/)
 mobile/               Capacitor project config for the Android APK build
+release/              gitignored build output (e.g. the Android APK)
 ```
 
 No bundler, no framework, no `import`/`export` — every file is a plain
@@ -163,13 +166,11 @@ loading the real app files — no browser needed for most of the suite. Web
 Bluetooth itself can't be exercised in jsdom, so Bluetooth-adjacent code is
 tested at the byte-encoding/state-transition level instead, with real hardware
 verification called out explicitly wherever it's still needed (see
-[AGENTS.md](AGENTS.md) and [docs/io-inventory-vs-wedo2-sdk.md](docs/io-inventory-vs-wedo2-sdk.md)
+[docs/io-inventory-vs-wedo2-sdk.md](docs/io-inventory-vs-wedo2-sdk.md)
 for exactly what's confirmed vs. still an educated guess pending real hardware,
 like a couple of hub port numbers).
 
-Contributions are welcome — [AGENTS.md](AGENTS.md) has the project's conventions
-(test-first, and every change gets a note in a doc plus a CHANGELOG entry).
-[CHANGELOG.md](CHANGELOG.md) has the full history of what's been built and why.
+Contributions are welcome.
 
 ## Known limitations
 
