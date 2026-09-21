@@ -1,0 +1,12 @@
+services:
+  android-build:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        UID: "${UID:-1000}"
+        GID: "${GID:-1000}"
+    volumes:
+      - .:/workspace:ro
+      - ./mobile:/workspace/mobile
+      - ./release:/output
