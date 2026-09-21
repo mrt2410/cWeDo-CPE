@@ -1,5 +1,7 @@
 # cWeDo CPE
 
+*cWeDo CPE stands for "comunity WeDo Customer Premises Equipment."*
+
 A browser-based visual programming app for the **LEGO® Education WeDo 2.0** Smarthub —
 drag-and-drop blocks, connect over Bluetooth, and control the motor, light, and
 sensors directly from a web page. No app store, no install, no build step.
@@ -39,6 +41,15 @@ mobile app got sunset.
 
 It's an unofficial, community-built project — not affiliated with, endorsed by, or
 supported by the LEGO Group.
+
+## Download
+
+| | |
+| :--- | :--- |
+| **Try it now** — live, in-browser, no install | [Open the app](https://mrt2410.github.io/cWeDo-CPE/) |
+| **Offline bundle** — single self-contained `.html`, no server needed | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-standalone.html) |
+| **Android APK** — see [Building the Android app](#building-the-android-app) | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-debug.apk) |
+| **iOS** | *Planned — not available yet* |
 
 ## Features
 

@@ -984,6 +984,8 @@ stageEl().addEventListener('wheel',ev=>{
   setZoom(ev.deltaY<0?16:-16);
 },{passive:false});
 addEventListener('resize',()=>{drawTray();paintDisplay();});
+const APP_VERSION='1.1.0';
+splashVersion.textContent=versionTag.textContent='v'+APP_VERSION;
 addEventListener('load',()=>setTimeout(()=>splash.classList.add('gone'),900));
 document.getElementById('stop').onclick=stopAll;
 

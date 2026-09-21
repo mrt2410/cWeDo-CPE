@@ -4,7 +4,8 @@
   "license": "MIT",
   "description": "Dev-only tooling for cWeDo CPE. The app itself is plain static files with zero runtime dependencies.",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "build:standalone": "node scripts/build-standalone.js"
   },
   "devDependencies": {
     "jsdom": "^30.0.1"
