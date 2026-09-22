@@ -2,6 +2,7 @@ node_modules/
 mobile/node_modules/
 mobile/www/
 mobile/android/
+mobile/ios/
 release/*
 !release/.gitkeep
 .claude/

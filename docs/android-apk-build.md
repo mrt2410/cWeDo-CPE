@@ -100,7 +100,10 @@ Covered by 11 new unit/UI tests (`test/native/capacitor-file-shim.test.js`,
 
 ## iOS: not the same process
 
-Two independent blockers, not just a packaging difference:
+See [docs/ios-build.md](ios-build.md) for the CI workflow that now builds an
+unsigned iOS Simulator app to validate the pipeline. Two independent
+blockers remain before a real device/App Store build is possible, not just
+a packaging difference:
 
 1. **No Docker/Linux path exists for iOS builds.** Apple only licenses Xcode
    to run on macOS. Building an iOS app needs an actual Mac (local, or a
