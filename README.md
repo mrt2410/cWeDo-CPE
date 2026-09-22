@@ -49,7 +49,7 @@ supported by the LEGO Group.
 | **Try it now** — live, in-browser, no install | [Open the app](https://mrt2410.github.io/cWeDo-CPE/) |
 | **Offline bundle** — single self-contained `.html`, no server needed | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-standalone.html) |
 | **Android APK** — see [Building the Android app](#building-the-android-app) | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-debug.apk) |
-| **iOS (Simulator only, not installable on a real device yet)** — see [Building the iOS app](#building-the-ios-app) | *No public download — build it yourself via GitHub Actions* |
+| **iOS Simulator app** — not installable on a real iPad/iPhone, see [Building the iOS app](#building-the-ios-app) | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-ios-simulator.app.zip) |
 
 ## Features
 
@@ -144,11 +144,14 @@ to run on macOS. Instead, a GitHub Actions workflow builds an **unsigned
 iOS Simulator app** on a `macos-14` runner, using the same Capacitor setup
 (BLE + Filesystem plugins, same shims) as the Android build.
 
-From the [Actions tab](https://github.com/mrt2410/cWeDo-CPE/actions/workflows/build-ios.yml),
+Pushing a version tag (`v*`) builds it and attaches the zipped `.app` to
+that GitHub Release automatically, same as the Android APK and standalone
+bundle — that's the [Download](#download) link above. To build it manually
+without cutting a release, go to the [Actions tab](https://github.com/mrt2410/cWeDo-CPE/actions/workflows/build-ios.yml),
 click **Run workflow**, pick a branch, and download the `cwedo-cpe-ios-simulator`
-artifact once it finishes (a zipped `App.app`, ~1-2 minutes to build). Since
-this repo is public, GitHub Actions minutes — including macOS runners — are
-free.
+artifact once it finishes (requires being logged into GitHub; expires after
+90 days). Since this repo is public, GitHub Actions minutes — including
+macOS runners — are free.
 
 **This is not yet an installable iPad/iPhone build.** A Simulator `.app`
 can't run on real hardware, and the Simulator has no Bluetooth hardware at

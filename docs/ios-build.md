@@ -7,13 +7,21 @@ Actions `macos-14` runner instead of locally.
 ## Usage
 
 From the repo's Actions tab, select **Build iOS (simulator, unsigned)**, then
-**Run workflow** and pick the branch to build from — it's `workflow_dispatch`
-only (no automatic trigger on push), so it can be run against a throwaway
-branch without touching `main`. Since this repo is public, GitHub Actions
-minutes — including macOS runners — are free and unlimited.
+**Run workflow** and pick the branch to build from — `workflow_dispatch` runs
+can target any branch, including a throwaway one, without touching `main`.
+Since this repo is public, GitHub Actions minutes — including macOS runners
+— are free and unlimited.
 
-The zipped `.app` is attached to the run as a downloadable artifact
-(`cwedo-cpe-ios-simulator`).
+For a `workflow_dispatch` run, the zipped `.app` is attached to the run as a
+downloadable artifact (`cwedo-cpe-ios-simulator`) — requires being logged
+into GitHub, and expires after 90 days (GitHub's default artifact
+retention).
+
+Pushing a `v*` tag (the same trigger [build-standalone.yml](../.github/workflows/build-standalone.yml)
+uses) instead **attaches `cwedo-cpe-ios-simulator.app.zip` to that GitHub
+Release** as a permanent, public asset — same mechanism as the Android APK
+and standalone bundle, no login needed to download. It's still the same
+Simulator-only unsigned build either way; see below.
 
 ## What this does and doesn't prove
 

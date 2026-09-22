@@ -1,7 +1,13 @@
 name: Build iOS (simulator, unsigned)
 
 on:
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -75,10 +81,17 @@ jobs:
 
       - name: Zip the simulator app bundle
         working-directory: mobile/ios/App/build/Build/Products/Debug-iphonesimulator
-        run: zip -r App.app.zip App.app
+        run: zip -r cwedo-cpe-ios-simulator.app.zip App.app
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mobile/ios/App/build/Build/Products/Debug-iphonesimulator/cwedo-cpe-ios-simulator.app.zip
 
       - name: Upload workflow artifact
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/upload-artifact@v4
         with:
           name: cwedo-cpe-ios-simulator
-          path: mobile/ios/App/build/Build/Products/Debug-iphonesimulator/App.app.zip
+          path: mobile/ios/App/build/Build/Products/Debug-iphonesimulator/cwedo-cpe-ios-simulator.app.zip
