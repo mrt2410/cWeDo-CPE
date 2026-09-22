@@ -1,0 +1,78 @@
+name: Build iOS (simulator, unsigned)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Copy web assets into mobile/www
+        run: |
+          rm -rf mobile/www
+          mkdir -p mobile/www
+          cp -rL index.html css js data mobile/www/
+
+      - name: Install Capacitor CLI + plugins
+        working-directory: mobile
+        run: npm install
+
+      # Same platform-agnostic browser bundles vendored for the Android
+      # build (docs/android-apk-build.md) — the native side differs per
+      # platform, but these JS files are shared.
+      - name: Vendor Capacitor core + BluetoothLe + Filesystem plugin bundles
+        working-directory: mobile
+        run: |
+          mkdir -p www/vendor
+          cp node_modules/@capacitor/core/dist/capacitor.js www/vendor/capacitor-core.js
+          cp node_modules/@capacitor-community/bluetooth-le/dist/plugin.js www/vendor/bluetooth-le-plugin.js
+          { echo 'var synapse={exposeSynapse:function(){}};'; cat node_modules/@capacitor/filesystem/dist/plugin.js; } \
+            > www/vendor/filesystem-plugin.js
+          sed -i '' \
+            's#<script src="js/ble/capacitor-ble-shim.js"></script>#<script src="vendor/capacitor-core.js"></script>\n<script src="vendor/bluetooth-le-plugin.js"></script>\n<script src="vendor/filesystem-plugin.js"></script>\n<script src="js/ble/capacitor-ble-shim.js"></script>#' \
+            www/index.html
+
+      - name: Create iOS project
+        working-directory: mobile
+        run: npx cap add ios
+
+      # iOS has no manifest-merger equivalent to Android's — the BLE
+      # plugin's permission string has to be added by hand.
+      - name: Add Bluetooth usage description to Info.plist
+        working-directory: mobile
+        run: |
+          /usr/libexec/PlistBuddy -c \
+            "Add :NSBluetoothAlwaysUsageDescription string 'Connects to your LEGO WeDo 2.0 Smarthub over Bluetooth.'" \
+            ios/App/App/Info.plist
+
+      - name: Build for iOS Simulator (unsigned)
+        working-directory: mobile/ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Zip the simulator app bundle
+        working-directory: mobile/ios/App/build/Build/Products/Debug-iphonesimulator
+        run: zip -r App.app.zip App.app
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cwedo-cpe-ios-simulator
+          path: mobile/ios/App/build/Build/Products/Debug-iphonesimulator/App.app.zip
