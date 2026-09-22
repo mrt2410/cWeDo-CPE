@@ -49,7 +49,7 @@ supported by the LEGO Group.
 | **Try it now** — live, in-browser, no install | [Open the app](https://mrt2410.github.io/cWeDo-CPE/) |
 | **Offline bundle** — single self-contained `.html`, no server needed | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-standalone.html) |
 | **Android APK** — see [Building the Android app](#building-the-android-app) | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-debug.apk) |
-| **iOS** | *No installable build yet — see [docs/ios-build.md](docs/ios-build.md) for the current CI validation build* |
+| **iOS (Simulator only, not installable on a real device yet)** — see [Building the iOS app](#building-the-ios-app) | *No public download — build it yourself via GitHub Actions* |
 
 ## Features
 
@@ -135,8 +135,27 @@ The APK is written to `release/cwedo-cpe-debug.apk` — install it with
 installs from unknown sources. It's an unsigned debug build, fine for
 sideloading. Re-run the same two commands any time to rebuild after pulling
 changes. See [docs/android-apk-build.md](docs/android-apk-build.md) for how
-it works and troubleshooting, and [docs/ios-build.md](docs/ios-build.md) for
-the iOS side.
+it works and troubleshooting.
+
+## Building the iOS app
+
+Unlike Android, there's no Docker path for iOS — Apple only licenses Xcode
+to run on macOS. Instead, a GitHub Actions workflow builds an **unsigned
+iOS Simulator app** on a `macos-14` runner, using the same Capacitor setup
+(BLE + Filesystem plugins, same shims) as the Android build.
+
+From the [Actions tab](https://github.com/mrt2410/cWeDo-CPE/actions/workflows/build-ios.yml),
+click **Run workflow**, pick a branch, and download the `cwedo-cpe-ios-simulator`
+artifact once it finishes (a zipped `App.app`, ~1-2 minutes to build). Since
+this repo is public, GitHub Actions minutes — including macOS runners — are
+free.
+
+**This is not yet an installable iPad/iPhone build.** A Simulator `.app`
+can't run on real hardware, and the Simulator has no Bluetooth hardware at
+all, so this only proves the app compiles — Bluetooth itself is unverified
+on iOS. A signed device build additionally needs an Apple Developer account,
+a signing certificate, and a provisioning profile, none of which exist yet.
+See [docs/ios-build.md](docs/ios-build.md) for the full explanation.
 
 ## Project structure
 
@@ -158,7 +177,7 @@ docs/                 design docs, feature write-ups, the LEGO-SDK feature inven
 test/                 the test suite (see below)
 docker/               Dockerfile + build script for the Android APK build
 docker-compose.yml    compose service definition for the Android APK build (docker/)
-mobile/               Capacitor project config for the Android APK build
+mobile/               Capacitor project config for the Android APK and iOS builds
 release/              gitignored build output (e.g. the Android APK)
 ```
 
