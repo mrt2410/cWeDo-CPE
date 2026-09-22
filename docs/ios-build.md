@@ -26,6 +26,10 @@ The workflow mirrors `docker/build-android.sh`: copies `index.html`/`css`/
 merging), then builds with `xcodebuild` against the `iphonesimulator` SDK
 with code signing disabled.
 
+Capacitor 8's iOS template resolves plugins via Swift Package Manager
+(`ios/App/CapApp-SPM/Package.swift`), not CocoaPods, so the build targets
+`App.xcodeproj` directly — there's no `App.xcworkspace` to open.
+
 This proves the Capacitor iOS project compiles and links against the
 plugins. It does **not** prove:
 
