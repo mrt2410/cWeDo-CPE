@@ -40,9 +40,15 @@ jobs:
             's#<script src="js/ble/capacitor-ble-shim.js"></script>#<script src="vendor/capacitor-core.js"></script>\n<script src="vendor/bluetooth-le-plugin.js"></script>\n<script src="vendor/filesystem-plugin.js"></script>\n<script src="js/ble/capacitor-ble-shim.js"></script>#' \
             www/index.html
 
-      - name: Create iOS project
+      # Forced to CocoaPods: Capacitor's default SPM integration resolves
+      # capacitor-swift-pm to a newer Swift API surface that
+      # @capacitor-community/bluetooth-le@8.3.0's bundled Swift source
+      # hasn't caught up with (missing CAPPluginCall.reject and friends).
+      # CocoaPods still uses the older, stable Objective-C-bridged runtime
+      # the plugin was actually written against.
+      - name: Create iOS project (CocoaPods)
         working-directory: mobile
-        run: npx cap add ios
+        run: npx cap add ios --packagemanager Cocoapods
 
       # iOS has no manifest-merger equivalent to Android's — the BLE
       # plugin's permission string has to be added by hand.
@@ -57,7 +63,7 @@ jobs:
         working-directory: mobile/ios/App
         run: |
           xcodebuild \
-            -project App.xcodeproj \
+            -workspace App.xcworkspace \
             -scheme App \
             -configuration Debug \
             -sdk iphonesimulator \

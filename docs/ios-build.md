@@ -26,9 +26,14 @@ The workflow mirrors `docker/build-android.sh`: copies `index.html`/`css`/
 merging), then builds with `xcodebuild` against the `iphonesimulator` SDK
 with code signing disabled.
 
-Capacitor 8's iOS template resolves plugins via Swift Package Manager
-(`ios/App/CapApp-SPM/Package.swift`), not CocoaPods, so the build targets
-`App.xcodeproj` directly — there's no `App.xcworkspace` to open.
+The project is created with `--packagemanager Cocoapods` rather than
+Capacitor 8's default Swift Package Manager integration:
+`@capacitor-community/bluetooth-le@8.3.0`'s bundled Swift source doesn't
+compile against the newer Swift API surface SPM resolves
+(`capacitor-swift-pm`) — it's missing `CAPPluginCall.reject` and a few
+other methods the plugin calls. CocoaPods installs the older, stable
+Objective-C-bridged Capacitor runtime the plugin was actually written
+against, which doesn't have this gap.
 
 This proves the Capacitor iOS project compiles and links against the
 plugins. It does **not** prove:
