@@ -49,7 +49,7 @@ supported by the LEGO Group.
 | **Try it now** — live, in-browser, no install | [Open the app](https://mrt2410.github.io/cWeDo-CPE/) |
 | **Offline bundle** — single self-contained `.html`, no server needed | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-standalone.html) |
 | **Android APK** — see [Building the Android app](#building-the-android-app) | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-debug.apk) |
-| **iOS** | *Planned — not available yet* |
+| **iOS** | *No installable build yet — see [docs/ios-build.md](docs/ios-build.md) for the current CI validation build* |
 
 ## Features
 
@@ -135,7 +135,8 @@ The APK is written to `release/cwedo-cpe-debug.apk` — install it with
 installs from unknown sources. It's an unsigned debug build, fine for
 sideloading. Re-run the same two commands any time to rebuild after pulling
 changes. See [docs/android-apk-build.md](docs/android-apk-build.md) for how
-it works, iOS status, and troubleshooting.
+it works and troubleshooting, and [docs/ios-build.md](docs/ios-build.md) for
+the iOS side.
 
 ## Project structure
 
