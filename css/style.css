@@ -358,7 +358,7 @@
   /* fixed, so it clears the work area and covers the tray as well */
   #scrim{position:fixed;inset:0;z-index:110;display:none}
   #scrim.open{display:block}
-  #panel{position:fixed;top:0;right:0;bottom:0;width:min(46%,620px);background:#fff;z-index:120;
+  #panel{position:fixed;top:0;right:0;max-height:100%;width:min(46%,620px);background:#fff;z-index:120;
     box-shadow:-4px 0 18px rgba(0,0,0,.18);display:flex;flex-direction:column;
     transform:translateX(102%);transition:transform .25s ease}
   #panel.open{transform:none}
@@ -403,9 +403,9 @@
   #diagtoggle{width:100%;text-align:left;padding:9px 20px;border:none;background:#f7f9fa;color:#9aa6b2;
     font-size:11.5px;cursor:pointer;display:flex;align-items:center;gap:8px}
   #diagwrap.closed .car{transform:rotate(-90deg)}
-  #diagwrap.closed #diag{display:none}
+  #diagwrap.closed #diag,#diagwrap.closed #ports{display:none}
   .car{transition:transform .15s}
-  #diag{flex:1 1 auto;min-height:90px;padding:12px 20px;font-size:11.5px;color:#8b97a3;
+  #diag{flex:1 1 auto;min-height:90px;max-height:40vh;padding:12px 20px;font-size:11.5px;color:#8b97a3;
     overflow:auto;background:#fcfdfd;user-select:text;-webkit-user-select:text;cursor:text}
   #diagwrap.closed{flex:0 0 auto}
   #diagbar{display:flex;align-items:center;background:#f7f9fa}

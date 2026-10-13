@@ -21,3 +21,11 @@ is plugged into the hub's external ports, 1 and 2. Issue #3.
 
 `test/port-tiles.test.js` feeds packets copied from a real hub's debug log. Icon
 appearance and real attach/detach still need a look on hardware.
+
+## Hub details live under Diagnostics (2026-10-13)
+
+The text block listing Tilt / Distance / Motor / Microphone and the tilt/distance
+condition chips (`#ports`) is part of the "Diagnostics (development only)" section in the
+Choose Smarthub panel. The section is closed by default; click its header to show the
+hub details and the log. The panel is only as tall as its content, so a closed
+Diagnostics leaves no blank area below it.
