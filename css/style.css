@@ -330,6 +330,18 @@
   #hub .badge svg{width:17px;height:17px;fill:#fff}
   #hub .state{font-size:13px;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
 
+  #hubports{position:absolute;top:84px;right:26px;z-index:39;display:none;gap:12px}
+  #hub.on + #hubports{display:flex}
+  .ptile{position:relative;width:96px;height:78px;border-radius:14px;background:#fff;overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,60,110,.3);display:grid;place-items:center;color:#2b93cf}
+  .ptile.empty{background:rgba(255,255,255,.55);border:2px dashed #9fb3c4;box-shadow:none}
+  .ptile img{max-width:90%;max-height:90%;object-fit:contain}
+  .ptile svg{width:40px;height:40px;fill:none;stroke:currentColor;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round}
+  .ptile .pnum{position:absolute;top:3px;left:6px;z-index:1;font-size:13px;font-weight:700;color:#fff;
+    background:#5b6b7a;border-radius:50%;width:20px;height:20px;display:grid;place-items:center}
+  .ptile.empty .pnum{background:#9fb3c4}
+
   #filerail{position:absolute;left:22px;top:16px;z-index:35;display:flex;gap:16px}
   #versionTag{position:absolute;left:8px;bottom:6px;z-index:35;font-size:11px;color:#b4bec8;
     pointer-events:none;user-select:none}

@@ -25,6 +25,10 @@ to ship it. Start with [architecture.md](architecture.md) for the overall code l
   write-then-read-back verification).
 - [app-version.md](app-version.md) — the splash-screen and persistent corner-tag
   version display, and how to bump it.
+- [port-tiles.md](port-tiles.md) — Port 1 / Port 2 device tiles under the hub widget.
+
+- [feature-requests.md](feature-requests.md) — requested-but-unbuilt features (e.g.
+  connecting to multiple Smarthubs at once).
 
 ## Shipping
 

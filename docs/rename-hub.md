@@ -22,6 +22,9 @@ same characteristic (`renameHub()` → `validateHubName()` → `writeHubName()`)
 
 - The BLE write itself can't run in jsdom; tests (`test/rename-hub.test.js`) cover
   validation and write/read-back against a fake characteristic.
-- Unverified: whether clone hubs persist the name across power cycles, and whether the
-  browser's device picker shows the new name immediately or a cached old one until re-pair.
+- Verified on a clone hub (factory name `LPF2 Smart Hub 2 I/O`, 2026-10-13): renaming
+  works, the name persists across a power cycle, and the 21-byte rejection fires
+  before any write. Still unverified: a name at exactly 20 bytes on a genuine LEGO hub,
+  and whether the browser's device picker shows the new name immediately or a cached
+  old one until re-pair.
 - The name prompt uses `window.prompt()`, which Capacitor's Android/iOS WebViews support.

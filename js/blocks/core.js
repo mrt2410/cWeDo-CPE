@@ -82,10 +82,12 @@ const EVENT_KEYS=['AnyTilt','AnyDistanceChange','DistanceChangeCloser','Distance
                   'SoundSensorInput'];
 const newEvents=()=>{const o={};EVENT_KEYS.forEach(k=>o[k]={n:0,at:0});return o;};
 const sensorEvents={events:newEvents(),motors:[]};
+/* what each port currently holds (device-type code, or 'unknown'), for the port tiles */
+let portDevices={};
 function bump(key){ const e=sensorEvents.events[key]; e.n++; e.at=Date.now(); }
 function clearSensors(){
   Tilt.reset(); Motion.reset();
-  sensorEvents.motors=[]; sensorEvents.events=newEvents();
+  sensorEvents.motors=[]; sensorEvents.events=newEvents(); portDevices={};
   renderPorts();
 }
 
@@ -115,13 +117,15 @@ function onPortEvent(ev){
   if(!attached){
     Tilt.onDetach(port); Motion.onDetach(port);
     sensorEvents.motors=sensorEvents.motors.filter(p=>p!==port);
+    delete portDevices[port];
     log('port '+port+' emptied'); renderPorts(); return;
   }
   /* write-ups disagree on which byte carries the device type, so look for a
      value we recognise instead of trusting one offset */
   let type=null;
   for(const i of [3,2,4]) if([DEV_MOTOR,DEV_TILT,DEV_DISTANCE].indexOf(v[i])>=0){type=v[i];break;}
-  if(type===null){ log('port '+port+': device not recognised'); renderPorts(); return; }
+  if(type===null){ portDevices[port]='unknown'; log('port '+port+': device not recognised'); renderPorts(); return; }
+  portDevices[port]=type;
   if(type===DEV_TILT) Tilt.onAttach(port);
   else if(type===DEV_DISTANCE) Motion.onAttach(port);
   else if(sensorEvents.motors.indexOf(port)<0) sensorEvents.motors.push(port);
@@ -178,7 +182,23 @@ function sensorAttached(key){
 
 const COND_KEYS=['TiltUp','TiltDown','TiltThisWay','TiltThatWay','TiltSensorInput','AnyTilt',
                  'AnyDistanceChange','DistanceChangeCloser','DistanceChangeFurther'];
+/* the two external ports, as tiles under the hub widget */
+/* tiles reuse the block-palette art: motor power gauge, shaking brick for tilt, arrows brick for distance */
+const PORT_SPRITES={motor:'MotorPowerBlock',tilt:'AnyTilt',distance:'AnyDistanceChange'};
+const UNKNOWN_ICON='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17v.5"/></svg>';
+const PORT_KINDS={[DEV_MOTOR]:'motor',[DEV_TILT]:'tilt',[DEV_DISTANCE]:'distance',unknown:'unknown'};
+function renderPortTiles(){
+  const el=document.getElementById('hubports'); if(!el) return;
+  el.innerHTML=[1,2].map(n=>{
+    const kind=PORT_KINDS[portDevices[n]]||'empty';
+    const label=kind==='empty'?'empty':kind==='unknown'?'unknown device':(DEV_NAMES[portDevices[n]]);
+    return '<div class="ptile '+kind+'" data-port="'+n+'" data-device="'+kind+'" title="Port '+n+': '+label+'">'+
+      '<span class="pnum">'+n+'</span>'+
+      (kind==='empty'?'':kind==='unknown'?UNKNOWN_ICON:'<img alt="'+label+'" src="'+S[PORT_SPRITES[kind]].d+'">')+'</div>';
+  }).join('');
+}
 function renderPorts(){
+  renderPortTiles();
   const el=document.getElementById('ports'); if(!el) return;
   el.innerHTML=
     Tilt.describe()+Motion.describe()+
