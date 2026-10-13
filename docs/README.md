@@ -21,6 +21,8 @@ to ship it. Start with [architecture.md](architecture.md) for the overall code l
 - [canvas-panning.md](canvas-panning.md) — canvas panning, zoom, and scrollbars.
 - [bluetooth-lan-setup.md](bluetooth-lan-setup.md) — using Web Bluetooth when the app
   is served from a LAN IP instead of `localhost`.
+- [rename-hub.md](rename-hub.md) — renaming a connected Smarthub (20-byte cap,
+  write-then-read-back verification).
 - [app-version.md](app-version.md) — the splash-screen and persistent corner-tag
   version display, and how to bump it.
 

@@ -1239,6 +1239,9 @@ function renderHubs(){
                         (h.currentMa!=null?h.currentMa.toFixed(0)+'mA':'--');
         r.appendChild(vc);
       }
+      if(h.nameChar){const ed=document.createElement('button');ed.className='rename';ed.title='Rename';
+        ed.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 20l4-1L19 8l-3-3L5 16z"/></svg>';
+        ed.onclick=e=>{e.stopPropagation();renameHub(h);};r.appendChild(ed);}
       const k=document.createElement('button');k.className='kill';k.title='Disconnect';
       k.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
       k.onclick=e=>{e.stopPropagation();disconnect(h);};r.appendChild(k);
@@ -1248,6 +1251,35 @@ function renderHubs(){
 }
 function setHubWidget(){const on=connectedHub(),w=document.getElementById('hub');
   w.classList.toggle('on',!!on);w.querySelector('.state').textContent=on?on.name:'Not connected';}
+/* ---- renaming the hub (writes the same Name ID characteristic connect() reads).
+   20 bytes is a conservative hard cap: the factory default "LPF2 Smart Hub 2 I/O"
+   is 20, and 20 is the most one default-MTU BLE write carries. */
+const HUB_NAME_MAX_BYTES=20;
+function validateHubName(name){
+  const n=String(name).trim();
+  if(!n) throw new Error('Name cannot be empty.');
+  if(new TextEncoder().encode(n).length>HUB_NAME_MAX_BYTES)
+    throw new Error('Name is too long (max '+HUB_NAME_MAX_BYTES+' bytes).');
+  return n;
+}
+/* writes, then reads back what the hub reports — some clones accept the write
+   without storing it, so the read-back is the source of truth */
+async function writeHubName(char,name){
+  await char.writeValue(new TextEncoder().encode(name));
+  const got=new TextDecoder().decode(await char.readValue()).replace(/\0+$/,'');
+  if(got!==name) throw new Error('The hub did not accept the new name (it still reports "'+got+'").');
+  return got;
+}
+async function renameHub(h){
+  const input=window.prompt('New name for this Smarthub (max '+HUB_NAME_MAX_BYTES+' bytes):',h.name||'');
+  if(input===null) return;
+  try{
+    const name=await writeHubName(h.nameChar,validateHubName(input));
+    h.name=name;rememberLastHub(h.device.id,name);
+    log('renamed hub to '+name);flashBanner('Hub renamed to "'+name+'"');
+  }catch(e){log('rename failed: '+e.message);flashBanner('Could not rename: '+e.message);}
+  renderHubs();setHubWidget();
+}
 async function connect(device){
   if(!device) return;
   if(connectedHub()){hintEl.textContent='Disconnect the current Smarthub first.';return;}
@@ -1256,11 +1288,11 @@ async function connect(device){
     log('connecting to '+(device.name||device.id)+' ...');
     const server=await device.gatt.connect();
     const svc=await server.getPrimaryService(HUB_SERVICE);
-    let name=device.name;
-    try{const c=await svc.getCharacteristic(C_NAME);
+    let name=device.name,nameChar=null;
+    try{const c=await svc.getCharacteristic(C_NAME);nameChar=c;
       name=new TextDecoder().decode(await c.readValue()).replace(/\0+$/,'');}catch(e){log('name read failed: '+e.message);}
     const h=hubs.get(device.id)||{device};
-    h.device=device;h.name=name;h.connected=true;h.pressed=false;hubs.set(device.id,h);
+    h.device=device;h.name=name;h.nameChar=nameChar;h.connected=true;h.pressed=false;hubs.set(device.id,h);
     await Telemetry.wireButtonBattery(h,svc,server);
     clearSensors();
     try{
@@ -1279,7 +1311,7 @@ async function connect(device){
     if(!h.wired){h.wired=true;
       device.addEventListener('gattserverdisconnected',()=>{
         h.connected=false;h.pressed=false;h.battery=null;h.voltageMv=null;h.currentMa=null;
-        h.out=null;h.inp=null;h.val=null;
+        h.out=null;h.inp=null;h.val=null;h.nameChar=null;
         clearSensors();
         log('disconnected: '+(h.name||''));hintEl.textContent='';renderHubs();setHubWidget();});}
     rememberLastHub(device.id,name);
