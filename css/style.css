@@ -366,7 +366,7 @@
   #panel h2{margin:0;font-size:26px;color:#8f9aa5;font-weight:700;flex:1}
   .xbtn{width:40px;height:40px;border:none;background:transparent;cursor:pointer;display:grid;place-items:center}
   .xbtn svg{width:26px;height:26px;stroke:#8f9aa5;stroke-width:2.4;stroke-linecap:round;fill:none}
-  #list{flex:0 1 auto;overflow-y:auto;padding:8px 20px;min-height:60px;max-height:34vh}
+  #list{flex:0 1 auto;overflow-y:auto;padding:8px 20px;min-height:60px;max-height:max(34vh,112px)}
   .row{display:flex;align-items:center;gap:16px;border-radius:10px;padding:14px 16px;margin-bottom:12px;
     background:#c9d2da;color:#fff;transition:background .12s}
   .row.found{background:#9fb0bf;cursor:pointer}
@@ -389,7 +389,7 @@
   #refresh{width:58px;height:58px;border-radius:50%;background:#eceff2;border:none;cursor:pointer;display:grid;place-items:center}
   #refresh svg{width:28px;height:28px;stroke:#8f9aa5;fill:none;stroke-width:2.2;stroke-linecap:round}
   #refresh:disabled{opacity:.4;cursor:default}
-  #hint{font-size:12.5px;color:#98a4b0;text-align:center;max-width:92%;line-height:1.45;min-height:18px}
+  #hint{user-select:text;-webkit-user-select:text;font-size:12.5px;color:#98a4b0;text-align:center;max-width:92%;line-height:1.45;min-height:18px}
   #ports{flex:0 0 auto;padding:10px 20px;border-top:1px solid #e6eaee;font-size:12px;
     color:#6b7784;background:#fff;-webkit-touch-callout:none}
   #ports .prow{margin-bottom:4px}

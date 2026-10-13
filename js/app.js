@@ -1124,7 +1124,7 @@ const C_OUTPUT  ='00001565-1212-efde-1523-785feabcd123';
 const C_SENSOR  ='00001560-1212-efde-1523-785feabcd123';
 const listEl=document.getElementById('list'),diagEl=document.getElementById('diag'),
       hintEl=document.getElementById('hint'),refreshBtn=document.getElementById('refresh');
-const hubs=new Map();let scanning=null,busy=false;
+const hubs=new Map();let scanning=null,busy=false,connectTimeoutMs=15000;
 const connectedHub=()=>[...hubs.values()].find(h=>h.connected);
 const logLines=[];
 
@@ -1286,7 +1286,12 @@ async function connect(device){
   if(busy) return; busy=true;renderHubs();
   try{
     log('connecting to '+(device.name||device.id)+' ...');
-    const server=await device.gatt.connect();
+    /* Chrome's gatt.connect() can hang forever after a failed attempt; without a
+       deadline `busy` would never clear and the UI would be stuck. */
+    let timer;
+    const server=await Promise.race([device.gatt.connect(),
+      new Promise((_,rej)=>{timer=setTimeout(()=>rej(new Error('Connection timed out. Switch the hub off and on, then try again.')),connectTimeoutMs);})
+    ]).finally(()=>clearTimeout(timer));
     const svc=await server.getPrimaryService(HUB_SERVICE);
     let name=device.name,nameChar=null;
     try{const c=await svc.getCharacteristic(C_NAME);nameChar=c;
@@ -1318,6 +1323,8 @@ async function connect(device){
     log('connected to '+name);hintEl.textContent='';
   }catch(e){log('connect failed: '+e.message);hintEl.textContent='Could not connect: '+e.message;
     const h=hubs.get(device.id);if(h)h.connected=false;
+    /* cancel any pending/half-open link so the next attempt starts clean */
+    try{device.gatt.disconnect();}catch(_){}
   }finally{busy=false;renderHubs();setHubWidget();}
 }
 async function disconnect(h){
