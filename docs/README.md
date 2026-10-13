@@ -23,6 +23,7 @@ to ship it. Start with [architecture.md](architecture.md) for the overall code l
   is served from a LAN IP instead of `localhost`.
 - [rename-hub.md](rename-hub.md) — renaming a connected Smarthub (20-byte cap,
   write-then-read-back verification).
+- [power-off-hub.md](power-off-hub.md) — remote power off of a connected Smarthub (verified on a hub)
 - [app-version.md](app-version.md) — the splash-screen and persistent corner-tag
   version display, and how to bump it.
 - [port-tiles.md](port-tiles.md) — Port 1 / Port 2 device tiles under the hub widget.

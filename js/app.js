@@ -1119,6 +1119,7 @@ const HUB_SERVICE='00001523-1212-efde-1523-785feabcd123';
 const IO_SERVICE ='00004f0e-1212-efde-1523-785feabcd123';
 const C_NAME='00001524-1212-efde-1523-785feabcd123';
 const C_ATTACHED='00001527-1212-efde-1523-785feabcd123';
+const C_OFF='0000152b-1212-efde-1523-785feabcd123'; // "turn off hub": write 0x00 (verified on a hub 2026-10-13)
 const C_INPUT   ='00001563-1212-efde-1523-785feabcd123';
 const C_OUTPUT  ='00001565-1212-efde-1523-785feabcd123';
 const C_SENSOR  ='00001560-1212-efde-1523-785feabcd123';
@@ -1242,6 +1243,9 @@ function renderHubs(){
       if(h.nameChar){const ed=document.createElement('button');ed.className='rename';ed.title='Rename';
         ed.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 20l4-1L19 8l-3-3L5 16z"/></svg>';
         ed.onclick=e=>{e.stopPropagation();renameHub(h);};r.appendChild(ed);}
+      if(h.offChar){const pw=document.createElement('button');pw.className='poweroff';pw.title='Power off hub';
+        pw.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 3v9M7 6.5a7 7 0 1 0 10 0"/></svg>';
+        pw.onclick=e=>{e.stopPropagation();powerOffHub(h);};r.appendChild(pw);}
       const k=document.createElement('button');k.className='kill';k.title='Disconnect';
       k.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
       k.onclick=e=>{e.stopPropagation();disconnect(h);};r.appendChild(k);
@@ -1280,6 +1284,19 @@ async function renameHub(h){
   }catch(e){log('rename failed: '+e.message);flashBanner('Could not rename: '+e.message);}
   renderHubs();setHubWidget();
 }
+/* ---- remote power off. The hub drops the link as it shuts down, so a failed write on
+   a link that is already gone counts as success. */
+async function writePowerOff(char){ await char.writeValue(new Uint8Array([0])); }
+async function powerOffHub(h){
+  if(!window.confirm('Power off this Smarthub? It must be switched on again by hand.')) return false;
+  haltEverything('hub powering off');
+  try{ await writePowerOff(h.offChar); }
+  catch(e){
+    if(h.device.gatt.connected){log('power off failed: '+e.message);flashBanner('Could not power off: '+e.message);return false;}
+  }
+  log('power off sent');flashBanner('Smarthub powered off');
+  return true;
+}
 async function connect(device){
   if(!device) return;
   if(connectedHub()){hintEl.textContent='Disconnect the current Smarthub first.';return;}
@@ -1310,13 +1327,14 @@ async function connect(device){
       log('I/O characteristics ready');
       await Telemetry.wireVoltageCurrent(h,io);
     }catch(e){log('I/O service unavailable: '+e.message);}
+    try{h.offChar=await svc.getCharacteristic(C_OFF);}catch(e){h.offChar=null;log('power-off unavailable: '+e.message);}
     try{const ac=await svc.getCharacteristic(C_ATTACHED);await ac.startNotifications();
       ac.addEventListener('characteristicvaluechanged',onPortEvent);
     }catch(e){log('attached-IO unavailable: '+e.message);}
     if(!h.wired){h.wired=true;
       device.addEventListener('gattserverdisconnected',()=>{
         h.connected=false;h.pressed=false;h.battery=null;h.voltageMv=null;h.currentMa=null;
-        h.out=null;h.inp=null;h.val=null;h.nameChar=null;
+        h.out=null;h.inp=null;h.val=null;h.nameChar=null;h.offChar=null;
         clearSensors();
         log('disconnected: '+(h.name||''));hintEl.textContent='';renderHubs();setHubWidget();});}
     rememberLastHub(device.id,name);
@@ -1336,7 +1354,7 @@ async function disconnect(h){
   try{if(h.device.gatt.connected)h.device.gatt.disconnect();log('disconnect requested');}
   catch(e){log('disconnect error: '+e.message);}
   h.connected=false;h.pressed=false;h.battery=null;h.voltageMv=null;h.currentMa=null;
-  h.out=null;h.inp=null;h.val=null;
+  h.out=null;h.inp=null;h.val=null;h.offChar=null;
   clearSensors();
   hintEl.textContent='';renderHubs();setHubWidget();
 }
