@@ -1,0 +1,63 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Hub button melody",
+    "description": "Press the Smarthub button to play a short C–E–G–C melody (heard on the tablet speaker).",
+    "author": "cWeDo CPE contributors",
+    "needs": [
+      "Smarthub button"
+    ],
+    "tags": [
+      "sound",
+      "tone",
+      "hub button"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnButtonPressBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "C",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "E",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "G",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "1",
+          "note": "C",
+          "octave": 5
+        }
+      ]
+    }
+  ]
+}

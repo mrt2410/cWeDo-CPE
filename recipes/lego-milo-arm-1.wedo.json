@@ -1,0 +1,87 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "MILO Arm 1: reaches out and back",
+    "description": "Press the a key and the arm swings out for 2 seconds, holds for a moment, then swings back, with a hub light to show each step. Demo program for LEGO Education's MILO Arm 1 model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt138fcd96cb4b5558/5f880344de194e1bde3f085c/45300_16a_milo_arm_1.pdf",
+    "needs": [
+      "LEGO MILO Arm 1 model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "keyboard",
+      "light"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "a"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "4"
+        },
+        {
+          "t": "b",
+          "key": "MotorThatWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "7"
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "NumberInput",
+          "inputValue": "1"
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "0"
+        }
+      ]
+    }
+  ]
+}

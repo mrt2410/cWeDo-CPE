@@ -1,0 +1,92 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Flower: bloom when something is near",
+    "description": "The flower waits for something to come closer to the motion sensor, then opens its petals for 3 seconds, waits, and closes them again. Repeats forever. Demo program for LEGO Education's Flower model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt89f32f0cdb22d609/5f88032e631d5a2165df412e/45300_05a_flower.pdf",
+    "needs": [
+      "LEGO Flower model",
+      "Motor",
+      "Distance sensor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "distance",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "3"
+        },
+        {
+          "t": "r",
+          "input": null,
+          "children": [
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "DistanceChangeCloser"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "3"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "2"
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "3"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

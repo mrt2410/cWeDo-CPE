@@ -1,0 +1,821 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Full template — every block",
+    "description": "One program that uses every block, input, note and condition the app has. A catalogue to copy from, not something to run.",
+    "author": "cWeDo CPE contributors",
+    "needs": [],
+    "tags": [
+      "template",
+      "reference"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "MotorThatWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "RandomInput"
+        },
+        {
+          "t": "b",
+          "key": "MotorBrakeBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorOffBlock",
+          "input": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "x": 60,
+      "y": 360,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnMessageBlock",
+          "input": "TextInput",
+          "inputValue": "go"
+        },
+        {
+          "t": "b",
+          "key": "SendMessageBlock",
+          "input": "TextInput",
+          "inputValue": "done"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "SendMessageBlock",
+          "input": "NumberInput",
+          "inputValue": "7"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "x": 60,
+      "y": 620,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "a"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "RandomInput"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": null,
+          "customRGB": {
+            "r": 0,
+            "g": 255,
+            "b": 128
+          }
+        },
+        {
+          "t": "b",
+          "key": "PlaySoundBlock",
+          "input": "NumberInput",
+          "inputValue": "1"
+        },
+        {
+          "t": "b",
+          "key": "PlaySoundBlock",
+          "input": "NumberInput",
+          "inputValue": "0"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "x": 60,
+      "y": 880,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnButtonPressBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "C",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "C#",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "D",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "D#",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "E",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "F",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "F#",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "G",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "G#",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "A",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "A#",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "B",
+          "octave": 4
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "x": 60,
+      "y": 1140,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "1",
+          "note": "C",
+          "octave": 1
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "1",
+          "note": "B",
+          "octave": 6
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "x": 60,
+      "y": 1400,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "DisplayBackgroundBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "b",
+          "key": "DisplayBlock",
+          "input": "TextInput",
+          "inputValue": "Hello"
+        },
+        {
+          "t": "b",
+          "key": "DisplayBlock",
+          "input": "NumberInput",
+          "inputValue": "42"
+        },
+        {
+          "t": "b",
+          "key": "AddtoDisplayBlock",
+          "input": "NumberInput",
+          "inputValue": "1"
+        },
+        {
+          "t": "b",
+          "key": "SubtractfromDisplayBlock",
+          "input": "NumberInput",
+          "inputValue": "1"
+        },
+        {
+          "t": "b",
+          "key": "MultiplybyDisplayBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "DividebyDisplayBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "AddtoDisplayBlock",
+          "input": "DisplayInput"
+        },
+        {
+          "t": "b",
+          "key": "DisplayMediumsizeBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "DisplayFullsizeBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "DisplayClosedBlock",
+          "input": null
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "x": 60,
+      "y": 1660,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "DistanceSensorInput"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "DisplayInput"
+        },
+        {
+          "t": "b",
+          "key": "PlaySoundBlock",
+          "input": "RandomInput"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "x": 60,
+      "y": 1920,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": null,
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "3"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "x": 60,
+      "y": 2400,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "inputValue": "4",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "9"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        },
+        {
+          "t": "r",
+          "input": "RandomInput",
+          "children": [
+            {
+              "t": "b",
+              "key": "MotorOffBlock",
+              "input": null
+            }
+          ]
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "1"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "x": 60,
+      "y": 2880,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": "AnyDistanceChange",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        },
+        {
+          "t": "r",
+          "input": "DistanceChangeCloser",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        },
+        {
+          "t": "r",
+          "input": "DistanceChangeFurther",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        },
+        {
+          "t": "r",
+          "input": "AnyTilt",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        },
+        {
+          "t": "r",
+          "input": "TiltUp",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "x": 60,
+      "y": 3660,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": "TiltDown",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        },
+        {
+          "t": "r",
+          "input": "TiltThisWay",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        },
+        {
+          "t": "r",
+          "input": "TiltThatWay",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        },
+        {
+          "t": "r",
+          "input": "TiltSensorInput",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        },
+        {
+          "t": "r",
+          "input": "SoundSensorInput",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "x": 60,
+      "y": 4440,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "inputValue": "3",
+          "children": [
+            {
+              "t": "r",
+              "input": "NumberInput",
+              "inputValue": "2",
+              "children": [
+                {
+                  "t": "b",
+                  "key": "LightBlock",
+                  "input": "NumberInput",
+                  "inputValue": "2"
+                },
+                {
+                  "t": "b",
+                  "key": "WaitForBlock",
+                  "input": "NumberInput",
+                  "inputValue": "1"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "x": 60,
+      "y": 4920,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "AnyDistanceChange"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "DistanceChangeCloser"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "DistanceChangeFurther"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "AnyTilt"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "TiltUp"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "TiltDown"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "TiltThisWay"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "TiltThatWay"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "TiltSensorInput"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "SoundSensorInput"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        }
+      ]
+    }
+  ]
+}

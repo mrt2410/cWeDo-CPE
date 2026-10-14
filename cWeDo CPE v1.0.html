@@ -33,7 +33,11 @@
 
     <div id="filerail">
       <button class="rbtn" id="saveasbtn" aria-label="Save As"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg></button>
-      <button class="rbtn" id="openbtn" aria-label="Open"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>
+      <button class="rbtn" id="openbtn" title="Open" aria-label="Open" aria-haspopup="menu" aria-expanded="false" aria-controls="openmenu"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><svg class="chev" viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3"/></svg></button>
+      <div id="openmenu" role="menu" aria-label="Open">
+        <button id="openfromdevice" role="menuitem"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Device</button>
+        <button id="openfromrecipe" role="menuitem"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 8h6M9 12h6"/></svg>Recipe</button>
+      </div>
     </div>
     <input id="openfile" type="file" accept="application/json,.json" style="display:none">
 
@@ -177,9 +181,35 @@
   </div>
 </div>
 
+<div id="recipepick">
+  <div id="rpcard" role="dialog" aria-modal="true" aria-label="Open a recipe">
+    <h3>Open a recipe</h3>
+    <div id="rpbody">
+      <div id="rpleft">
+        <input id="rpsearch" type="search" placeholder="Search recipes…" aria-label="Search recipes" autocomplete="off">
+        <div id="rpfilter" role="group" aria-label="Filter by hardware"></div>
+        <div id="rplist" role="listbox" aria-label="Recipes"></div>
+        <div id="rpempty" hidden>No recipes match.</div>
+      </div>
+      <div id="rpdetail">
+        <div id="rpimgbox"><img id="rpimg" alt=""></div>
+        <h4 id="rptitle"></h4>
+        <p id="rpdesc"></p>
+        <p id="rpby"></p>
+        <div id="rpneeds"></div>
+      </div>
+    </div>
+    <div id="rpbtns">
+      <button id="rpcancel">Cancel</button>
+      <button id="rpopen">Open recipe</button>
+    </div>
+  </div>
+</div>
+
 <script src="data/bundle.js"></script>
 <script src="data/soundbank.js"></script>
 <script src="data/bgbank.js"></script>
+<script src="data/recipes.js"></script>
 <script src="js/blocks/core.js"></script>
 <script src="js/blocks/tilt-sensor.js"></script>
 <script src="js/blocks/motion-sensor.js"></script>

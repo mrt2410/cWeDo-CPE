@@ -1,0 +1,65 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Message ping-pong",
+    "description": "Two programs talk to each other: one shows \"ping\" and sends a message, the other starts on that message and shows \"pong\".",
+    "author": "cWeDo CPE contributors",
+    "needs": [],
+    "tags": [
+      "messaging",
+      "display"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "DisplayBlock",
+          "input": "TextInput",
+          "inputValue": "ping"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "NumberInput",
+          "inputValue": "1"
+        },
+        {
+          "t": "b",
+          "key": "SendMessageBlock",
+          "input": "TextInput",
+          "inputValue": "pong"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "x": 60,
+      "y": 360,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnMessageBlock",
+          "input": "TextInput",
+          "inputValue": "pong"
+        },
+        {
+          "t": "b",
+          "key": "DisplayBlock",
+          "input": "TextInput",
+          "inputValue": "pong"
+        }
+      ]
+    }
+  ]
+}

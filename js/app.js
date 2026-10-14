@@ -1098,10 +1098,99 @@ function closeOpenListDialog(){
 document.getElementById('saveasbtn').onclick=openSaveAsDialog;
 document.getElementById('sacancel').onclick=closeSaveAsDialog;
 document.getElementById('saok').onclick=confirmSaveAs;
-document.getElementById('openbtn').onclick=()=>{
+/* ---- Open > Recipe: list + preview of the ready-made programs embedded in data/recipes.js ---- */
+const rpEl=document.getElementById('recipepick'),rpList=document.getElementById('rplist'),
+      rpSearch=document.getElementById('rpsearch'),rpOpenBtn=document.getElementById('rpopen');
+let rpSelected=null;
+const rpHw=new Set();   /* hardware filter buttons currently pressed */
+const rpRecipes=()=>(window.WEDO_DATA&&WEDO_DATA.recipes)||[];
+function rpShow(r){
+  rpSelected=r;
+  rpList.querySelectorAll('.rprow').forEach(b=>{
+    const on=!!r&&b.dataset.id===r.id; b.classList.toggle('sel',on); b.setAttribute('aria-selected',on);
+  });
+  rpOpenBtn.disabled=!r;
+  const img=document.getElementById('rpimg');
+  img.hidden=!r||!r.image; img.onerror=()=>{ img.hidden=true; };
+  if(r&&r.image) img.src=r.image; else img.removeAttribute('src');
+  document.getElementById('rptitle').textContent=r?r.title:'';
+  document.getElementById('rpdesc').textContent=r?r.description:'';
+  const by=document.getElementById('rpby'); by.textContent=r?'By '+r.author:'';
+  if(r&&r.source){
+    const a=document.createElement('a'); a.href=r.source; a.target='_blank'; a.rel='noopener'; a.textContent='Source';
+    by.append(' · ',a);
+  }
+  const needs=document.getElementById('rpneeds'); needs.textContent='';
+  if(r){
+    r.needs.forEach(n=>{ const c=document.createElement('span'); c.className='need'; c.textContent='Needs '+n; needs.appendChild(c); });
+    r.tags.forEach(n=>{ const c=document.createElement('span'); c.textContent=n; needs.appendChild(c); });
+  }
+}
+function rpFilter(){
+  const q=rpSearch.value.trim().toLowerCase();
+  const hit=rpRecipes().filter(r=>[...rpHw].every(h=>r.needs.includes(h))).filter(r=>!q||[r.title,r.description,r.author,...r.tags,...r.needs].join(' ').toLowerCase().includes(q));
+  rpList.textContent='';
+  hit.forEach(r=>{
+    const b=document.createElement('button'); b.className='rprow'; b.dataset.id=r.id; b.setAttribute('role','option');
+    b.append(r.title); const i=document.createElement('i'); i.textContent=r.blocks+' blocks'; b.appendChild(i);
+    b.onclick=()=>rpShow(r); rpList.appendChild(b);
+  });
+  document.getElementById('rpempty').hidden=hit.length>0;
+  rpShow(hit.includes(rpSelected)?rpSelected:hit[0]||null);
+}
+function rpBuildFilter(){
+  const n={}; rpRecipes().forEach(r=>r.needs.forEach(h=>{ if(!/ model$/.test(h)) n[h]=(n[h]||0)+1; }));  /* hardware only, not "LEGO X model" */
+  const box=document.getElementById('rpfilter'); box.textContent='';
+  Object.keys(n).sort((a,b)=>n[b]-n[a]).forEach(h=>{
+    const b=document.createElement('button'); b.dataset.hw=h; b.textContent=h; b.setAttribute('aria-pressed','false');
+    b.onclick=()=>{
+      if(rpHw.has(h)) rpHw.delete(h); else rpHw.add(h);
+      b.setAttribute('aria-pressed',rpHw.has(h)); rpFilter();
+    };
+    box.appendChild(b);
+  });
+}
+function openRecipePicker(){
+  if(!rpRecipes().length){ flashBanner('No recipes are bundled in this build.'); return; }
+  rpSearch.value=''; rpSelected=null; rpHw.clear(); rpBuildFilter(); rpFilter();
+  rpEl.classList.add('open');
+  setTimeout(()=>{ if(rpEl.classList.contains('open')) rpEl.classList.add('armed'); },300);
+}
+function closeRecipePicker(){ rpEl.classList.remove('open','armed'); }
+rpSearch.oninput=rpFilter;
+document.getElementById('rpcancel').onclick=closeRecipePicker;
+rpOpenBtn.onclick=()=>{
+  if(!rpSelected) return;
+  const r=rpSelected; closeRecipePicker();
+  openProgramText(JSON.stringify(r.program),r.title);   /* via text so the embedded copy is never mutated */
+};
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&rpEl.classList.contains('open')) closeRecipePicker(); });
+
+function openFromDevice(){
   if(window.NativeProgramStorage&&window.NativeProgramStorage.available) openOpenListDialog();
   else document.getElementById('openfile').click();
-};
+}
+/* ---- Open menu: "Device" (the original Open) or "Recipe" ---- */
+const openMenu=document.getElementById('openmenu'),openBtn=document.getElementById('openbtn');
+function setOpenMenu(open){
+  openMenu.classList.toggle('open',open);
+  openBtn.setAttribute('aria-expanded',open?'true':'false');
+  if(open) openMenu.querySelector('[role=menuitem]').focus();
+}
+openBtn.onclick=()=>setOpenMenu(!openMenu.classList.contains('open'));
+document.getElementById('openfromdevice').onclick=()=>{ setOpenMenu(false); openFromDevice(); };
+document.getElementById('openfromrecipe').onclick=()=>{ setOpenMenu(false); openRecipePicker(); };
+document.addEventListener('pointerdown',e=>{
+  if(openMenu.classList.contains('open')&&!openMenu.contains(e.target)&&!openBtn.contains(e.target)) setOpenMenu(false);
+});
+document.addEventListener('keydown',e=>{
+  if(!openMenu.classList.contains('open')) return;
+  if(e.key==='Escape'){ setOpenMenu(false); openBtn.focus(); }
+  else if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+    const it=[...openMenu.querySelectorAll('[role=menuitem]')],i=it.indexOf(document.activeElement);
+    it[(i+(e.key==='ArrowDown'?1:it.length-1))%it.length].focus(); e.preventDefault();
+  }
+});
 document.getElementById('olclose').onclick=closeOpenListDialog;
 document.getElementById('openfile').onchange=e=>{
   const file=e.target.files[0];

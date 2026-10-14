@@ -38,5 +38,7 @@ to ship it. Start with [architecture.md](architecture.md) for the overall code l
   Capacitor), and the native BLE/file shims it needs.
 - [github-pages-deployment.md](github-pages-deployment.md) — the tagged-release
   pipeline that publishes the live site on GitHub Pages.
+- [recipes-page.md](recipes-page.md) — the recipes gallery page (`recipes/`): auto-discovery, JSON viewer, and how it is deployed.
+- [open-menu.md](open-menu.md) — the Open button menu (Device / Recipe) and the recipe picker: list + preview, hardware filter buttons, embedded `data/recipes.js`.
 - [standalone-build.md](standalone-build.md) — bundling the split app back into one
   offline-ready HTML file, and the CI workflow that attaches it to releases.

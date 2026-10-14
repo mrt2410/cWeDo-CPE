@@ -1,0 +1,42 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Distance controls the light",
+    "description": "Forever: the hub LED colour follows the distance sensor reading, so moving your hand changes the colour.",
+    "author": "cWeDo CPE contributors",
+    "needs": [
+      "Distance sensor"
+    ],
+    "tags": [
+      "distance",
+      "light",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": null,
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "DistanceSensorInput"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

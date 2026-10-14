@@ -1,0 +1,103 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Grab: open and close the claw",
+    "description": "Press the G key to open the claw, wait a moment, then close it to grab. Press R to release. Demo program for LEGO Education's Grab model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt34e9f8b57fabbb1a/5f88032b83a36a1be55e9c10/45300_09_grab.pdf",
+    "needs": [
+      "LEGO Grab model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "keyboard"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "G"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "NumberInput",
+          "inputValue": "1"
+        },
+        {
+          "t": "b",
+          "key": "MotorThatWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "1"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "x": 60,
+      "y": 360,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "R"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "1"
+        },
+        {
+          "t": "b",
+          "key": "MotorOffBlock",
+          "input": null
+        }
+      ]
+    }
+  ]
+}

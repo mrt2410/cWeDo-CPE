@@ -1,0 +1,82 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Turn: drives forward and turns around",
+    "description": "Press the t key: the model drives forward for 2 seconds, then turns around by running the motor the other way for 1 second, three times in a row. Demo program for LEGO Education's Turn model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt822aaaf75e6717e1/5f880346721f8178f2e5e64e/45300_16_turn.pdf",
+    "needs": [
+      "LEGO Turn model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "keyboard",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "t"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "children": [
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "2"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "8"
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "0"
+            }
+          ],
+          "inputValue": "3"
+        }
+      ]
+    }
+  ]
+}

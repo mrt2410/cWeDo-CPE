@@ -1,0 +1,111 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Alarm Device: siren spins and flashes",
+    "description": "Press the Hub Button: the light turns red, the alarm sounds while the motor spins the siren arm, then the light goes green again. Demo program for LEGO Education's Alarm Device model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt34660ad3039fae85/5f880340feae340396c3b6a3/45300_11a_alarm_device.pdf",
+    "needs": [
+      "LEGO Alarm Device model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "light",
+      "sound",
+      "hub button"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnButtonPressBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "9"
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "children": [
+            {
+              "t": "b",
+              "key": "PlaySoundBlock",
+              "input": "NumberInput",
+              "inputValue": "8"
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "7"
+            },
+            {
+              "t": "b",
+              "key": "PlaySoundBlock",
+              "input": "NumberInput",
+              "inputValue": "26"
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "9"
+            }
+          ],
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        }
+      ]
+    }
+  ]
+}

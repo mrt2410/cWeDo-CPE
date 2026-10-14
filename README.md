@@ -177,6 +177,8 @@ js/
   ble/                native Bluetooth shim, used only inside the packaged Android app
   native/             native file-storage shim, used only inside the packaged Android app
 docs/                 design docs, feature write-ups, the LEGO-SDK feature inventory
+recipes/              ready-made programs (.wedo.json + pictures) to Open in the app, a
+                       full template, and AGENTS.md — a guide for building programs with AI
 test/                 the test suite (see below)
 docker/               Dockerfile + build script for the Android APK build
 docker-compose.yml    compose service definition for the Android APK build (docker/)

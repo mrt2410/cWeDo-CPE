@@ -82,6 +82,7 @@ test("Open shows the native in-app list instead of the OS file picker when Nativ
   document.getElementById("openfile").click = () => { filePickerClicked = true; };
 
   document.getElementById("openbtn").click();
+  document.getElementById("openfromdevice").click();
   await wait(10);
 
   assert.equal(document.getElementById("openlist").classList.contains("open"), true);
@@ -97,6 +98,7 @@ test("Open shows an empty-state message when nothing is saved yet", async (t) =>
   window.NativeProgramStorage = fakeNativeStorage();
 
   document.getElementById("openbtn").click();
+  document.getElementById("openfromdevice").click();
   await wait(10);
 
   assert.equal(document.querySelectorAll("#olgrid .orow").length, 0);
@@ -114,6 +116,7 @@ test("picking a program from the native list opens it and closes the dialog", as
   });
 
   document.getElementById("openbtn").click();
+  document.getElementById("openfromdevice").click();
   await wait(10);
   document.querySelector("#olgrid .orow .pick").click();
   await wait(10);
@@ -130,6 +133,7 @@ test("deleting a program from the native list removes it and refreshes the list"
   window.NativeProgramStorage = fakeNativeStorage({ "prog.wedo.json": "{}" });
 
   document.getElementById("openbtn").click();
+  document.getElementById("openfromdevice").click();
   await wait(10);
   document.querySelector("#olgrid .orow .del").click();
   await wait(10);

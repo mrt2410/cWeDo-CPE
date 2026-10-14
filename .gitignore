@@ -8,3 +8,5 @@ release/*
 .claude/
 AGENTS.md
 CHANGELOG.md
+
+!recipes/AGENTS.md

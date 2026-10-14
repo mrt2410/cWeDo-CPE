@@ -1,0 +1,81 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Race Car: dash and stop",
+    "description": "Press the R key: the car revs with the race car sound, dashes at full power for 3 seconds, then brakes. Press S to stop it any time. Demo program for LEGO Education's Race Car model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blte7a599838deb6c44/5f880329b74e541ab55846f0/45300_02a_race_car.pdf",
+    "needs": [
+      "LEGO Race Car model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "keyboard",
+      "sound"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "R"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "10"
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "PlaySoundBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "MotorBrakeBlock",
+          "input": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "x": 60,
+      "y": 360,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "S"
+        },
+        {
+          "t": "b",
+          "key": "MotorBrakeBlock",
+          "input": null
+        }
+      ]
+    }
+  ]
+}

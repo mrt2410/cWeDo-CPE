@@ -5,7 +5,9 @@
   "description": "Dev-only tooling for cWeDo CPE. The app itself is plain static files with zero runtime dependencies.",
   "scripts": {
     "test": "node --test",
-    "build:standalone": "node scripts/build-standalone.js"
+    "build:standalone": "node scripts/build-standalone.js",
+    "build:recipes": "node scripts/build-recipes-manifest.js",
+    "render:recipes": "node scripts/render-recipe-pictures.js"
   },
   "devDependencies": {
     "jsdom": "^30.0.1"

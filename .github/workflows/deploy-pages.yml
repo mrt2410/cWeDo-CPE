@@ -29,6 +29,9 @@ jobs:
           cp -r css "$site/css"
           cp -r js "$site/js"
           cp -r data "$site/data"
+          # recipes page: regenerate the manifest it uses for auto-discovery, then ship the folder
+          node scripts/build-recipes-manifest.js
+          cp -r recipes "$site/recipes"
 
       - name: Publish version to gh-pages
         run: |
@@ -47,7 +50,7 @@ jobs:
             git rm -rf . >/dev/null 2>&1 || true
           fi
 
-          rm -rf index.html css js data "$version"
+          rm -rf index.html css js data recipes "$version"
           cp -r "$site/." .
           mkdir -p "$version"
           cp -r "$site/." "$version/"

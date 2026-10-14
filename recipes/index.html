@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cWeDo CPE Recipes</title>
+<link rel="icon" href="data:,">
+<meta name="description" content="Ready-made programs for cWeDo CPE. Preview them, copy the JSON, and open them in the app.">
+<style>
+  :root {
+    --lime:#a2c300; --lime-d:#7d9800; --ink:#1c2530;
+    --bg:#f4f6f8; --card:#fff; --fg:#1c2530; --muted:#5b6b7a; --line:#d9dee4;
+    --link:#1b6fb5; --chip:#e8edf2; --chip-on:#a2c300; --code-bg:#0f1720; --code-fg:#d6e2ee;
+    --k:#8fd0ff; --s:#b9e08a; --n:#ffc27a; --b:#d9a5ff; --shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#12171c; --card:#1b2229; --fg:#e8edf2; --muted:#9aa8b5; --line:#2d3740;
+            --link:#6db3ee; --chip:#26303a; --shadow:none; }
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; scroll-padding-top:16px; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  a { color:var(--link); }
+  code { font:0.9em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; background:var(--chip); padding:1px 5px; border-radius:4px; }
+  button { font:inherit; cursor:pointer; }
+  :focus-visible { outline:3px solid #2379a8; outline-offset:2px; }
+
+  /* ---- header ---- */
+  header { background:linear-gradient(135deg,var(--lime) 0%,#c6d94a 60%,#e7e24a 100%); color:var(--ink); padding:40px 16px 28px; }
+  .wrap { max-width:1180px; margin:0 auto; }
+  header h1 { margin:0 0 6px; font-size:clamp(1.8rem,5vw,2.8rem); letter-spacing:-0.02em; }
+  header p { margin:0 0 18px; max-width:62ch; font-size:1.05rem; }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; border:1px solid transparent;
+         background:var(--ink); color:#fff; text-decoration:none; font-weight:600; font-size:.95rem; }
+  .btn.alt { background:rgba(255,255,255,.55); color:var(--ink); border-color:rgba(28,37,48,.25); }
+  .btn.sm { padding:5px 10px; font-size:.85rem; }
+  .btn.chipbtn { background:var(--chip); color:var(--fg); border-color:var(--line); }
+  .btn.ghost { background:transparent; color:var(--link); border-color:var(--line); }
+  .stats { margin-top:16px; font-size:.9rem; opacity:.85; }
+
+  /* ---- layout ---- */
+  .layout { display:grid; grid-template-columns:240px 1fr; gap:28px; padding:24px 16px 64px; }
+  nav#toc-wrap { position:sticky; top:16px; align-self:start; max-height:calc(100vh - 32px); overflow:auto; }
+  nav h2 { font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:16px 0 6px; }
+  nav h2:first-child { margin-top:0; }
+  #toc a { display:block; padding:5px 10px; border-left:3px solid var(--line); color:var(--fg); text-decoration:none; font-size:.93rem; }
+  #toc a:hover { background:var(--chip); }
+  #toc a.on { border-left-color:var(--lime-d); background:var(--chip); font-weight:600; }
+  details.toc-m { display:none; }
+
+  /* ---- controls ---- */
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px; }
+  #search { flex:1 1 220px; padding:9px 12px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--fg); font:inherit; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { border:1px solid var(--line); background:var(--chip); color:var(--fg); border-radius:999px; padding:3px 11px; font-size:.85rem; }
+  .chip[aria-pressed="true"] { background:var(--chip-on); border-color:var(--lime-d); color:var(--ink); font-weight:600; }
+  .howto { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:20px; box-shadow:var(--shadow); }
+  .howto ol { margin:6px 0 0; padding-left:22px; }
+  #status { color:var(--muted); margin:8px 0 16px; }
+  #status.err { background:#fff3cd; color:#5c4400; border:1px solid #e6c85a; padding:12px 14px; border-radius:8px; }
+
+  /* ---- cards ---- */
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:22px; box-shadow:var(--shadow); }
+  .card[hidden] { display:none; }
+  .card h3 { margin:0 0 4px; font-size:1.25rem; }
+  .card h3 a { color:inherit; text-decoration:none; }
+  .card h3 a:hover::after { content:" #"; color:var(--muted); }
+  .card .desc { margin:0 0 10px; }
+  .byline { margin:0 0 10px; color:var(--muted); font-size:.88rem; }
+  .badges { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; font-size:.8rem; }
+  .badge { background:var(--chip); border-radius:6px; padding:2px 8px; color:var(--muted); }
+  .badge.need { background:#fde7c9; color:#6b3b00; }
+  @media (prefers-color-scheme: dark) { .badge.need { background:#4a3516; color:#ffd9a0; } }
+  .preview-btn { display:block; width:100%; padding:0; border:1px solid var(--line); border-radius:8px; background:#fff; overflow:auto; text-align:left; }
+  img.preview { display:block; max-width:100%; height:auto; margin:0 auto; }
+  .nopreview { border:1px dashed var(--line); border-radius:8px; padding:18px; color:var(--muted); text-align:center; font-size:.9rem; }
+  .card-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+
+  /* ---- viewer + lightbox ---- */
+  .overlay { position:fixed; inset:0; background:rgba(8,12,16,.72); display:flex; align-items:center; justify-content:center; padding:16px; z-index:50; }
+  .overlay[hidden] { display:none; }
+  .modal { background:var(--card); color:var(--fg); border-radius:12px; width:min(960px,100%); max-height:100%; display:flex; flex-direction:column; overflow:hidden; }
+  .modal-head { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:12px 14px; border-bottom:1px solid var(--line); }
+  .modal-head .t { flex:1 1 200px; min-width:0; }
+  .modal-head .t b { display:block; overflow-wrap:anywhere; }
+  .modal-head .t small { color:var(--muted); }
+  pre#viewer-code { margin:0; padding:14px; overflow:auto; background:var(--code-bg); color:var(--code-fg); font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; tab-size:2; flex:1; }
+  .tk { color:var(--k); } .ts { color:var(--s); } .tn { color:var(--n); } .tb { color:var(--b); }
+  #lightbox .modal { width:auto; max-width:100%; }
+  #lightbox .imgbox { overflow:auto; background:#fff; padding:8px; }
+  #lightbox img { display:block; max-width:none; }
+  #toast { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:8px 16px; border-radius:999px; font-size:.9rem; z-index:60; }
+  #toast[hidden] { display:none; }
+  footer { text-align:center; color:var(--muted); font-size:.85rem; padding:0 16px 32px; }
+
+  @media (max-width:880px) {
+    .layout { grid-template-columns:1fr; }
+    nav#toc-wrap { display:none; }
+    details.toc-m { display:block; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-bottom:16px; }
+    details.toc-m summary { cursor:pointer; font-weight:600; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>cWeDo CPE Recipes</h1>
+    <p>Ready-made programs for the LEGO WeDo 2.0 Smarthub. Preview each whiteboard, copy or download the JSON, then load it in the app. Building your own with AI? Hand it the guide.</p>
+    <div class="actions">
+      <a class="btn" href="../index.html">Open the app</a>
+      <button class="btn alt" id="guide-copy" type="button">Copy AI guide</button>
+      <button class="btn alt" id="guide-view" type="button">Read AI guide</button>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav id="toc-wrap" aria-label="Table of contents">
+    <div id="toc"></div>
+  </nav>
+
+  <main>
+    <details class="toc-m"><summary>Jump to a recipe</summary><div id="toc-m"></div></details>
+
+    <section class="howto">
+      <strong>How to use a recipe</strong>
+      <ol>
+        <li>Press <b>Download</b> on a recipe (or <b>View JSON</b> and copy it into a file named <code>something.wedo.json</code>).</li>
+        <li>In <a href="../index.html">the app</a>, click the folder icon (<b>Open</b>) and choose the file.</li>
+        <li>Press the green flag on the Start block. Hardware a recipe needs is listed on its card.</li>
+      </ol>
+    </section>
+
+    <div class="controls">
+      <input id="search" type="search" placeholder="Search recipes…" aria-label="Search recipes">
+      <div class="chips" id="chips" role="group" aria-label="Filter by tag"></div>
+    </div>
+    <div id="status" role="status">Loading recipes…</div>
+    <div id="cards"></div>
+  </main>
+</div>
+
+<footer>cWeDo CPE · recipes are plain <code>.wedo.json</code> files. Add one to the <code>recipes/</code> folder and it appears here automatically.<br>LEGO® and WeDo are trademarks of the LEGO Group, which does not sponsor, authorize or endorse this project. Recipes credited to LEGO Education use their model designs; the programs are written by this project.</footer>
+
+<div class="overlay" id="viewer" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="viewer-title">
+    <div class="modal-head">
+      <div class="t"><b id="viewer-title"></b><small id="viewer-meta"></small></div>
+      <button class="btn sm" id="viewer-copy" type="button">Copy</button>
+      <a class="btn sm ghost" id="viewer-download" href="#" download>Download</a>
+      <button class="btn sm ghost" id="viewer-close" type="button" aria-label="Close">✕ Close</button>
+    </div>
+    <pre id="viewer-code" tabindex="0"></pre>
+  </div>
+</div>
+
+<div class="overlay" id="lightbox" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lightbox-title">
+    <div class="modal-head">
+      <div class="t"><b id="lightbox-title"></b></div>
+      <button class="btn sm ghost" id="lightbox-close" type="button" aria-label="Close">✕ Close</button>
+    </div>
+    <div class="imgbox"><img id="lightbox-img" alt=""></div>
+  </div>
+</div>
+
+<div id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var entries = [], manifest = null, activeTag = '', lastFocus = null;
+  var viewerPromise = Promise.resolve();
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  /* ---- clipboard: the async API needs a secure context; plain-http LAN servers need the fallback ---- */
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(function () { return legacyCopy(text); });
+    }
+    return legacyCopy(text);
+  }
+  function legacyCopy(text) {
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand && document.execCommand('copy'); } catch (e) { /* fall through */ }
+      document.body.removeChild(ta);
+      ok ? resolve() : reject(new Error('copy not available'));
+    });
+  }
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 2000);
+  }
+  function fetchText(path) {
+    return fetch(path).then(function (r) { if (!r.ok) throw new Error(path + ' → ' + r.status); return r.text(); });
+  }
+  function copyFile(path, label) {
+    return fetchText(path).then(copyText).then(function () { toast('Copied ' + label); },
+      function () { toast('Could not copy — use View and select the text'); });
+  }
+
+  /* ---- JSON syntax colouring (the text itself is never altered) ---- */
+  function highlightJson(text) {
+    return esc(text).replace(/("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g,
+      function (m, str, colon, lit) {
+        if (str) return colon ? '<span class="tk">' + str + '</span>' + colon : '<span class="ts">' + str + '</span>';
+        if (lit) return '<span class="tb">' + m + '</span>';
+        return '<span class="tn">' + m + '</span>';
+      });
+  }
+
+  /* ---- viewer ---- */
+  function openOverlay(id) { lastFocus = document.activeElement; $(id).hidden = false; }
+  function closeOverlays() {
+    ['viewer', 'lightbox'].forEach(function (id) { $(id).hidden = true; });
+    if (location.hash.indexOf('#view=') === 0) history.replaceState(null, '', location.pathname + location.search);
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  function openViewer(path, title, id) {
+    var code = $('viewer-code');
+    $('viewer-title').textContent = path;
+    $('viewer-meta').textContent = title ? title + ' · loading…' : 'loading…';
+    code.textContent = '';
+    $('viewer-download').setAttribute('href', path);
+    $('viewer-download').setAttribute('download', path.split('/').pop());
+    openOverlay('viewer');
+    if (id) history.replaceState(null, '', '#view=' + id);
+    var p = fetchText(path).then(function (text) {
+      var lines = text.split('\n').length - (text.slice(-1) === '\n' ? 1 : 0);
+      if (/\.json$/.test(path)) code.innerHTML = highlightJson(text); else code.textContent = text;
+      $('viewer-meta').textContent = (title ? title + ' · ' : '') + lines + ' lines';
+      $('viewer-copy').onclick = function () {
+        copyText(text).then(function () { toast('Copied ' + path); }, function () { toast('Could not copy — select the text and press Ctrl+C'); });
+      };
+      code.focus();
+    }, function (e) { code.textContent = 'Could not load ' + path + '\n' + e.message; });
+    viewerPromise = p;
+    window.__viewerLoaded = p;
+    return p;
+  }
+  function openLightbox(e) {
+    $('lightbox-title').textContent = e.title;
+    $('lightbox-img').src = e.image; $('lightbox-img').alt = e.title + ' whiteboard';
+    openOverlay('lightbox');
+  }
+
+  /* ---- rendering ---- */
+  function card(e) {
+    var a = el('article', 'card'); a.id = e.id;
+    var h = el('h3'); var link = el('a', null, e.title); link.href = '#' + e.id; h.appendChild(link);
+    a.appendChild(h);
+    a.appendChild(el('p', 'desc', e.description));
+    var by = el('p', 'byline', 'By ' + e.author);
+    if (e.source) {
+      var src = el('a', null, 'Source'); src.href = e.source; src.target = '_blank'; src.rel = 'noopener noreferrer';
+      by.appendChild(document.createTextNode(' · ')); by.appendChild(src);
+    }
+    a.appendChild(by);
+    var badges = el('div', 'badges');
+    e.needs.forEach(function (n) { badges.appendChild(el('span', 'badge need', 'Needs: ' + n)); });
+    if (!e.needs.length && e.kind === 'recipe') badges.appendChild(el('span', 'badge', 'No extra hardware'));
+    badges.appendChild(el('span', 'badge', e.blocks + ' blocks'));
+    if (e.stacks > 1) badges.appendChild(el('span', 'badge', e.stacks + ' stacks'));
+    e.tags.forEach(function (t) { badges.appendChild(el('span', 'badge', '#' + t)); });
+    a.appendChild(badges);
+
+    if (e.image) {
+      var pb = el('button', 'preview-btn'); pb.type = 'button'; pb.title = 'Click to enlarge';
+      pb.setAttribute('aria-label', 'Enlarge the ' + e.title + ' whiteboard');
+      var img = el('img', 'preview'); img.src = e.image; img.alt = e.title + ' whiteboard'; img.loading = 'lazy';
+      pb.appendChild(img); pb.onclick = function () { openLightbox(e); };
+      a.appendChild(pb);
+    } else {
+      a.appendChild(el('div', 'nopreview', 'No picture — this one is a catalogue to copy from.'));
+    }
+
+    var acts = el('div', 'card-actions');
+    var view = el('button', 'btn sm', 'View JSON'); view.type = 'button'; view.dataset.action = 'view';
+    view.onclick = function () { openViewer(e.file, e.title, e.id); };
+    var copy = el('button', 'btn sm chipbtn', 'Copy'); copy.type = 'button'; copy.dataset.action = 'copy';
+    copy.onclick = function () { copyFile(e.file, e.file); };
+    var dl = el('a', 'btn sm ghost', 'Download'); dl.href = e.file; dl.setAttribute('download', e.file.split('/').pop()); dl.dataset.action = 'download';
+    acts.appendChild(view); acts.appendChild(copy); acts.appendChild(dl);
+    a.appendChild(acts);
+    return a;
+  }
+
+  function buildToc(into) {
+    into.innerHTML = '';
+    var sections = [['Recipes', entries.filter(function (e) { return e.kind === 'recipe'; })],
+                    ['Reference', entries.filter(function (e) { return e.kind === 'template'; })]];
+    sections.forEach(function (s) {
+      if (!s[1].length) return;
+      into.appendChild(el('h2', null, s[0]));
+      s[1].forEach(function (e) { var a = el('a', null, e.title); a.href = '#' + e.id; a.dataset.id = e.id; into.appendChild(a); });
+    });
+  }
+
+  function applyFilter() {
+    var q = $('search').value.trim().toLowerCase(), shown = 0;
+    entries.forEach(function (e) {
+      var hay = [e.title, e.description, e.author, e.id, e.needs.join(' '), e.tags.join(' ')].join(' ').toLowerCase();
+      var ok = (!q || hay.indexOf(q) >= 0) && (!activeTag || e.tags.indexOf(activeTag) >= 0);
+      $(e.id).hidden = !ok;
+      document.querySelectorAll('[data-id="' + e.id + '"]').forEach(function (a) { a.style.display = ok ? '' : 'none'; });
+      if (ok) shown++;
+    });
+    document.querySelectorAll('#toc h2, #toc-m h2').forEach(function (h) {
+      var any = false, n = h.nextElementSibling;
+      while (n && n.tagName !== 'H2') { if (n.style.display !== 'none') any = true; n = n.nextElementSibling; }
+      h.style.display = any ? '' : 'none';
+    });
+    $('status').className = '';
+    $('status').textContent = shown ? '' : 'No recipe matches. Try clearing the search or the tag.';
+  }
+
+  function buildChips() {
+    var tags = {};
+    entries.forEach(function (e) { e.tags.forEach(function (t) { tags[t] = (tags[t] || 0) + 1; }); });
+    var box = $('chips'); box.innerHTML = '';
+    Object.keys(tags).sort().forEach(function (t) {
+      var c = el('button', 'chip', t + ' ' + tags[t]); c.type = 'button'; c.dataset.tag = t; c.setAttribute('aria-pressed', 'false');
+      c.onclick = function () {
+        activeTag = activeTag === t ? '' : t;
+        box.querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', String(x.dataset.tag === activeTag)); });
+        applyFilter();
+      };
+      box.appendChild(c);
+    });
+  }
+
+  function scrollSpy() {
+    if (!('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (items) {
+      items.forEach(function (i) {
+        if (!i.isIntersecting) return;
+        document.querySelectorAll('#toc a').forEach(function (a) { a.classList.toggle('on', a.dataset.id === i.target.id); });
+      });
+    }, { rootMargin: '-10% 0px -70% 0px' });
+    entries.forEach(function (e) { io.observe($(e.id)); });
+  }
+
+  function handleHash() {
+    var m = /^#view=(.+)$/.exec(location.hash);
+    if (!m) return;
+    var e = entries.filter(function (x) { return x.id === decodeURIComponent(m[1]); })[0];
+    if (e) openViewer(e.file, e.title, e.id);
+  }
+
+  /* ---- wiring ---- */
+  $('viewer-close').onclick = closeOverlays;
+  $('lightbox-close').onclick = closeOverlays;
+  ['viewer', 'lightbox'].forEach(function (id) {
+    $(id).addEventListener('click', function (ev) { if (ev.target === $(id)) closeOverlays(); });
+  });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') closeOverlays(); });
+  $('search').addEventListener('input', applyFilter);
+  $('guide-copy').onclick = function () { copyFile((manifest && manifest.guide) || 'AGENTS.md', 'the AI guide'); };
+  $('guide-view').onclick = function () { openViewer((manifest && manifest.guide) || 'AGENTS.md', 'Guide for AI agents'); };
+
+  window.__recipesReady = fetch('manifest.json')
+    .then(function (r) { if (!r.ok) throw new Error('manifest.json → ' + r.status); return r.json(); })
+    .then(function (m) {
+      manifest = m;
+      entries = m.recipes.map(function (e) { return Object.assign({ kind: 'recipe' }, e); })
+        .concat(m.templates.map(function (e) { return Object.assign({ kind: 'template' }, e); }));
+      var cards = $('cards');
+      entries.forEach(function (e) { cards.appendChild(card(e)); });
+      buildToc($('toc')); buildToc($('toc-m')); buildChips(); scrollSpy();
+      $('stats').textContent = m.recipes.length + ' recipes · ' + m.templates.length + ' template';
+      $('status').textContent = '';
+      handleHash();
+    })
+    .catch(function (e) {
+      var s = $('status'); s.className = 'err';
+      s.textContent = 'Could not load the recipe list (' + e.message + '). Open this page through a web server ' +
+        '(for example "python3 -m http.server" in the repo root, then /recipes/), not straight from a file. ' +
+        'If you added a recipe, run "npm run build:recipes" to refresh manifest.json.';
+    });
+  window.addEventListener('hashchange', handleHash);
+})();
+</script>
+</body>
+</html>

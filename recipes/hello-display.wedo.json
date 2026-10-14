@@ -1,0 +1,57 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Hello display",
+    "description": "Press the h key to show \"Hello!\" over a picture background for 3 seconds, then close the display.",
+    "author": "cWeDo CPE contributors",
+    "needs": [],
+    "tags": [
+      "display",
+      "keyboard"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "h"
+        },
+        {
+          "t": "b",
+          "key": "DisplayBackgroundBlock",
+          "input": "NumberInput",
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "DisplayBlock",
+          "input": "TextInput",
+          "inputValue": "Hello!"
+        },
+        {
+          "t": "b",
+          "key": "DisplayMediumsizeBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "NumberInput",
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "DisplayClosedBlock",
+          "input": null
+        }
+      ]
+    }
+  ]
+}

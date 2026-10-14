@@ -1,0 +1,87 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Revolve: turntable show",
+    "description": "Press the Hub Button: the turntable spins one way with a teal light, a short beep, then the other way, three times. Demo program for LEGO Education's Revolve model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt7f1d748015ac4237/5f88032844cd830f46b0728a/45300_11_revolve.pdf",
+    "needs": [
+      "LEGO Revolve model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "hub button",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnButtonPressBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "inputValue": "3",
+          "children": [
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "2"
+            },
+            {
+              "t": "b",
+              "key": "PlaySoundBlock",
+              "input": "NumberInput",
+              "inputValue": "21"
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "2"
+            }
+          ]
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "0"
+        }
+      ]
+    }
+  ]
+}

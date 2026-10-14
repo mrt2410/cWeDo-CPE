@@ -14,8 +14,9 @@ own permanent URL — publishing a new version never removes an older one:
 
 ## What counts as "the app" for deployment
 
-The deployable static site is just `index.html` (dereferenced from its symlink to
-`cWeDo CPE v1.0.html`), `css/`, `js/`, and `data/`. `test/`, `mobile/`, `docker*`,
+The deployable static site is `index.html` (dereferenced from its symlink to
+`cWeDo CPE v1.0.html`), `css/`, `js/`, `data/`, and `recipes/` (the [recipes page](recipes-page.md);
+its manifest is regenerated during the build). `test/`, `mobile/`, `docker*`,
 `release/`, `docs/`, and dev tooling (`package.json`, `node_modules/`) are not part of
 the served site. All internal references in `index.html`/`js/`/`css/` are relative, so
 the same file set works unmodified whether served from `/` (root/latest) or `/vX.Y.Z/`
@@ -45,7 +46,8 @@ Branch deploy serves whatever is currently committed to a branch, so a new run c
 On a `vX.Y.Z` tag push, the workflow:
 
 1. Checks out the tag's commit and builds a staging directory with `index.html`
-   (dereferenced), `css/`, `js/`, `data/`.
+   (dereferenced), `css/`, `js/`, `data/`, and `recipes/` (after regenerating
+   `recipes/manifest.json`).
 2. Checks out `gh-pages` (creating it as an orphan branch on the first run).
 3. Copies the staging directory into `gh-pages:/vX.Y.Z/` — a new, permanent path,
    never overwritten by later runs — and also over the `gh-pages` root, so `/` always

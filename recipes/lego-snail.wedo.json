@@ -1,0 +1,70 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Snail: creeps then rests",
+    "description": "Press the Smarthub button and the hub light blinks green and sky blue three times, like a snail creeping along, then switches off. Demo program for LEGO Education's Snail model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/bltafe88d4b265016a7/5f88034625a3fc0c1a86b36a/45300_easystart_m1_.pdf",
+    "needs": [
+      "LEGO Snail model"
+    ],
+    "tags": [
+      "lego",
+      "light",
+      "hub button",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnButtonPressBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "children": [
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "4"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ],
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "0"
+        }
+      ]
+    }
+  ]
+}

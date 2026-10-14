@@ -1,0 +1,91 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Flex: swing back and forth",
+    "description": "Press Start and the motor swings Flex's arm forward and back three times, with a beep each time it turns around. Demo program for LEGO Education's Flex model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/bltfe9883771432bba5/5f880335631d5a2165df4132/45300_06_flex.pdf",
+    "needs": [
+      "LEGO Flex model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "loop",
+      "tone"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "inputValue": "3",
+          "children": [
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "PlayToneBlock",
+              "input": "NumberInput",
+              "inputValue": "0.3",
+              "note": "C",
+              "octave": 4
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "PlayToneBlock",
+              "input": "NumberInput",
+              "inputValue": "0.3",
+              "note": "G",
+              "octave": 4
+            }
+          ]
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        }
+      ]
+    }
+  ]
+}

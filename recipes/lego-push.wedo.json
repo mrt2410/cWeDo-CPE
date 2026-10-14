@@ -1,0 +1,93 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Push: push, hold and retract",
+    "description": "Press the Hub Button to push forward for 1.5 seconds, pause, then pull back, three times, with a pink light while moving. Demo program for LEGO Education's Push model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt46fcd50c6cd4e605/5f88032d5955180f989f5686/45300_10_push.pdf",
+    "needs": [
+      "LEGO Push model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "hub button",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnButtonPressBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "1"
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "inputValue": "3",
+          "children": [
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1.5"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1.5"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "0"
+        }
+      ]
+    }
+  ]
+}

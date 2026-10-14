@@ -1,0 +1,109 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Joystick: tilt to show direction",
+    "description": "Tilt the joystick in a direction and the hub light and display tell you which way it points. Runs forever. Demo program for LEGO Education's Joystick model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/bltf94c66d602549dfe/5f880330e53bb90f6c283634/45300_15b_joystick.pdf",
+    "needs": [
+      "LEGO Joystick model",
+      "Tilt sensor"
+    ],
+    "tags": [
+      "lego",
+      "tilt",
+      "light",
+      "display",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": null,
+          "children": [
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "TiltUp"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "DisplayBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "TiltDown"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "9"
+            },
+            {
+              "t": "b",
+              "key": "DisplayBlock",
+              "input": "NumberInput",
+              "inputValue": "2"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "TiltThisWay"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "3"
+            },
+            {
+              "t": "b",
+              "key": "DisplayBlock",
+              "input": "NumberInput",
+              "inputValue": "3"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "TiltThatWay"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "8"
+            },
+            {
+              "t": "b",
+              "key": "DisplayBlock",
+              "input": "NumberInput",
+              "inputValue": "4"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

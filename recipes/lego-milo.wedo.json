@@ -1,0 +1,86 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "MILO: patrols and backs away",
+    "description": "Press Play and MILO drives forward for 3 seconds, then waits for something to come closer to its sensor and reverses for 2 seconds, forever. Demo program for LEGO Education's MILO model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt93919edff44b5450/5f88037fb8b59a77a945d172/45300_16_milo.pdf",
+    "needs": [
+      "LEGO MILO model",
+      "Motor",
+      "Distance sensor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "distance",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "r",
+          "input": null,
+          "children": [
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "3"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "9"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "DistanceChangeCloser"
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "2"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

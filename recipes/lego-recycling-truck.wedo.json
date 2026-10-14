@@ -1,0 +1,94 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Recycling Truck: tip the bin",
+    "description": "Press the T key: a yellow light and machinery sound come on, the motor tips the bin for 2 seconds, holds, then lowers it. A cheer plays when done. Demo program for LEGO Education's Recycling Truck model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt19b2acdd566bcb36/5f88033644cd830f46b0728e/45300_08a_recycling_truck.pdf",
+    "needs": [
+      "LEGO Recycling Truck model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "keyboard",
+      "sound",
+      "light"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "T"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "4"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "7"
+        },
+        {
+          "t": "b",
+          "key": "PlaySoundBlock",
+          "input": "NumberInput",
+          "inputValue": "14"
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "MotorThatWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "PlaySoundBlock",
+          "input": "NumberInput",
+          "inputValue": "12"
+        }
+      ]
+    }
+  ]
+}

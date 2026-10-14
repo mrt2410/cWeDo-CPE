@@ -1,0 +1,54 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Counter",
+    "description": "The display counts from 0 to 10, adding one every second.",
+    "author": "cWeDo CPE contributors",
+    "needs": [],
+    "tags": [
+      "display",
+      "math",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "DisplayBlock",
+          "input": "NumberInput",
+          "inputValue": "0"
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "inputValue": "10",
+          "children": [
+            {
+              "t": "b",
+              "key": "AddtoDisplayBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

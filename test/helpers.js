@@ -9,7 +9,7 @@ const HTML_PATH = path.join(ROOT, "cWeDo CPE v1.0.html");
 // scripts are stripped from the parsed HTML and evaluated manually in order —
 // equivalent to what a browser does with these classic (non-module) scripts,
 // without depending on jsdom's resource loader.
-const SCRIPTS = ["data/bundle.js", "data/soundbank.js", "data/bgbank.js",
+const SCRIPTS = ["data/bundle.js", "data/soundbank.js", "data/bgbank.js", "data/recipes.js",
   "js/blocks/core.js", "js/blocks/tilt-sensor.js", "js/blocks/motion-sensor.js", "js/blocks/motor.js", "js/blocks/rgb-light.js", "js/blocks/piezo-tone-player.js", "js/blocks/sound.js", "js/blocks/display.js", "js/blocks/messaging.js", "js/telemetry/button-battery.js", "js/telemetry/voltage-current.js", "js/ble/capacitor-ble-shim.js", "js/native/capacitor-file-shim.js", "js/app.js"];
 
 /**
