@@ -385,7 +385,8 @@
   .row.pressed{background:var(--lime)}
   .row .hbrick{width:74px;height:44px;border-radius:5px;background:linear-gradient(#fdfdfd,#dde2e6);
     position:relative;flex:0 0 auto;box-shadow:inset 0 -3px 0 rgba(0,0,0,.12)}
-  .row .hbrick:before{content:"";position:absolute;left:8px;top:7px;width:14px;height:10px;border-radius:2px;background:#37b34a}
+  .row .hbrick:before{content:"";position:absolute;left:8px;top:7px;width:14px;height:10px;border-radius:2px;background:#9aa5af}
+  .row.connected .hbrick:before,.row.pressed .hbrick:before{background:#37b34a}
   .row .nm{flex:1;font-weight:700;font-size:19px;letter-spacing:.4px;text-transform:uppercase;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .batt{font-size:11px;color:#fff;border:2px solid #fff;border-radius:3px;padding:2px 5px;position:relative;min-width:38px;text-align:center}
