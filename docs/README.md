@@ -31,6 +31,7 @@ to ship it. Start with [architecture.md](architecture.md) for the overall code l
 
 - [feature-requests.md](feature-requests.md) — requested-but-unbuilt features (e.g.
   connecting to multiple Smarthubs at once).
+- [known-bugs.md](known-bugs.md) — reported bugs not yet fixed, with what was already checked.
 
 ## Shipping
 

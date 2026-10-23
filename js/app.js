@@ -1339,11 +1339,23 @@ function renderHubs(){
       k.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
       k.onclick=e=>{e.stopPropagation();disconnect(h);};r.appendChild(k);
     } else if(!conn){ r.onclick=()=>connect(h.device); }
+    if(!h.connected){const f=document.createElement('button');f.className='forget';f.title='Remove from list';
+      f.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+      f.onclick=e=>{e.stopPropagation();forgetHub(h);};r.appendChild(f);}
     listEl.appendChild(r);
   });
 }
 function setHubWidget(){const on=connectedHub(),w=document.getElementById('hub');
   w.classList.toggle('on',!!on);w.querySelector('.state').textContent=on?on.name:'Not connected';}
+/* removes a hub that isn't connected from the list. If it is the remembered hub, that is
+   forgotten too, so auto-reconnect doesn't look for it on the next load. Scanning finds it again. */
+function forgetHub(h){
+  hubs.delete(h.device.id);
+  try{const raw=localStorage.getItem(LAST_HUB_KEY);
+    if(raw&&JSON.parse(raw).id===h.device.id) localStorage.removeItem(LAST_HUB_KEY);}catch(e){}
+  log('removed '+(h.name||h.device.id)+' from the list');
+  renderHubs();setHubWidget();
+}
 /* ---- renaming the hub (writes the same Name ID characteristic connect() reads).
    20 bytes is a conservative hard cap: the factory default "LPF2 Smart Hub 2 I/O"
    is 20, and 20 is the most one default-MTU BLE write carries. */
