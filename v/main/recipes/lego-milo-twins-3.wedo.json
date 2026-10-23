@@ -1,0 +1,102 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "MILO Twins 3: tug of war",
+    "description": "Press Play for a pull at a steady power with a cheer at the end. Press the t key for a pull at a random power in the opposite direction. Demo program for LEGO Education's MILO Twins 3 model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blta0b9fb007fac4232/5f8803b582eaa522ca601cbb/45300_16a_milo_twins_3.pdf",
+    "needs": [
+      "LEGO MILO Twins 3 model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "random",
+      "sound"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "4"
+        },
+        {
+          "t": "b",
+          "key": "MotorBrakeBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "PlaySoundBlock",
+          "input": "NumberInput",
+          "inputValue": "12"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "x": 60,
+      "y": 360,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "t"
+        },
+        {
+          "t": "b",
+          "key": "MotorThatWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "RandomInput"
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "MotorBrakeBlock",
+          "input": null
+        }
+      ]
+    }
+  ]
+}

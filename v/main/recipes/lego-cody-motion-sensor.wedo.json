@@ -1,0 +1,92 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Cody Motion Sensor: arm waves at you",
+    "description": "When something moves closer to the Motion Sensor, Cody swings his arm and plays a sound; press Play to start watching. Demo program for LEGO Education's Cody Motion Sensor model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/bltf6a8d3523750fda2/5f880347b8b59a77a945d168/45300_p01a_cody_with_motion_sensor_.pdf",
+    "needs": [
+      "LEGO Cody Motion Sensor model",
+      "Motor",
+      "Distance sensor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "distance",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "r",
+          "input": null,
+          "children": [
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "DistanceChangeCloser"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "8"
+            },
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "PlaySoundBlock",
+              "input": "NumberInput",
+              "inputValue": "12"
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

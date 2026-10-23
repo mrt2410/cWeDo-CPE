@@ -1,0 +1,98 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Crank: turn up, turn down",
+    "description": "Press Play: the crank turns slowly one way for 3 seconds, then faster the other way, with the display counting the turns. Demo program for LEGO Education's Crank model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/bltade0bb3fd1abceb9/5f88031b18bf360ec7ca8899/45300_03_crank.pdf",
+    "needs": [
+      "LEGO Crank model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "display",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "DisplayBackgroundBlock",
+          "input": "NumberInput",
+          "inputValue": "0"
+        },
+        {
+          "t": "b",
+          "key": "DisplayBlock",
+          "input": "NumberInput",
+          "inputValue": "0"
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "children": [
+            {
+              "t": "b",
+              "key": "MotorPowerBlock",
+              "input": "NumberInput",
+              "inputValue": "3"
+            },
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "3"
+            },
+            {
+              "t": "b",
+              "key": "AddtoDisplayBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "MotorPowerBlock",
+              "input": "NumberInput",
+              "inputValue": "8"
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1.5"
+            }
+          ],
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "MotorBrakeBlock",
+          "input": null
+        }
+      ]
+    }
+  ]
+}

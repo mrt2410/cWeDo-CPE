@@ -1,0 +1,74 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Motion: seesaw tilt alarm",
+    "description": "Tilt the lever one way for a green light and a boing, the other way for a red light and a buzz, forever. Press Play to start. Demo program for LEGO Education's Motion model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/bltb67619b137f1a290/5f88032d722f2a15c7ba2535/45300_14_motion.pdf",
+    "needs": [
+      "LEGO Motion model",
+      "Tilt sensor"
+    ],
+    "tags": [
+      "lego",
+      "tilt",
+      "light",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": null,
+          "children": [
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "TiltThisWay"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "PlaySoundBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "TiltThatWay"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "9"
+            },
+            {
+              "t": "b",
+              "key": "PlaySoundBlock",
+              "input": "NumberInput",
+              "inputValue": "16"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

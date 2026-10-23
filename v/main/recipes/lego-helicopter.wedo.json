@@ -1,0 +1,98 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Helicopter: spin up the rotor",
+    "description": "Press Start for a take-off: the rotor spins up slowly, then fast with a helicopter sound, then spins down and lands. Demo program for LEGO Education's Helicopter model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/bltfca247efe00b6955/5f88038069efd81ab4debf32/45300_7a_helicopter.pdf",
+    "needs": [
+      "LEGO Helicopter model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "sound",
+      "light"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "7"
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "7"
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "PlaySoundBlock",
+          "input": "NumberInput",
+          "inputValue": "13"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "10"
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "4"
+        },
+        {
+          "t": "b",
+          "key": "MotorBrakeBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Tilt spins the motor",
+    "description": "Forever: tilt one way and the motor spins one way for 2 seconds; tilt the other way and it reverses.",
+    "author": "cWeDo CPE contributors",
+    "needs": [
+      "Motor",
+      "Tilt sensor"
+    ],
+    "tags": [
+      "motor",
+      "tilt",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "r",
+          "input": null,
+          "children": [
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "TiltThisWay"
+            },
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "2"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "TiltThatWay"
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "2"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

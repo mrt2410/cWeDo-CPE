@@ -1,0 +1,132 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Tilt: lights up with the tilt direction",
+    "description": "Press Play, then tilt the model: each tilt direction turns the hub light a different colour and plays a sound. Shake it to flash the hub light white. Demo program for LEGO Education's Tilt model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt8b83a4496ae45573/5f88032fc8a27c1d9614c29c/45300_15_tilt.pdf",
+    "needs": [
+      "LEGO Tilt model",
+      "Tilt sensor"
+    ],
+    "tags": [
+      "lego",
+      "tilt",
+      "light",
+      "sound"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": null,
+          "children": [
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "TiltThisWay"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "3"
+            },
+            {
+              "t": "b",
+              "key": "PlaySoundBlock",
+              "input": "NumberInput",
+              "inputValue": "21"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "TiltThatWay"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "9"
+            },
+            {
+              "t": "b",
+              "key": "PlaySoundBlock",
+              "input": "NumberInput",
+              "inputValue": "21"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "TiltUp"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            },
+            {
+              "t": "b",
+              "key": "PlaySoundBlock",
+              "input": "NumberInput",
+              "inputValue": "20"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "x": 60,
+      "y": 580,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": null,
+          "children": [
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "AnyTilt"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "10"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "0.5"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Earthquake: shaking bursts",
+    "description": "Press Play: the motor shakes the platform in short bursts of random strength that alternate direction, then the light turns red. Demo program for LEGO Education's Earthquake model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt545ada040e1dbb07/5f880329d041c37a4af706a8/45300_03a_earthquake.pdf",
+    "needs": [
+      "LEGO Earthquake model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "random",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "10"
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "8"
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "children": [
+            {
+              "t": "b",
+              "key": "MotorPowerBlock",
+              "input": "RandomInput"
+            },
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "0.4"
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "0.4"
+            }
+          ],
+          "inputValue": "6"
+        },
+        {
+          "t": "b",
+          "key": "MotorOffBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "9"
+        }
+      ]
+    }
+  ]
+}

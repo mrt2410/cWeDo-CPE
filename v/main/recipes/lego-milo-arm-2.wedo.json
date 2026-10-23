@@ -1,0 +1,95 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "MILO Arm 2: waves three times",
+    "description": "Press Play and the arm swings out and back three times, then a cheer sounds. Demo program for LEGO Education's MILO Arm 2 model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt40184ca97ebe0cf8/5f8803406c54ba0f72c20840/45300_16a_milo_arm_2.pdf",
+    "needs": [
+      "LEGO MILO Arm 2 model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "loop",
+      "messaging",
+      "sound"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "SendMessageBlock",
+          "input": "TextInput",
+          "inputValue": "wave"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "x": 60,
+      "y": 360,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnMessageBlock",
+          "input": "TextInput",
+          "inputValue": "wave"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "7"
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "children": [
+            {
+              "t": "b",
+              "key": "MotorThisWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "0.5"
+            },
+            {
+              "t": "b",
+              "key": "MotorThatWayBlock",
+              "input": null
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "0.5"
+            }
+          ],
+          "inputValue": "3"
+        },
+        {
+          "t": "b",
+          "key": "PlaySoundBlock",
+          "input": "NumberInput",
+          "inputValue": "12"
+        }
+      ]
+    }
+  ]
+}

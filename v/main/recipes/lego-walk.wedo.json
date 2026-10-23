@@ -1,0 +1,106 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Walk: walks in bursts",
+    "description": "Press Play: the model walks in alternating short and long bursts, then waits for something to come close to the distance sensor and walks one more burst. Demo program for LEGO Education's Walk model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/bltc168f6f13389fe3a/5f88031fc3d3c30be7c15210/45300_04_walk.pdf",
+    "needs": [
+      "LEGO Walk model",
+      "Motor",
+      "Distance sensor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "distance",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "children": [
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "0.5"
+            },
+            {
+              "t": "b",
+              "key": "MotorPowerBlock",
+              "input": "NumberInput",
+              "inputValue": "8"
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "2"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "0.5"
+            },
+            {
+              "t": "b",
+              "key": "MotorPowerBlock",
+              "input": "NumberInput",
+              "inputValue": "5"
+            }
+          ],
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "DistanceChangeCloser"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "7"
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "3"
+        }
+      ]
+    }
+  ]
+}

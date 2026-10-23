@@ -1,0 +1,65 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Random dance",
+    "description": "Repeat 5 times: pick a random motor power, run for a second, and flash a random LED colour.",
+    "author": "cWeDo CPE contributors",
+    "needs": [
+      "Motor"
+    ],
+    "tags": [
+      "motor",
+      "light",
+      "random",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "r",
+          "input": "NumberInput",
+          "inputValue": "5",
+          "children": [
+            {
+              "t": "b",
+              "key": "MotorPowerBlock",
+              "input": "RandomInput"
+            },
+            {
+              "t": "b",
+              "key": "MotorOnForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "RandomInput"
+            }
+          ]
+        },
+        {
+          "t": "b",
+          "key": "MotorOffBlock",
+          "input": null
+        }
+      ]
+    }
+  ]
+}

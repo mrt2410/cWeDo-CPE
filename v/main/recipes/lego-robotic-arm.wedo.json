@@ -1,0 +1,137 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Robotic Arm: pick and place sweep",
+    "description": "Press the G key to swing the arm out, hold for a moment, then swing it back. Press H to send a message that makes it sweep slowly with a tone. Demo program for LEGO Education's Robotic Arm model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt31b1c4b8bee378c6/5f8803240fa6ca0be8c8d3cf/45300_09a_robotic_arm.pdf",
+    "needs": [
+      "LEGO Robotic Arm model",
+      "Motor"
+    ],
+    "tags": [
+      "lego",
+      "motor",
+      "keyboard",
+      "messaging"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "G"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "5"
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "1.5"
+        },
+        {
+          "t": "b",
+          "key": "WaitForBlock",
+          "input": "NumberInput",
+          "inputValue": "1"
+        },
+        {
+          "t": "b",
+          "key": "MotorThatWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "1.5"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "x": 60,
+      "y": 360,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnKeyPressBlock",
+          "input": null,
+          "letter": "H"
+        },
+        {
+          "t": "b",
+          "key": "SendMessageBlock",
+          "input": "TextInput",
+          "inputValue": "sweep"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "x": 60,
+      "y": 620,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartOnMessageBlock",
+          "input": "TextInput",
+          "inputValue": "sweep"
+        },
+        {
+          "t": "b",
+          "key": "MotorPowerBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "MotorThatWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "PlayToneBlock",
+          "input": "NumberInput",
+          "inputValue": "0.5",
+          "note": "C",
+          "octave": 4
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        },
+        {
+          "t": "b",
+          "key": "MotorThisWayBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "MotorOnForBlock",
+          "input": "NumberInput",
+          "inputValue": "2"
+        }
+      ]
+    }
+  ]
+}

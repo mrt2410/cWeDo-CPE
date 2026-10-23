@@ -1,0 +1,76 @@
+{
+  "format": "wedo-cpe-program",
+  "version": 1,
+  "meta": {
+    "title": "Spy Robot: spots movement",
+    "description": "Press Play, then move your hand toward the Spy Robot: its light turns red and the security alarm sounds, then it calms back to green. Demo program for LEGO Education's Spy Robot model; LEGO's building instructions contain no program.",
+    "author": "LEGO Education (model) · cWeDo CPE contributors (program)",
+    "source": "https://assets.education.lego.com/v3/assets/blt293eea581807678a/blt36c5008089ab3a1d/5f8803461e95ad78fa1e8bcc/45300_easystart_m4_.pdf",
+    "needs": [
+      "LEGO Spy Robot model",
+      "Distance sensor"
+    ],
+    "tags": [
+      "lego",
+      "distance",
+      "light",
+      "sound",
+      "loop"
+    ]
+  },
+  "stacks": [
+    {
+      "id": 1,
+      "x": 60,
+      "y": 100,
+      "items": [
+        {
+          "t": "b",
+          "key": "StartBlock",
+          "input": null
+        },
+        {
+          "t": "b",
+          "key": "LightBlock",
+          "input": "NumberInput",
+          "inputValue": "6"
+        },
+        {
+          "t": "r",
+          "input": null,
+          "children": [
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "DistanceChangeCloser"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "9"
+            },
+            {
+              "t": "b",
+              "key": "PlaySoundBlock",
+              "input": "NumberInput",
+              "inputValue": "24"
+            },
+            {
+              "t": "b",
+              "key": "WaitForBlock",
+              "input": "NumberInput",
+              "inputValue": "1"
+            },
+            {
+              "t": "b",
+              "key": "LightBlock",
+              "input": "NumberInput",
+              "inputValue": "6"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
