@@ -398,6 +398,8 @@
   .poweroff{width:34px;height:34px;border-radius:50%;background:#b8860b;border:none;cursor:pointer;display:grid;place-items:center;flex:0 0 auto;margin-right:6px}
   .poweroff svg{width:16px;height:16px;stroke:#fff;stroke-width:2.5;stroke-linecap:round;fill:none}
   .rename svg{width:16px;height:16px;stroke:#fff;stroke-width:2.5;stroke-linejoin:round;fill:none}
+  .forget{width:34px;height:34px;border-radius:50%;background:#5b6b7a;border:none;cursor:pointer;display:grid;place-items:center;flex:0 0 auto}
+  .forget svg{width:16px;height:16px;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none}
   #panelfoot{padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;flex:0 0 auto}
   #refresh{width:58px;height:58px;border-radius:50%;background:#eceff2;border:none;cursor:pointer;display:grid;place-items:center}
   #refresh svg{width:28px;height:28px;stroke:#8f9aa5;fill:none;stroke-width:2.2;stroke-linecap:round}
