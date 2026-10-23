@@ -2,6 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
   workflow_dispatch:
@@ -17,8 +19,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout tag
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # all tags, so the newest release can be picked out for the site root
+          fetch-depth: 0
 
       - name: Build static site
         run: |
@@ -33,11 +38,18 @@ jobs:
           node scripts/build-recipes-manifest.js
           cp -r recipes "$site/recipes"
 
-      - name: Publish version to gh-pages
+      - name: Publish to gh-pages
         run: |
           set -euo pipefail
-          version="${GITHUB_REF_NAME}"
           site="$RUNNER_TEMP/site"
+
+          # releases go to v/<tag>/, the main branch to v/main/
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            dest="v/$GITHUB_REF_NAME"
+          else
+            dest="v/main"
+          fi
+          latest="$(git tag -l 'v*' --sort=-v:refname | head -n 1)"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -50,10 +62,24 @@ jobs:
             git rm -rf . >/dev/null 2>&1 || true
           fi
 
-          rm -rf index.html css js data recipes "$version"
-          cp -r "$site/." .
-          mkdir -p "$version"
-          cp -r "$site/." "$version/"
+          # one-time move of the old top-level /vX.Y.Z/ folders into v/
+          shopt -s nullglob
+          for old in v[0-9]*/; do
+            mkdir -p v
+            mv "${old%/}" "v/${old%/}"
+          done
+          shopt -u nullglob
+          rm -f versions.html
+
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          cp -r "$site/." "$dest/"
+
+          # the site root mirrors the newest release; a branch push or an older tag leaves it alone
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" = "$latest" ]; then
+            rm -rf index.html css js data recipes
+            cp -r "$site/." .
+          fi
 
           touch .nojekyll
 
@@ -62,15 +88,17 @@ jobs:
             echo "<html lang=\"en\"><head><meta charset=\"utf-8\">"
             echo "<title>cWeDo CPE — versions</title></head><body>"
             echo "<h1>cWeDo CPE — versions</h1>"
-            echo "<p><a href=\"./\">Latest (root)</a></p>"
+            echo "<p><a href=\"../\">Latest release</a></p>"
             echo "<ul>"
-            for d in v*/; do
-              d="${d%/}"
-              echo "  <li><a href=\"$d/\">$d</a></li>"
+            echo "  <li><a href=\"main/\">main</a></li>"
+            for name in $(ls -1 v | sort -Vr); do
+              [ -d "v/$name" ] || continue
+              [ "$name" = "main" ] && continue
+              echo "  <li><a href=\"$name/\">$name</a></li>"
             done
             echo "</ul></body></html>"
-          } > versions.html
+          } > v/index.html
 
           git add -A
-          git commit -m "Publish $version" --allow-empty
+          git commit -m "Publish $GITHUB_REF_NAME" --allow-empty
           git push origin gh-pages

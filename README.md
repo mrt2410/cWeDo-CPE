@@ -46,7 +46,9 @@ supported by the LEGO Group.
 
 | | |
 | :--- | :--- |
-| **Try it now** — live, in-browser, no install | [Open the app](https://mrt2410.github.io/cWeDo-CPE/) |
+| **Try it now** — live, in-browser, no install | [Open the app](https://mrt2410.github.io/cWeDo-CPE/) (latest release) |
+| **Development version** — the current `main` branch | [Open main](https://mrt2410.github.io/cWeDo-CPE/v/main/) |
+| **Older releases** — each version is live at its own address | [All versions](https://mrt2410.github.io/cWeDo-CPE/v/) |
 | **Offline bundle** — single self-contained `.html`, no server needed | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-standalone.html) |
 | **Android APK** — see [Building the Android app](#building-the-android-app) | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-debug.apk) |
 | **iOS Simulator app** — not installable on a real iPad/iPhone, see [Building the iOS app](#building-the-ios-app) | [Download](https://github.com/mrt2410/cWeDo-CPE/releases/latest/download/cwedo-cpe-ios-simulator.app.zip) |
