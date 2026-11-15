@@ -87,8 +87,10 @@ supported by the LEGO Group.
 
 Web Bluetooth — needed to actually connect to a hub — only works in
 **Chromium-based browsers**: Chrome, Edge, Opera, Brave. Firefox has never
-implemented Web Bluetooth at all, and Safari/iOS doesn't support it either. The
-rest of the app (building and editing programs) works in any modern browser.
+implemented Web Bluetooth at all, and Safari/iOS doesn't support it either. In
+those browsers the app opens on a Browser Not Supported page, with a small Still Try
+button to go past it. The full list of browsers, and how the check works, is in
+[docs/browser-support.md](docs/browser-support.md).
 
 ### Run it
 
