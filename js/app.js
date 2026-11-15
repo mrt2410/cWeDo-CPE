@@ -987,6 +987,14 @@ addEventListener('resize',()=>{drawTray();paintDisplay();});
 const APP_VERSION='1.1.0';
 splashVersion.textContent=versionTag.textContent='v'+APP_VERSION;
 addEventListener('load',()=>setTimeout(()=>splash.classList.add('gone'),900));
+/* Browser check: without Web Bluetooth (Firefox, Safari, iOS) a hub can't be
+   reached, so show the Browser Not Supported page. The packaged Android app
+   gets Web Bluetooth from js/ble/capacitor-ble-shim.js, so it is never gated. */
+const nativeApp=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+const hasWebBluetooth=!!(navigator.bluetooth&&typeof navigator.bluetooth.requestDevice==='function');
+const unsupportedEl=document.getElementById('unsupported');
+unsupportedEl.hidden=nativeApp||hasWebBluetooth;
+document.getElementById('stilltry').onclick=()=>{unsupportedEl.hidden=true;};
 document.getElementById('stop').onclick=stopAll;
 
 /* ---- save as / open ---- */

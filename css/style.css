@@ -21,6 +21,15 @@
   @keyframes pop{0%,70%,100%{transform:translateY(0);opacity:.4}35%{transform:translateY(-12px);opacity:1}}
   @media (prefers-reduced-motion:reduce){.stud{animation:none;opacity:1}}
 
+  #unsupported{position:fixed;inset:0;z-index:310;background:#fff;display:flex;align-items:center;
+    justify-content:center;padding:16px}
+  #unsupported[hidden]{display:none}
+  #unsupported .card{max-width:420px;text-align:center;color:#3a3a3a}
+  #unsupported h1{margin:0 0 12px;font-size:28px;font-weight:700}
+  #unsupported p{margin:0 0 12px;font-size:15px;line-height:1.4}
+  #stilltry{margin-top:12px;padding:4px 10px;font-size:12px;color:#777;background:none;
+    border:1px solid #ccc;border-radius:6px;cursor:pointer}
+
   #app{height:100%;display:flex;flex-direction:column}
   #work{flex:1;min-height:0;position:relative;overflow:hidden;background:#fff}
   #stage{position:absolute;inset:0;overflow:auto;background:#fff;transition:background .2s;touch-action:pan-x pan-y;cursor:grab}
