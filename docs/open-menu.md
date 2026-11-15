@@ -31,6 +31,30 @@ picker opens.
 Preview-then-open is deliberately two steps, so a stray tap can't replace the board. There is
 no extra "replace your program?" confirm in this version.
 
+### Model pictures
+
+A recipe built from a LEGO model can have a picture of the finished model, `recipes/<id>-model.jpg`
+(440×294 JPEG, about 17 KB). The manifest picks it up automatically as `model` (null when there is
+none). The picker shows it as a 64×43 thumbnail in the recipe's row and larger above the whiteboard
+picture in the preview; recipes without one look as before. 27 of the 47 recipes have one: every
+LEGO model `wedo_blocks` has building instructions for (Cody ×3, Flex, Grab, Lift, Milo, Motion,
+Pull, Push, Spin, Steer, Sweep, Tilt, Turn, Walk, Wobble, Race Car, Recycling Truck, Flower,
+Floodgates, Helicopter, Snail, Fan, Satellite, Spy Robot, Robotic Arm). The other 20 have none: the
+7 programs not tied to a LEGO model (Counter, Hello Display, …), and Crank, Drive, Reel, Revolve,
+Earthquake, Joystick, Alarm Device, Luna Rover, Young Frog and the MILO Arm / Twins variants, for
+which `wedo_blocks` has no matching model.
+
+The pictures were rendered from `wedo_blocks`' 3D LDraw models: its instruction viewer at the last
+step, step card hidden, viewport 1100×800, cropped below the top bar and scaled down. Rendering is
+a one-off; to add one, drop a `<id>-model.jpg` next to the recipe and run `npm run build:recipes`.
+Tradeoff: they show the model on the wedo_blocks desk, so the model is small in the frame.
+
+The whiteboard in the preview is the small `recipes/<id>-board.jpg` (800 px wide, JPEG, about 29 KB
+each, made from the full-size `<id>.png`), not the 2600 px PNG; the web recipes page keeps the PNG.
+Both pictures are embedded in the standalone build, see [standalone-build.md](standalone-build.md).
+To make a board picture for a new recipe: resize its `.png` to 800 px wide, save as
+`<id>-board.jpg`, run `npm run build:recipes`.
+
 ### Where the data comes from
 
 `data/recipes.js` (loaded like the other `data/` banks) embeds every recipe plus its program,

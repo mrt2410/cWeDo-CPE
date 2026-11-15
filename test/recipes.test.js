@@ -107,3 +107,26 @@ test("data/recipes.js (embedded for the app's picker) is up to date (run `npm ru
   const onDisk = fs.readFileSync(path.join(ROOT, "data/recipes.js"), "utf8");
   assert.equal(onDisk, buildRecipesData());
 });
+
+test("a recipe with a model picture (<id>-model.jpg) gets it in the manifest, others get null", () => {
+  const { buildManifest } = require("../scripts/build-recipes-manifest.js");
+  const m = buildManifest();
+  for (const r of m.recipes) {
+    const jpg = r.file.replace(".wedo.json", "-model.jpg");
+    assert.equal(r.model, fs.existsSync(path.join(ROOT, "recipes", jpg)) ? jpg : null, r.id);
+  }
+  assert.ok(m.recipes.filter((r) => r.model).length >= 15);
+});
+
+test("the picker data points each recipe at its small whiteboard (<id>-board.jpg)", () => {
+  const { buildRecipesData } = require("../scripts/build-recipes-manifest.js");
+  const code = buildRecipesData();
+  const ctx = {};
+  ctx.window = ctx;
+  require("node:vm").runInNewContext(code, ctx);
+  const recipes = ctx.WEDO_DATA.recipes;
+  for (const r of recipes) {
+    assert.equal(r.image, `recipes/${r.id}-board.jpg`, r.id);
+    assert.ok(fs.existsSync(path.join(ROOT, r.image)), `${r.image} exists`);
+  }
+});

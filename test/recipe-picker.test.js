@@ -42,7 +42,7 @@ test("selecting a row shows its preview, description, author and hardware", asyn
   assert.equal(doc.getElementById("rpdesc").textContent, r.description);
   assert.match(doc.getElementById("rpby").textContent, new RegExp(r.author.slice(0, 10)));
   assert.match(doc.getElementById("rpneeds").textContent, new RegExp(r.needs[0], "i"));
-  assert.match(doc.getElementById("rpimg").getAttribute("src"), /^recipes\/.+\.png$/);
+  assert.match(doc.getElementById("rpimg").getAttribute("src"), /^recipes\/.+-board\.jpg$/);
 });
 
 test("search filters the list by title, tag and description", async (t) => {
@@ -156,4 +156,22 @@ test("filters reset each time the picker opens", async (t) => {
 
   assert.equal(chip(doc, "Tilt sensor").getAttribute("aria-pressed"), "false");
   assert.equal(rows().length, recipes().length);
+});
+
+test("rows of recipes with a model picture show a thumbnail; the preview shows the model above the whiteboard", async (t) => {
+  const { doc, open, rows, recipes } = await setup(t);
+  open();
+  const withModel = recipes().findIndex((r) => r.model);
+  const without = recipes().findIndex((r) => !r.model);
+  assert.ok(withModel >= 0 && without >= 0);
+
+  assert.match(rows()[withModel].querySelector("img.rpthumb").getAttribute("src"), /^recipes\/.+-model\.jpg$/);
+  assert.equal(rows()[without].querySelector("img.rpthumb"), null);
+
+  rows()[withModel].click();
+  assert.equal(doc.getElementById("rpmodel").hidden, false);
+  assert.equal(doc.getElementById("rpmodel").getAttribute("src"), recipes()[withModel].model);
+
+  rows()[without].click();
+  assert.equal(doc.getElementById("rpmodel").hidden, true);
 });

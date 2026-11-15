@@ -27,6 +27,7 @@ function entry(dir, file) {
     throw new Error(`${rel}: needs meta {title, description, author, needs[], tags[]} (source is optional)`);
   const id = file.slice(0, -EXT.length);
   const png = id + ".png";
+  const model = id + "-model.jpg";   // optional picture of the real LEGO model
   return {
     id,
     title: m.title,
@@ -37,6 +38,7 @@ function entry(dir, file) {
     tags: m.tags,
     file: rel,
     image: fs.existsSync(path.join(ROOT, dir, png)) ? path.posix.join(dir, png) : null,
+    model: fs.existsSync(path.join(ROOT, dir, model)) ? path.posix.join(dir, model) : null,
     stacks: data.stacks.length,
     blocks: data.stacks.reduce((n, s) => n + countBlocks(s.items), 0),
   };
@@ -53,10 +55,13 @@ function buildManifest() {
   return { guide: "AGENTS.md", recipes: list("."), templates: list("template") };
 }
 
+const smallBoard = (id) => (fs.existsSync(path.join(ROOT, id + "-board.jpg")) ? `recipes/${id}-board.jpg` : null);
+
 function buildRecipesData() {
   const recipes = list(".").map((e) => ({
     ...e,
-    image: e.image && "recipes/" + e.image,
+    image: smallBoard(e.id) || (e.image && "recipes/" + e.image),   // small JPEG for the picker, full PNG stays on the recipes page
+    model: e.model && "recipes/" + e.model,
     program: JSON.parse(fs.readFileSync(path.join(ROOT, e.file), "utf8")),
   }));
   return "window.WEDO_DATA=window.WEDO_DATA||{};\nWEDO_DATA.recipes=" + JSON.stringify(recipes) + ";\n";

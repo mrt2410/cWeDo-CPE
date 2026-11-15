@@ -1110,6 +1110,9 @@ function rpShow(r){
     const on=!!r&&b.dataset.id===r.id; b.classList.toggle('sel',on); b.setAttribute('aria-selected',on);
   });
   rpOpenBtn.disabled=!r;
+  const mdl=document.getElementById('rpmodel');
+  mdl.hidden=!r||!r.model; mdl.onerror=()=>{ mdl.hidden=true; };
+  if(r&&r.model) mdl.src=r.model; else mdl.removeAttribute('src');
   const img=document.getElementById('rpimg');
   img.hidden=!r||!r.image; img.onerror=()=>{ img.hidden=true; };
   if(r&&r.image) img.src=r.image; else img.removeAttribute('src');
@@ -1132,7 +1135,9 @@ function rpFilter(){
   rpList.textContent='';
   hit.forEach(r=>{
     const b=document.createElement('button'); b.className='rprow'; b.dataset.id=r.id; b.setAttribute('role','option');
-    b.append(r.title); const i=document.createElement('i'); i.textContent=r.blocks+' blocks'; b.appendChild(i);
+    if(r.model){ const t=document.createElement('img'); t.className='rpthumb'; t.src=r.model; t.alt=''; t.loading='lazy'; b.appendChild(t); }
+    const tx=document.createElement('span'); tx.className='rptxt'; tx.append(r.title);
+    const i=document.createElement('i'); i.textContent=r.blocks+' blocks'; tx.appendChild(i); b.appendChild(tx);
     b.onclick=()=>rpShow(r); rpList.appendChild(b);
   });
   document.getElementById('rpempty').hidden=hit.length>0;

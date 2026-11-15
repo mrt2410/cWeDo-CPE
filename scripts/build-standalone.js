@@ -28,6 +28,12 @@ function buildStandalone() {
     }
   );
 
+  // Embed the recipe picker's pictures (data/recipes.js points at recipes/*.jpg) so the single file needs no folder beside it.
+  html = html.replace(/"(recipes\/[^"\s]+\.jpg)"/g, (_match, rel) => {
+    const file = path.join(ROOT, rel);
+    return fs.existsSync(file) ? `"data:image/jpeg;base64,${fs.readFileSync(file).toString("base64")}"` : _match;
+  });
+
   return html;
 }
 

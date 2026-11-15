@@ -32,3 +32,10 @@ test("leaves the rest of the page (markup outside style/script) untouched", () =
   assert.match(html, /<title>cWeDo CPE<\/title>/);
   assert.match(html, /id="app"/);
 });
+
+test("embeds the recipe picker's model and whiteboard pictures as data URIs", () => {
+  const html = buildStandalone();
+  assert.doesNotMatch(html, /"recipes\/[^"\s]+\.jpg"/);
+  const embedded = html.match(/"data:image\/jpeg;base64,[A-Za-z0-9+/=]+"/g) || [];
+  assert.ok(embedded.length >= 27 + 47, `only ${embedded.length} embedded pictures`);
+});

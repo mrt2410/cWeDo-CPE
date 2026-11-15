@@ -28,6 +28,12 @@ that file's contents, and leaves everything else untouched. It follows the same
 `index.html` → `cWeDo CPE v1.0.html` symlink the split site uses, so there's one source
 of truth for the markup.
 
+It also embeds the Open > Recipe picker's pictures: `data/recipes.js` points at
+`recipes/<id>-board.jpg` (an 800 px JPEG of the whiteboard) and `recipes/<id>-model.jpg` (the real
+model, when there is one), and the build swaps each of those paths for a base64 data URI, so the
+single file needs no `recipes/` folder next to it. Cost: the file grows from about 5.1 MB to
+about 7.6 MB. (The full-size PNGs are only used by the web recipes page and are not embedded.)
+
 Order matters and is preserved: the app has no bundler and no `import`/`export`, so
 later scripts (e.g. `js/app.js`) rely on earlier ones (e.g. `js/blocks/core.js`) having
 already run and populated globals — see architecture.md.
