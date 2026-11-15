@@ -15,6 +15,7 @@
       ],
       "file": "counter.wedo.json",
       "image": "counter.png",
+      "model": null,
       "stacks": 1,
       "blocks": 5
     },
@@ -34,6 +35,7 @@
       ],
       "file": "distance-controls-light.wedo.json",
       "image": "distance-controls-light.png",
+      "model": null,
       "stacks": 1,
       "blocks": 3
     },
@@ -50,6 +52,7 @@
       ],
       "file": "hello-display.wedo.json",
       "image": "hello-display.png",
+      "model": null,
       "stacks": 1,
       "blocks": 6
     },
@@ -69,6 +72,7 @@
       ],
       "file": "hub-button-melody.wedo.json",
       "image": "hub-button-melody.png",
+      "model": null,
       "stacks": 1,
       "blocks": 5
     },
@@ -91,6 +95,7 @@
       ],
       "file": "lego-alarm-device.wedo.json",
       "image": "lego-alarm-device.png",
+      "model": null,
       "stacks": 1,
       "blocks": 14
     },
@@ -113,6 +118,7 @@
       ],
       "file": "lego-cody-motion-sensor.wedo.json",
       "image": "lego-cody-motion-sensor.png",
+      "model": "lego-cody-motion-sensor-model.jpg",
       "stacks": 1,
       "blocks": 11
     },
@@ -135,6 +141,7 @@
       ],
       "file": "lego-cody-tilt-sensor.wedo.json",
       "image": "lego-cody-tilt-sensor.png",
+      "model": "lego-cody-tilt-sensor-model.jpg",
       "stacks": 2,
       "blocks": 15
     },
@@ -156,6 +163,7 @@
       ],
       "file": "lego-cody.wedo.json",
       "image": "lego-cody.png",
+      "model": "lego-cody-model.jpg",
       "stacks": 1,
       "blocks": 10
     },
@@ -177,6 +185,7 @@
       ],
       "file": "lego-crank.wedo.json",
       "image": "lego-crank.png",
+      "model": null,
       "stacks": 1,
       "blocks": 12
     },
@@ -196,6 +205,7 @@
       ],
       "file": "lego-drive.wedo.json",
       "image": "lego-drive.png",
+      "model": null,
       "stacks": 1,
       "blocks": 11
     },
@@ -217,6 +227,7 @@
       ],
       "file": "lego-earthquake.wedo.json",
       "image": "lego-earthquake.png",
+      "model": null,
       "stacks": 1,
       "blocks": 11
     },
@@ -236,6 +247,7 @@
       ],
       "file": "lego-fan.wedo.json",
       "image": "lego-fan.png",
+      "model": "lego-fan-model.jpg",
       "stacks": 1,
       "blocks": 9
     },
@@ -257,6 +269,7 @@
       ],
       "file": "lego-flex.wedo.json",
       "image": "lego-flex.png",
+      "model": "lego-flex-model.jpg",
       "stacks": 1,
       "blocks": 10
     },
@@ -278,6 +291,7 @@
       ],
       "file": "lego-floodgates.wedo.json",
       "image": "lego-floodgates.png",
+      "model": "lego-floodgates-model.jpg",
       "stacks": 2,
       "blocks": 11
     },
@@ -300,6 +314,7 @@
       ],
       "file": "lego-flower.wedo.json",
       "image": "lego-flower.png",
+      "model": "lego-flower-model.jpg",
       "stacks": 1,
       "blocks": 11
     },
@@ -320,6 +335,7 @@
       ],
       "file": "lego-grab.wedo.json",
       "image": "lego-grab.png",
+      "model": "lego-grab-model.jpg",
       "stacks": 2,
       "blocks": 12
     },
@@ -341,6 +357,7 @@
       ],
       "file": "lego-helicopter.wedo.json",
       "image": "lego-helicopter.png",
+      "model": "lego-helicopter-model.jpg",
       "stacks": 1,
       "blocks": 12
     },
@@ -363,6 +380,7 @@
       ],
       "file": "lego-joystick.wedo.json",
       "image": "lego-joystick.png",
+      "model": null,
       "stacks": 1,
       "blocks": 14
     },
@@ -384,6 +402,7 @@
       ],
       "file": "lego-lift.wedo.json",
       "image": "lego-lift.png",
+      "model": "lego-lift-model.jpg",
       "stacks": 2,
       "blocks": 12
     },
@@ -405,6 +424,7 @@
       ],
       "file": "lego-luna-rover.wedo.json",
       "image": "lego-luna-rover.png",
+      "model": null,
       "stacks": 2,
       "blocks": 12
     },
@@ -427,6 +447,7 @@
       ],
       "file": "lego-milo-arm-1-modified.wedo.json",
       "image": "lego-milo-arm-1-modified.png",
+      "model": null,
       "stacks": 1,
       "blocks": 12
     },
@@ -448,6 +469,7 @@
       ],
       "file": "lego-milo-arm-1.wedo.json",
       "image": "lego-milo-arm-1.png",
+      "model": null,
       "stacks": 1,
       "blocks": 10
     },
@@ -470,6 +492,7 @@
       ],
       "file": "lego-milo-arm-2.wedo.json",
       "image": "lego-milo-arm-2.png",
+      "model": null,
       "stacks": 2,
       "blocks": 10
     },
@@ -491,6 +514,7 @@
       ],
       "file": "lego-milo-twins-3.wedo.json",
       "image": "lego-milo-twins-3.png",
+      "model": null,
       "stacks": 2,
       "blocks": 12
     },
@@ -513,6 +537,7 @@
       ],
       "file": "lego-milo.wedo.json",
       "image": "lego-milo.png",
+      "model": "lego-milo-model.jpg",
       "stacks": 1,
       "blocks": 10
     },
@@ -534,6 +559,7 @@
       ],
       "file": "lego-motion.wedo.json",
       "image": "lego-motion.png",
+      "model": "lego-motion-model.jpg",
       "stacks": 1,
       "blocks": 8
     },
@@ -555,6 +581,7 @@
       ],
       "file": "lego-pull.wedo.json",
       "image": "lego-pull.png",
+      "model": "lego-pull-model.jpg",
       "stacks": 1,
       "blocks": 7
     },
@@ -576,6 +603,7 @@
       ],
       "file": "lego-push.wedo.json",
       "image": "lego-push.png",
+      "model": "lego-push-model.jpg",
       "stacks": 1,
       "blocks": 11
     },
@@ -597,6 +625,7 @@
       ],
       "file": "lego-race-car.wedo.json",
       "image": "lego-race-car.png",
+      "model": "lego-race-car-model.jpg",
       "stacks": 2,
       "blocks": 8
     },
@@ -619,6 +648,7 @@
       ],
       "file": "lego-recycling-truck.wedo.json",
       "image": "lego-recycling-truck.png",
+      "model": "lego-recycling-truck-model.jpg",
       "stacks": 1,
       "blocks": 11
     },
@@ -640,6 +670,7 @@
       ],
       "file": "lego-reel.wedo.json",
       "image": "lego-reel.png",
+      "model": null,
       "stacks": 1,
       "blocks": 9
     },
@@ -661,6 +692,7 @@
       ],
       "file": "lego-revolve.wedo.json",
       "image": "lego-revolve.png",
+      "model": null,
       "stacks": 1,
       "blocks": 10
     },
@@ -682,6 +714,7 @@
       ],
       "file": "lego-robotic-arm.wedo.json",
       "image": "lego-robotic-arm.png",
+      "model": "lego-robotic-arm-model.jpg",
       "stacks": 3,
       "blocks": 16
     },
@@ -702,6 +735,7 @@
       ],
       "file": "lego-satellite.wedo.json",
       "image": "lego-satellite.png",
+      "model": "lego-satellite-model.jpg",
       "stacks": 1,
       "blocks": 9
     },
@@ -722,6 +756,7 @@
       ],
       "file": "lego-snail.wedo.json",
       "image": "lego-snail.png",
+      "model": "lego-snail-model.jpg",
       "stacks": 1,
       "blocks": 7
     },
@@ -742,6 +777,7 @@
       ],
       "file": "lego-spin.wedo.json",
       "image": "lego-spin.png",
+      "model": "lego-spin-model.jpg",
       "stacks": 1,
       "blocks": 14
     },
@@ -764,6 +800,7 @@
       ],
       "file": "lego-spy-robot.wedo.json",
       "image": "lego-spy-robot.png",
+      "model": "lego-spy-robot-model.jpg",
       "stacks": 1,
       "blocks": 8
     },
@@ -786,6 +823,7 @@
       ],
       "file": "lego-steer.wedo.json",
       "image": "lego-steer.png",
+      "model": "lego-steer-model.jpg",
       "stacks": 2,
       "blocks": 19
     },
@@ -806,6 +844,7 @@
       ],
       "file": "lego-sweep.wedo.json",
       "image": "lego-sweep.png",
+      "model": "lego-sweep-model.jpg",
       "stacks": 1,
       "blocks": 10
     },
@@ -827,6 +866,7 @@
       ],
       "file": "lego-tilt.wedo.json",
       "image": "lego-tilt.png",
+      "model": "lego-tilt-model.jpg",
       "stacks": 2,
       "blocks": 17
     },
@@ -848,6 +888,7 @@
       ],
       "file": "lego-turn.wedo.json",
       "image": "lego-turn.png",
+      "model": "lego-turn-model.jpg",
       "stacks": 1,
       "blocks": 9
     },
@@ -870,6 +911,7 @@
       ],
       "file": "lego-walk.wedo.json",
       "image": "lego-walk.png",
+      "model": "lego-walk-model.jpg",
       "stacks": 1,
       "blocks": 13
     },
@@ -891,6 +933,7 @@
       ],
       "file": "lego-wobble.wedo.json",
       "image": "lego-wobble.png",
+      "model": "lego-wobble-model.jpg",
       "stacks": 1,
       "blocks": 8
     },
@@ -913,6 +956,7 @@
       ],
       "file": "lego-young-frog.wedo.json",
       "image": "lego-young-frog.png",
+      "model": null,
       "stacks": 1,
       "blocks": 9
     },
@@ -929,6 +973,7 @@
       ],
       "file": "message-ping-pong.wedo.json",
       "image": "message-ping-pong.png",
+      "model": null,
       "stacks": 2,
       "blocks": 6
     },
@@ -949,6 +994,7 @@
       ],
       "file": "random-dance.wedo.json",
       "image": "random-dance.png",
+      "model": null,
       "stacks": 1,
       "blocks": 7
     },
@@ -969,6 +1015,7 @@
       ],
       "file": "tilt-spins-motor.wedo.json",
       "image": "tilt-spins-motor.png",
+      "model": null,
       "stacks": 1,
       "blocks": 9
     }
@@ -987,6 +1034,7 @@
       ],
       "file": "template/full-template.wedo.json",
       "image": null,
+      "model": null,
       "stacks": 13,
       "blocks": 119
     }
